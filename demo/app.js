@@ -50,7 +50,9 @@ window.requestFileSystem(window.PERSISTENT, null, function (fileSystem) {
             callback(null, entries);
           }
           else {
-            entries.push.apply(entries, results);
+            entries = entries.concat(Array.prototype.slice.call(results).map(function (entry) {
+              return entry.name;
+            }));
             readEntries();
           }
         }, callback);
@@ -58,10 +60,16 @@ window.requestFileSystem(window.PERSISTENT, null, function (fileSystem) {
     }, callback);
   }
   function mkdir(path, callback) {
-    callback(new Error("TODO: Implement mkdir"));
+    fileSystem.root.getDirectory(path, {create: true}, function () {
+      callback();
+    }, callback);
   }
   function rmdir(path, callback) {
-    callback(new Error("TODO: Implement rmdir"));
+    fileSystem.root.getDirectory(path, {}, function (dirEntry) {
+      dirEntry.removeRecursively(function () {
+        callback();
+      }, callback);
+    }, callback);
   }
   function copy(source, dest, callback) {
     callback(new Error("TODO: Implement copy"));
