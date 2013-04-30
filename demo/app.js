@@ -121,11 +121,25 @@ function wrapFileSystem(fileSystem) {
       }, callback);
     }, callback);
   }
-  function copy(source, dest, callback) {
-    callback(new Error("TODO: Implement copy"));
+  function copy(src, dest, callback) {
+    // TODO: make sure works for cases where dest includes and excludes file name.
+    cwd.getFile(src, {}, function(fileEntry) {
+      cwd.getDirectory(dest, {}, function(dirEntry) {
+        fileEntry.copyTo(dirEntry, function () {
+          callback();
+        }, callback);
+      }, callback);
+    }, callback);
   }
-  function move(source, dest, callback) {
-    callback(new Error("TODO: Implement move"));
+  function move(src, dest, callback) {
+    // TODO: handle more cases like file renames and moving/renaming directories
+    cwd.getFile(src, {}, function(fileEntry) {
+      cwd.getDirectory(dest, {}, function(dirEntry) {
+        fileEntry.moveTo(dirEntry, function () {
+          callback();
+        }, callback);
+      }, callback);
+    }, callback);
   }
   function chdir(path, callback) {
     cwd.getDirectory(path, {}, function (dirEntry) {
