@@ -1,46 +1,96 @@
 
-// These 3 functions make using async function in the repl easier.  If no
+// These functions make using async function in the repl easier.  If no
 // callback is specefied, they log the result to the console.
 
-// Wrap a 1 parameter async function for easy repl use.
 function log(err) {
   if (err) throw err;
   console.log.apply(console, Array.prototype.slice.call(arguments, 1));
 }
-// Repl wRap 2-arg
+function formatError(fileError) {
+  switch (fileError.code) {
+    case window.FileError.QUOTA_EXCEEDED_ERR: return 'QUOTA_EXCEEDED_ERR';
+    case window.FileError.NOT_FOUND_ERR: return 'NOT_FOUND_ERR';
+    case window.FileError.SECURITY_ERR: return 'SECURITY_ERR';
+    case window.FileError.INVALID_MODIFICATION_ERR: return 'INVALID_MODIFICATION_ERR';
+    case window.FileError.INVALID_STATE_ERR: return 'INVALID_STATE_ERR';
+    default: return 'Unknown Error';
+  }
+}
+function check(path, callback) {
+  return function (err) {
+    if (err && err instanceof window.FileError) {
+      err.path = path;
+      err.message = formatError(err) + " at '" + path + "'";
+      console.error(err.message);
+      callback(err);
+    }
+    else {
+      callback.apply(this, arguments);
+    }
+  };
+}
 function rr2(fn) {
   return function (arg1, arg2, callback) {
-    return fn(arg1, arg2, callback || log);
+    return fn(arg1, arg2, check(arg1, callback || log));
   };
 }
-// Repl wRap 1-arg
 function rr1(fn) {
   return function (arg, callback) {
-    return fn(arg, callback || log);
-  };
-}
-// Repl wRap 0-args
-function rr0(fn) {
-  return function (callback) {
-    return fn(callback || log);
+    return fn(arg, check(arg, callback || log));
   };
 }
 
 // Note: The file system has been prefixed as of Google Chrome 12:
 window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
 
-window.requestFileSystem(window.PERSISTENT, null, function (fileSystem) {
+
+function wrapFileSystem(fileSystem) {
+  var cwd = fileSystem.root;
+  var fs = {
+    readfile: rr1(readfile),
+    writefile: rr2(writefile),
+    rmfile: rr1(rmfile),
+    readdir: rr1(readdir),
+    mkdir: rr1(mkdir),
+    rmdir: rr1(rmdir),
+    copy: rr2(copy),
+    move: rr2(move),
+    chdir: rr1(chdir),
+    cwd: function () { return cwd.fullPath; }
+  };
+
   function readfile(path, callback) {
-    callback(new Error("TODO: Implement readfile"));
+    cwd.getFile(path, {}, function (fileEntry) {
+      fileEntry.file(function (file) {
+        var reader = new FileReader();
+        reader.onloadend = function () {
+          callback(null, this.result);
+        };
+        reader.readAsText(file);
+      }, callback);
+    }, callback);
   }
+
   function writefile(path, contents, callback) {
-    callback(new Error("TODO: Implement writefile"));
+    cwd.getFile(path, {create: true}, function (fileEntry) {
+      fileEntry.createWriter(function (fileWriter) {
+        fileWriter.onwriteend = function () {
+          callback();
+        };
+        fileWriter.onerror = callback;
+        fileWriter.write(new Blob([contents], {type: 'text/plain'}));
+      }, callback);
+    }, callback);
   }
   function rmfile(path, callback) {
-    callback(new Error("TODO: Implement writefile"));
+    cwd.getFile(path, {}, function (fileEntry) {
+      fileEntry.remove(function () {
+        callback();
+      }, callback);
+    }, callback);
   }
   function readdir(path, callback) {
-    fileSystem.root.getDirectory(path, {create: false}, function (dirEntry) {
+    cwd.getDirectory(path, {}, function (dirEntry) {
       var dirReader = dirEntry.createReader();
       var entries = [];
       readEntries();
@@ -51,7 +101,7 @@ window.requestFileSystem(window.PERSISTENT, null, function (fileSystem) {
           }
           else {
             entries = entries.concat(Array.prototype.slice.call(results).map(function (entry) {
-              return entry.name;
+              return entry.name + (entry.isDirectory ? "/" : "");
             }));
             readEntries();
           }
@@ -60,12 +110,12 @@ window.requestFileSystem(window.PERSISTENT, null, function (fileSystem) {
     }, callback);
   }
   function mkdir(path, callback) {
-    fileSystem.root.getDirectory(path, {create: true}, function () {
+    cwd.getDirectory(path, {create: true}, function () {
       callback();
     }, callback);
   }
   function rmdir(path, callback) {
-    fileSystem.root.getDirectory(path, {}, function (dirEntry) {
+    cwd.getDirectory(path, {}, function (dirEntry) {
       dirEntry.removeRecursively(function () {
         callback();
       }, callback);
@@ -77,42 +127,24 @@ window.requestFileSystem(window.PERSISTENT, null, function (fileSystem) {
   function move(source, dest, callback) {
     callback(new Error("TODO: Implement move"));
   }
-
-  window.fs = {
-    readfile: rr1(readfile),
-    writefile: rr2(writefile),
-    rmfile: rr1(rmfile),
-    readdir: rr1(readdir),
-    mkdir: rr1(mkdir),
-    rmdir: rr1(rmdir),
-    copy: rr2(copy),
-    move: rr2(move),
-  };
-}, function (fileError) {
-  var msg = '';
-
-  switch (fileError.code) {
-    case window.FileError.QUOTA_EXCEEDED_ERR:
-      msg = 'QUOTA_EXCEEDED_ERR';
-      break;
-    case window.FileError.NOT_FOUND_ERR:
-      msg = 'NOT_FOUND_ERR';
-      break;
-    case window.FileError.SECURITY_ERR:
-      msg = 'SECURITY_ERR';
-      break;
-    case window.FileError.INVALID_MODIFICATION_ERR:
-      msg = 'INVALID_MODIFICATION_ERR';
-      break;
-    case window.FileError.INVALID_STATE_ERR:
-      msg = 'INVALID_STATE_ERR';
-      break;
-    default:
-      msg = 'Unknown Error';
-      break;
+  function chdir(path, callback) {
+    cwd.getDirectory(path, {}, function (dirEntry) {
+      cwd = dirEntry;
+      if (fs.onchdir) {
+        fs.onchdir(cwd.fullPath);
+      }
+      callback();
+    }, callback);
   }
 
-  console.error("Problem getting fs", msg);
+  return fs;
+}
+
+
+window.requestFileSystem(window.PERSISTENT, null, function (fileSystem) {
+  window.fs = wrapFileSystem(fileSystem);
+}, function (fileError) {
+  throw new Error("Problem getting fs: " + formatError(fileError));
 });
 
 
