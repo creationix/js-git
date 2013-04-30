@@ -1,0 +1,31 @@
+{
+  "name": "JS-Git Demo",
+  "version": "0.0.0",
+  "manifest_version": 2,
+  "offline_enabled": true,
+  
+  "description": "A bare-bones demo of js-git's libraries",
+  "icons": {
+    "16": "icon-16.png",
+    "128": "icon-128.png"
+  },
+
+  "app": {
+    "background": {
+      "scripts": ["app.js"]
+    }
+  },
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "http://*/*",
+    "https://*/*",
+    {"socket": [
+      "tcp-connect:*:9418",
+      "tcp-listen::9418",
+      "udp-send-to::19418",
+      "udp-bind::19418",
+      "tcp-listen::8080"
+    ]}
+  ]
+}
