@@ -163,18 +163,25 @@ function getFs() {
 }
 
 function getDb() {
-  function get(key, callback) {
-    window.fs.readfile("/.gitdb/" + key, callback || log);
+
+  function fsDb(fs, path, callback) {
+    function get(key, callback) {
+      fs.readfile("/.gitdb/" + key, callback || log);
+    }
+    function set(key, value, callback) {
+      fs.writefile("/.gitdb/" + key, value, callback || log);
+    }
+    fs.mkdir("/.gitdb", function (err) {
+      if (err) return callback(err);
+      callback(null, {
+        get: get,
+        set: set
+      });
+    });
   }
-  function set(key, value, callback) {
-    window.fs.writefile("/.gitdb/" + key, value, callback || log);
-  }
-  window.fs.mkdir("/.gitdb", function (err) {
-    if (err) throw err;
-    window.db = {
-      get: get,
-      set: set
-    };
+
+  fsDb(window.fs, "/.gitdb", function (err, db) {
+    window.db = db;
     getGit();
   });
 }
