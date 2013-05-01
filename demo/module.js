@@ -211,7 +211,6 @@ function realProcess(path, contents, callback, errback) {
   // Scan for dependencies
   var root = path.match(/^(.*\/)[^\/]*$/)[1];
   var matches = mine(contents);
-  console.log(matches);
   var deps = [];
   if (!matches) return save();
   // If there are dependencies, load them first.
