@@ -1,14 +1,17 @@
 "use strict";
 
 // Gets the persistent filesystem for this app and wraps it in the fs interface.
-module.exports = function (callback) {
+module.exports = getfs;
+getfs.wrapFileSystem = wrapFileSystem;
+getfs.formatError = formatError;
+function getfs(callback) {
   var requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
   requestFileSystem(window.PERSISTENT, null, function (fs) {
     callback(null, wrapFileSystem(fs));
   }, function (fileError) {
     callback(new Error("Problem getting fs: " + formatError(fileError)));
   });
-};
+}
 
 // These functions make using async function in the repl easier.  If no
 // callback is specified, they log the result to the console.
