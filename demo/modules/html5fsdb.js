@@ -1,3 +1,4 @@
+"use strict";
 
 function log(err) {
   if (err) throw err;

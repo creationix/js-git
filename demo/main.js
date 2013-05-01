@@ -1,3 +1,5 @@
+"use strict";
+
 require('html5fs.js')(function (err, fs) {
   if (err) throw err;
   window.fs = fs;
