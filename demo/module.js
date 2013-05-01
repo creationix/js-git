@@ -202,6 +202,12 @@ function process(path, contents, callback, errback) {
   }
 }
 function realProcess(path, contents, callback, errback) {
+  var failed;
+  function fail(err) {
+    if (failed) return;
+    failed = true;
+    errback(err);
+  }
   // Scan for dependencies
   var root = path.match(/^(.*\/)[^\/]*$/)[1];
   var matches = contents.match(/require\((['"])[^)]*\1\)/g);
@@ -211,11 +217,11 @@ function realProcess(path, contents, callback, errback) {
   var left = matches.length;
   for (var i = 0, l = left; i < l; i++) {
     var match = matches[i].match(/require\((['"])([^)]*)\1\)/)[2];
-    resolve(root, match, onResolve, errback);
+    resolve(root, match, onResolve, fail);
   }
   function onResolve(realPath, contents) {
     deps.push(realPath);
-    process(realPath, contents, check, errback);
+    process(realPath, contents, check, fail);
   }
   function check(dep) {
     deps.push(dep);
