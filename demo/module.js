@@ -52,7 +52,7 @@ function realGet(path, callback, errback) {
   request.onerror = function () {
     errback(this);
   };
-  request.open("GET", path, true);
+  request.open("GET", path + "?" + (Math.random() * 0x100000000).toString(36), true);
   request.setRequestHeader("Pragma", "no-cache");
   request.send();
 }
@@ -210,13 +210,14 @@ function realProcess(path, contents, callback, errback) {
   }
   // Scan for dependencies
   var root = path.match(/^(.*\/)[^\/]*$/)[1];
-  var matches = contents.match(/require\((['"])[^)]*\1\)/g);
+  var matches = mine(contents);
+  console.log(matches);
   var deps = [];
   if (!matches) return save();
   // If there are dependencies, load them first.
   var left = matches.length;
   for (var i = 0, l = left; i < l; i++) {
-    var match = matches[i].match(/require\((['"])([^)]*)\1\)/)[2];
+    var match = matches[i];
     resolve(root, match, onResolve, fail);
   }
   function onResolve(realPath, contents) {
@@ -242,6 +243,90 @@ function realProcess(path, contents, callback, errback) {
       document.head.appendChild(script);
     }, errback);
   }
+}
+// Mine a string for require calls and export the module names
+// Extract all require calls using a proper state-machine parser.
+function mine(js) {
+  var names = [];
+  var state = "START";
+  var ident;
+  var quote;
+  var name;
+  for (var i = 0, l = js.length; i < l; i++) {
+    var char = js[i];
+    switch (state) {
+      case "START":
+        if (char === "/") state = "SLASH";
+        else if (char === "'" || char === '"') {
+          quote = char;
+          state = "STRING";
+        }
+        else if (char === "r") {
+          ident = char;
+          state = "IDENT";
+        }
+        break;
+      case "IDENT":
+        if (char === "require"[ident.length]) {
+          ident += char;
+        }
+        else if (char === "(" && ident === "require") {
+          ident = undefined;
+          state = "CALL";
+        }
+        else {
+          state = "START";
+        }
+        break;
+      case "CALL":
+        if (char === "'" || char === '"') {
+          quote = char;
+          name = "";
+          state = "NAME";
+        }
+        else {
+          state = "START";
+        }
+        break;
+      case "NAME":
+        if (char === quote) {
+          names.push(name);
+          name = undefined;
+          state = "START";
+        }
+        else {
+          name += char;
+        }
+        break;
+      case "STRING":
+        if (char === "\\") {
+          state = "ESCAPE";
+        }
+        else if (char === quote) {
+          state = "START";
+        }
+        break;
+      case "ESCAPE":
+        state = "STRING";
+        break;
+      case "SLASH":
+        if (char === "/") state = "LINE_COMMENT";
+        else if (char === "*") state = "MULTILINE_COMMENT";
+        else state = "START";
+        break;
+      case "LINE_COMMENT":
+        if (char === "\r" || char === "\n") state = "START";
+        break;
+      case "MULTILINE_COMMENT":
+        if (char === "*") state = "MULTILINE_ENDING";
+        break;
+      case "MULTILINE_ENDING":
+        if (char === "/") state = "START";
+        else if (char !== "*") state = "MULTILINE_COMMENT";
+        break;
+    }
+  }
+  return names;
 }
 ////////////////////////////////////////////////////////////////////////////////
 
