@@ -7,6 +7,8 @@ window.require.resolve = resolve;
 
 var defs = {};
 var modules = {};
+
+
 var fs;
 (window.requestFileSystem || window.webkitRequestFileSystem)(window.TEMPORARY, null, function (fileSystem) {
   fs = fileSystem;
@@ -24,23 +26,14 @@ var fs;
 // We also want to support optional extensions, loading json files, and
 // parsing package.json looking for main.
 // callback(realPath, contents) or errback(err) are the output.
-var mappings = {};
-function resolve(root, path, callback, errback) {
-  var key = root + ":" + path;
-  if (key in mappings) {
-    return callback(mappings[key][0], mappings[key][1]);
-  }
-  function success(realPath, contents) {
-    mappings[key] = [realPath, contents];
-    callback(realPath, contents);
-  }
-  if (path[0] === "/") return find(path, success, errback);
-  if (path[0] === ".") return find(realPath(root + path), success, errback);
+function realResolve(root, path, callback, errback) {
+  if (path[0] === "/") return find(path, callback, errback);
+  if (path[0] === ".") return find(realPath(root + path), callback, errback);
   var base = root;
   cycle();
   function cycle() {
     base = base.match(/^(.*\/)[^\/]*$/)[1];
-    find(base + "modules/" + path, success, function () {
+    find(base + "modules/" + path, callback, function () {
       if (base.length > 1) {
         base = base.substr(0, base.length - 1);
         cycle();
@@ -48,6 +41,35 @@ function resolve(root, path, callback, errback) {
       else {
         errback(new Error("Can't find module: " + path + " in " + root));
       }
+    });
+  }
+}
+
+// A concurrency-safe version of resolve;
+var mappings = {};
+require.defs = defs;
+require.modules = modules;
+require.mappings = mappings;
+var resolvePending = {};
+function resolve(root, path, callback, errback) {
+  var key = root + ":" + path;
+  if (key in mappings) {
+    return callback(mappings[key][0], mappings[key][1]);
+  }
+  if (key in resolvePending) {
+    return resolvePending.push([callback, errback]);
+  }
+  resolvePending[key] = [[callback, errback]];
+  realResolve(root, path, function (realPath, contents) {
+    mappings[key] = [realPath, contents];
+    flush(null, realPath, contents);
+  }, flush);
+  function flush(err, realPath, contents) {
+    var pending = resolvePending[key];
+    delete resolvePending[key];
+    pending.forEach(function (pair) {
+      if (err) pair[1](err);
+      else pair[0](realPath, contents);
     });
   }
 }
@@ -107,6 +129,7 @@ return require;
 
 // basic xhr get
 function get(path, callback, errback) {
+  console.log("GET", path);
   var request = new XMLHttpRequest();
   request.onload = function () {
     callback(path, this.responseText);
@@ -115,6 +138,7 @@ function get(path, callback, errback) {
     errback(this);
   };
   request.open("GET", path, true);
+  request.setRequestHeader("Pragma", "no-cache");
   request.send();
 }
 
@@ -131,12 +155,24 @@ function writeFile(path, contents, callback, errback) {
 }
 
 function process(path, js) {
-  console.log("TODO: process", {path:path, js:js});
+  console.log("PROCESS", {path:path, js:js});
+  var root = path.match(/^(.*\/)[^\/]*$/)[1];
+  // TODO: replace with a more robust matcher
+  var matches = js.match(/require\((['"])[^)]*\1\)/g);
+  if (!matches) return;
+  for (var i = 0, l = matches.length; i < l; i++) {
+    var match = matches[i].match(/require\((['"])([^)]*)\1\)/)[2];
+    resolve(root, match, function (realPath, contents) {
+      load(realPath, function (realPath, url) {
+      });
+    });
+  }
   // TODO: look for dependencies in js and load them too.
 }
 
 // Load a script from disk and place in the temporary filesystem.
 function realLoad(path, callback, errback) {
+  
   get(path, function (path, js) {
     process(path, js);
     var wrappedjs =
@@ -144,7 +180,12 @@ function realLoad(path, callback, errback) {
       js + '\n});';
     // Write the wrapped file to the temporary filesystem.
     writeFile(path.substr(1).replace(/\//g, "_"), wrappedjs, function (fileEntry) {
-      callback(fileEntry.toURL());
+      var url = fileEntry.toURL();
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = url;
+      document.head.appendChild(script);    
+      callback(url);
     }, errback);
   }, errback);
 }
@@ -169,10 +210,9 @@ function load(path, callback, errback) {
   function flush(err, url) {
     var pending = loadPending[path];
     delete loadPending[path];
-    console.log("FLUSH", arguments);
     pending.forEach(function (pair) {
-      if (url) pair[0](url);
-      else pair[1](err);
+      if (err) pair[1](err);
+      else pair[0]();
     });
   }
 }
@@ -227,10 +267,6 @@ function realRequireAsync(path, callback) {
     return callback(null, modules[path]);
   }
   load(path, function (url) {
-    var script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = url;
-    document.head.appendChild(script);    
   }, callback);
 }
 
