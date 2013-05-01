@@ -8,7 +8,7 @@ window.modulesReady = start;
 }());
 
 function start() {
-  require.async("main.js", function (err) {
+  require.async("./main.js", function (err) {
     if (err) throw err;
   });
 }
