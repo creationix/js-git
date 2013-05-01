@@ -84,7 +84,13 @@ function wrapFileSystem(fileSystem) {
   function writefile(path, contents, callback) {
     cwd.getFile(path, {create: true}, function (fileEntry) {
       fileEntry.createWriter(function (fileWriter) {
+        var truncated = false;
         fileWriter.onwriteend = function () {
+          if (!truncated) {
+            truncated = true;
+            this.truncate(this.position);
+            return;
+          }
           callback(null, fileEntry);
         };
         fileWriter.onerror = callback;

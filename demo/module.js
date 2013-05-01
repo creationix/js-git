@@ -73,7 +73,13 @@ requestFileSystem(window.TEMPORARY, null, function (fileSystem) {
 function writeFile(path, contents, callback, errback) {
   fs.root.getFile(path, {create: true}, function (fileEntry) {
     fileEntry.createWriter(function (fileWriter) {
+      var truncated = false;
       fileWriter.onwriteend = function () {
+        if (!truncated) {
+          truncated = true;
+          this.truncate(this.position);
+          return;
+        }
         callback(fileEntry.toURL());
       };
       fileWriter.onerror = errback;
