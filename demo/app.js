@@ -218,11 +218,11 @@ function getGit() {
     get(path, function (err, js) {
       if (err) return callback(err);
       if (path[0] === "/") path = path.substr(1);
-      var safePath = path.replace(/\//g, "_");
+      var safePath = "/" + path.replace(/\//g, "_");
       var wrappedjs =
-        'window.registerFile(' + JSON.stringify(safePath) + ', [], function (module, exports, require) {\n\n' +
+        'window.define(' + JSON.stringify(safePath) + ', [], function (module, exports, require) {\n\n' +
         js + '\n\n});';
-      window.tfs.writefile("/" + safePath, wrappedjs, function (err, fileEntry) {
+      window.tfs.writefile(safePath, wrappedjs, function (err, fileEntry) {
         if (err) return callback(err);
         callback(null, fileEntry.toURL(), wrappedjs);
       });
