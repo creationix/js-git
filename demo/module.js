@@ -141,21 +141,24 @@ function realPath(path) {
 function find(path, callback, errback) {
   // .js extensions are passed through as-is
   if (/\.js$/.test(path)) return get(path, callback, errback);
-  // Then try looking for package.json
+  // First look for /index.js
+  // Then try looking for /package.json
   // Then try appending the .js extension
-  get(path + "/package.json", function (jsonPath, json) {
-    // Parse the JSON file
-    var doc;
-    try { doc = JSON.parse(json); }
-    catch (err) { return errback(err); }
-    // Abort if main is missing
-    if (!doc.main) {
-      return errback(new Error("Missing main field in " + jsonPath));
-    }
-    find(realPath(path + "/" + doc.main), callback, errback);
-  }, function () {
-    get(path + ".js", callback, function () {
-      errback(new Error("Unable to find module: " + path));
+  get(path + "/index.js", callback, function () {
+    get(path + "/package.json", function (jsonPath, json) {
+      // Parse the JSON file
+      var doc;
+      try { doc = JSON.parse(json); }
+      catch (err) { return errback(err); }
+      // Abort if main is missing
+      if (!doc.main) {
+        return errback(new Error("Missing main field in " + jsonPath));
+      }
+      find(realPath(path + "/" + doc.main), callback, errback);
+    }, function () {
+      get(path + ".js", callback, function () {
+        errback(new Error("Unable to find module: " + path));
+      });
     });
   });
 }
