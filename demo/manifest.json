@@ -12,7 +12,7 @@
 
   "app": {
     "background": {
-      "scripts": ["app.js"]
+      "scripts": ["background.js"]
     }
   },
   "permissions": [
