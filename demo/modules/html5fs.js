@@ -74,8 +74,9 @@ function wrapFileSystem(fileSystem) {
       fileEntry.file(function (file) {
         var reader = new FileReader();
         reader.onloadend = function () {
-          callback(null, this.result, fileEntry);
+          callback(null, this.result);
         };
+        // TODO: find a way to read as binary too
         reader.readAsText(file);
       }, callback);
     }, callback);
@@ -91,9 +92,10 @@ function wrapFileSystem(fileSystem) {
             this.truncate(this.position);
             return;
           }
-          callback(null, fileEntry);
+          callback();
         };
         fileWriter.onerror = callback;
+        // TODO: find a way to write as binary too
         fileWriter.write(new Blob([contents], {type: 'text/plain'}));
       }, callback);
     }, callback);
