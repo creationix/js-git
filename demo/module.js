@@ -212,7 +212,7 @@ function realProcess(path, contents, callback, errback) {
   var root = path.match(/^(.*\/)[^\/]*$/)[1];
   var matches = mine(contents);
   var deps = [];
-  if (!matches) return save();
+  if (!matches.length) return save();
   // If there are dependencies, load them first.
   var left = matches.length;
   for (var i = 0, l = left; i < l; i++) {
