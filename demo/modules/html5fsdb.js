@@ -1,10 +1,5 @@
 "use strict";
 
-function log(err) {
-  if (err) throw err;
-  console.log.apply(console, Array.prototype.slice.call(arguments, 1));
-}
-
 module.exports = getdb;
 function getdb(fs, root, callback) {
   // Make sure it's an absolute path;
@@ -14,10 +9,10 @@ function getdb(fs, root, callback) {
   if (root[root.length - 1] !== "/") root += "/";
 
   function get(key, callback) {
-    fs.readfile(root + key, callback || log);
+    fs.readfile(root + key, callback);
   }
   function set(key, value, callback) {
-    fs.writefile(root + key, value, callback || log);
+    fs.writefile(root + key, value, callback);
   }
   fs.mkdir(root.substr(0, root.length - 1), function (err) {
     if (err) return callback(err);
