@@ -31,4 +31,303 @@
 
 ## Believer
 
- - 
+ - Luke Arduini
+ - garza
+ - Maciej Małecki
+ - LJHarb (Jordan Harband)
+ - Joel Hillacre
+ - Sean Dunn
+ - Anthony Blardo
+ - Luke Karrys
+ - Jonathan Lonowski
+ - Joey Schluchter
+ - Henry Allen-Tilford
+ - Brett Stimmerman
+ - natevw
+ - Norman Jaffe
+ - Zannalov
+ - Brian Ford
+ - Tom Wilson
+ - Jonas S Almeida
+ - Geir Gåsodden
+ - Breck Yunits
+ - Dmitrii Soltys
+ - Greg Price
+ - C. Scott Ananian
+ - Donovan Sandey
+ - John Frizelle
+ - Sureshot Saddletrousers
+ - Karl Tiedt
+ - Matthew Robb
+ - Kristofor Carle
+ - Stubbornella
+ - Dan Herbert
+ - Chris Jaure (@chrisjaure)
+ - Ben Adida
+ - Jon Buckley
+ - roxstyle
+ - Endre Stølsvik
+ - Irakli Gozalishvili
+ - Matt Weagle
+ - Lon Ingram
+ - Mitch Skinner
+ - Thomas Holloway
+ - Peter Tillemans
+ - John Waterson
+ - Maksim Lin
+ - Tom de Grunt
+ - Timon Reinhard
+ - Kevin Swiber
+ - C J Silverio
+ - Ken Heutmaker (bgok)
+ - Joe McCann
+ - Peter deHaan
+ - Alex Lusco
+ - Andreas Wenk (@awenkhh)
+ - Todd Wolfson
+ - Cristián Romo
+ - Lyle Garza
+ - Eric Laberge
+ - David Thomas
+ - Paul C. Cook
+ - Craig "The Coder" Dunn
+ - Ray Daly
+ - Josh Marinacci
+ - fauno
+ - Jeff Burtoft
+ - Patrick Roberts
+ - Matthew Mirande
+ - Matt Field
+ - Dion Almaer
+ - Murvin Lai
+ - David E Levin
+ - Monsur Hossain
+ - Jesse Harlin
+ - Mike Cooper - @mythmon
+ - heikki
+ - Zef Hemel
+ - Vince Allen
+ - Biko Tushinde
+ - Nick Crohn
+ - Justin Tucker @certainstrings
+ - Kimberly Munoz
+ - Nikolaj Ivancic
+ - Paul Redman
+ - Glenn Block
+ - Owen Smith
+ - Eugene Lazutkin
+ - letterj - Jay Payne
+ - Jason Campbell (@jxson)
+ - noah peters
+ - Pelle Wessman, @VoxPelli
+ - Claes Magnusson, Malmö Yrkeshögskola
+ - Yuuki Kunitake
+ - Ady Ngom
+ - Glenn Scott (@glennsc)
+ - Corey Innis
+ - Dmitry Pashkevich
+ - Jay Pozo
+ - Brian Gershon
+ - Joe Feser
+ - Tyler Breisacher
+ - Nick Cooley @nickcooley
+ - Hugh Kennedy
+ - Jakub Korál
+ - Manuel Alejandro de Brito Fontes
+
+## Supporter
+
+ - Eric Knudtson
+ - Damien Klinnert
+ - Tom Fairfield
+ - Jon Galloway
+ - Ryan Joy (@atxryan)
+ - Eran Hammer
+ - Michael Matuzak
+ - Joshua Barratt
+ - Mathieu D'Amours
+ - Duncan Kolba
+ - Josh Roesslein
+ - getify
+ - Jonathan 'Wolf' Rentzsch
+ - Zach Geis
+ - Mirco Zeiss
+ - Lapo Luchini - lapo@lapo.it
+ - Jeremy Morrell
+ - Michael Chui
+ - Benaiah Mischenko
+ - Aki Mimoto
+ - rictic
+ - Karolina Szczur
+ - Sunil kumar Pissaye
+ - Ben Vanik
+ - Michael Henretty
+ - TehShrike
+ - Scott Shillcock
+ - Doug Orleans
+ - Nick Nisi
+ - jostylr
+ - Lukas Olson
+ - Adam Blackburn
+ - Michael Canfield
+ - Azer Koçulu @4zjs
+ - Neil Kandalgaonkar
+ - Rob O'Dwyer
+ - jamie brim
+ - Michael Hausenblas
+ - Don McCurdy
+ - Scott MacFarlane
+ - Alex Cox
+ - kastner
+ - David Robit Chenosaurus
+ - Marko Bregant
+ - Mariz Melo
+ - Evan Solomon
+ - Andrew Petersen
+ - Ferdinand Salis-Samaden
+ - danielkbx
+ - Chris Alfano
+ - Jason Demeuse
+ - Tom Townsend
+ - ShihChi Huang
+ - Zellyn Hunter
+ - ~
+ - Lynn Wallenstein
+ - Sindre Sorhus
+ - Yuriy Nemtsov
+ - Dan Kohn
+ - Patrick Mueller
+ - David Leston
+ - Larry Battle
+ - Kevin Barry
+ - Tomomi Imura
+ - Kevin Vlahos
+ - Gokce Mutlu
+ - Niclas Hoyer
+ - Jamie Oliver
+ - Makis Tracend
+ - Troy Forster
+ - Filip Körling
+ - Randy Sargent
+ - Dr Mícheál Ó Foghlú, FeedHenry
+ - Chris Christensen
+ - Mike Preisinger
+ - Neutron Drive
+ - Kaleb Murphy
+ - Kevin O'Hara
+ - Ian Kennington Walter
+ - John-Philip Johansson
+ - Jan-Christoph Borchardt
+ - Genshin Souzou K.K. [Phantom Creation Inc.]
+ - Michael Dandy
+ - Neil de Carteret
+ - Dennis Reed
+ - Jacob Lowe
+ - Rob Tsuk
+ - Aaron Hans
+ - Dilys Sun
+ - JP Sugarbroad
+ - Austin Appleby
+ - vicapow
+ - Scott Elcomb
+ - Soldair (Ryan Day)
+ - Nick Young
+ - Kalvir Sandhu - @kalv
+ - Flynn Joffray
+ - Stijn van Schooten
+ - Jared Barboza (@codeimpossible)
+ - Jörn Zaefferer
+ - Miroslav Magda
+ - Adam Argyle
+ - Alexandru Vladutu
+ - Dinis Cruz , OWASP O2 Platform
+ - Elliott B. Edwards (automatonic)
+ - Philippe Lachaise
+ - Per Thulin
+ - Matt Donnelly
+ - kewah
+ - Greg McCarvell
+ - Pedro Teixeira (@pgte)
+ - Marco Rogers (@polotek)
+ - Jacques Crocker
+ - Matthew Podwysocki
+ - Frantz Gauthier
+ - Gerry Cardinal III
+ - Hansemann
+ - Ben "unwiredben" Combee
+ - Geoff Bentley, NZ
+ - David Granado
+ - Assaf Arkin
+ - Trevor Baker
+ - Elliot Glaysher
+ - Wil Moore III
+ - Jason Persampieri
+ - Dennis G Daniels
+ - Mike de Boer
+ - Jeroen Janssen
+ - Daniel Aleksandersen
+ - Raphael Schweikert
+ - Nikolay Bachiyski
+ - Dima Samodurov
+ - tmartineau
+ - Daniel Flower
+ - Kevin Garnett
+ - Jae Hess
+ - Matt Reynolds
+ - LSD25
+ - Nima Gardideh (nemo)
+ - Patrick Collins (pat@burned.com)
+ - Michael J. Ryan (tracker1)
+ - technoweenie
+ - David Hayes
+ - Meyer SciTech Solutions, LLC
+ - Srdjan
+ - Joseph Werle
+ - Sebastian Mikkel Wilson (@codebudo)
+ - Brent Knight
+ - Nikolay Kolev
+ - Michael Alyn Miller
+ - Leon Noel
+ - Dave LeCompte
+ - Bermi Ferrer
+ - Bernard Chen
+ - Jyri Tuulos
+ - fMads
+ - Matt Kowalski
+ - Ishan Anand
+ - Frederick Ostrander
+ - Ryan Riley
+ - Dominik Wagenknecht
+ - Yves Ineichen
+ - Raphael Salomon
+ - John Wu
+ - Gergő Tisza
+ - Chris Bearcroft (@DJCMBear)
+ - Eric Allam
+ - David Souther
+ - Rob van den Bogaard-Braaf
+ - Anthony Scotti
+ - de.henne (Henning Leutz)
+ - Scott Sauyet
+ - Trae Robbins
+ - Jason Sallis
+ - Andrew Maxwell
+ - Sembiance
+ - Christian Sullivan (@euforic)
+ - Alan Effrig
+ - Rob Quick
+ - Will Blasko
+ - ikeyasu@gmail.com
+ - Ben Sheldon
+ - Federico Weber
+ - Ken Chen
+ - Maxime Quandalle
+ - Darwiin (Christophe R.)
+ - Fabrizio Codello
+ - John Pywtorak
+ - Danny Coates
+ - Desmond Morris
+ - Will Dent
+ - Antoine Brault
+ - Bruno Vieira, @bmpvieira
+ - Charles Moncrief
