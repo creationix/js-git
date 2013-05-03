@@ -348,6 +348,8 @@ require.modules = modules;
 function realRequire(root, path) {
   var realPath = mappings[root + ":" + path];
   if (!realPath) throw new Error("Can't require sync yet: " + path + " in " + root);
+  var module = modules[realPath];
+  if (module) return module;
   var def = defs[realPath];
   if (!def) throw new Error("Missing definition for: " + realPath);
   return start(def);
