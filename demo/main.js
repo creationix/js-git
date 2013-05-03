@@ -16,3 +16,26 @@ console.log(
   "Use autocomplete to explore their capabilities"
 );
 
+window.httpGet = function (host) {
+  var tcp = require('min-stream-chrome');
+  var helpers = require('min-stream-helpers');
+  window.helpers = helpers;
+  tcp.connect(host, 80, function (err, socket) {
+    if (err) throw err;
+    var pipe = helpers.makePipe();
+    socket.sink(pipe.read);
+    helpers.consume(socket.source, function (err, item) {
+      if (err) throw err;
+      bufferToString(item, console.log.bind(console));
+    });
+    pipe.emit(null, "GET / HTTP/1.1\r\nHost: " + host + "\r\n\r\n");
+  });
+}
+
+function bufferToString(buffer, callback) {
+  var reader = new FileReader();
+  reader.onload = function (evt) {
+    callback(evt.target.result);
+  };
+  reader.readAsText(new Blob([new Uint8Array(buffer)]));
+}
