@@ -235,7 +235,7 @@ function realProcess(path, contents, callback, errback) {
   function save() {
     // Wrap and save the file
     var wrappedjs = 'window.define(' + JSON.stringify(path) + ', ' + JSON.stringify(deps) +
-      ', function (module, exports, require, __dirname, __filename) {\n' + contents + '\n});';
+      ', function (module, exports, require, __dirname, __filename) { ' + contents + '});';
     writeFile(path.substr(1).replace(/\//g, "_"), wrappedjs, function (url) {
       defCallbacks[path] = callback;
       var script = document.createElement('script');
