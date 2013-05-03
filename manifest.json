@@ -7,7 +7,9 @@
   "description": "A tiny app that tests the various js-git libraries",
   "icons": {
     "16": "app/icons/icon-16.png",
-    "128": "app/icons/icon-128.png"
+    "128": "app/icons/icon-128.png",
+    "256": "app/icons/icon-256.png",
+    "512": "app/icons/icon-512.png"
   },
 
   "app": {
