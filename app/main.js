@@ -11,19 +11,24 @@ require('git-fs-html5')(function (err, fs) {
 
 console.log(
   "Welcome to the js-git demo.\n" +
-  "There are some global objects you can use to manupulate the sandbox.\n" +
+  "There are some global objects you can use to manipulate the sandbox.\n" +
   "They are `fs`, `git`, and `db`.\n" +
-  "Use autocomplete to explore their capabilities"
+  "Use auto-complete to explore their capabilities"
 );
 
 var tcp = require('min-stream-chrome');
 var helpers = require('min-stream-helpers');
 
 
-tcp.createServer("127.0.0.1", 8080, function (client) {
-  console.log("New client", client);
-  client.sink(client.source);
-  console.log("TCP echo server listening at localhost 8080");
+tcp.createServer("0.0.0.0", 3000, function (err, server) {
+  if (err) throw err;
+  var n = 0;
+  console.log("TCP Echo Server Listening at localhost 3000");
+  helpers.consume(server.source, function (err, client) {
+    if (err) throw err;
+    console.log("New client", client);
+    client.sink(client.source);
+  });
 });
 
 window.httpGet = function (host) {
