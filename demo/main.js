@@ -16,9 +16,17 @@ console.log(
   "Use autocomplete to explore their capabilities"
 );
 
+var tcp = require('min-stream-chrome');
+var helpers = require('min-stream-helpers');
+
+
+tcp.createServer("127.0.0.1", 8080, function (client) {
+  console.log("New client", client);
+  client.sink(client.source);
+  console.log("TCP echo server listening at localhost 8080");
+});
+
 window.httpGet = function (host) {
-  var tcp = require('min-stream-chrome');
-  var helpers = require('min-stream-helpers');
   window.helpers = helpers;
   tcp.connect(host, 80, function (err, socket) {
     if (err) throw err;
@@ -39,3 +47,4 @@ function bufferToString(buffer, callback) {
   };
   reader.readAsText(new Blob([new Uint8Array(buffer)]));
 }
+
