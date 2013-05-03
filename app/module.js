@@ -1,6 +1,17 @@
 (function () {
 "use strict";
 
+var autorequire;
+var moduledir;
+var scripts = document.getElementsByTagName('script');
+for (var i = 0, l = scripts.length; i < l; i++) {
+  if (scripts[i].src.match(/module\.js$/)) {
+    autorequire = scripts[i].getAttribute('autorequire');
+    moduledir = scripts[i].getAttribute('moduledir');
+    break;
+  }
+}
+
 var require = window.require = makeRequire("/");
 require.resolve = resolve;
 function makeRequire(root) {
@@ -65,7 +76,17 @@ var fs;
 var requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
 requestFileSystem(window.TEMPORARY, null, function (fileSystem) {
   fs = fileSystem;
-  window.modulesReady();
+  var scripts = document.getElementsByTagName('script');
+  for (var i = 0, l = scripts.length; i < l; i++) {
+    if (autorequire) {
+      window.require.async(autorequire, function (err) {
+        if (err) throw err;
+      });
+    }
+  }
+  function onLoad(err) {
+    if (err) { throw err; }
+  }
 }, function (fileError) {
   throw new Error("Unable to create temporary fs for module loader: " + fileError);
 });
@@ -110,6 +131,10 @@ function resolve(root, path, callback, errback) {
   }
   if (path[0] === "/") return find(path, success, errback);
   if (path[0] === ".") return find(realPath(root + path), success, errback);
+  if (moduledir) {
+    return find(moduledir + path, success, errback);
+  }
+
   var base = root;
   cycle();
   function cycle() {
@@ -143,18 +168,18 @@ function find(path, callback, errback) {
   // First look for /index.js
   // Then try looking for /package.json
   // Then try appending the .js extension
-  get(path + "/index.js", callback, function () {
-    get(path + "/package.json", function (jsonPath, json) {
-      // Parse the JSON file
-      var doc;
-      try { doc = JSON.parse(json); }
-      catch (err) { return errback(err); }
-      // Abort if main is missing
-      if (!doc.main) {
-        return errback(new Error("Missing main field in " + jsonPath));
-      }
-      find(realPath(path + "/" + doc.main), callback, errback);
-    }, function () {
+  get(path + "/package.json", function (jsonPath, json) {
+    // Parse the JSON file
+    var doc;
+    try { doc = JSON.parse(json); }
+    catch (err) { return errback(err); }
+    // Abort if main is missing
+    if (!doc.main) {
+      return errback(new Error("Missing main field in " + jsonPath));
+    }
+    find(realPath(path + "/" + doc.main), callback, errback);
+  }, function () {
+    get(path + "/index.js", callback, function () {
       get(path + ".js", callback, function () {
         errback(new Error("Unable to find module: " + path));
       });
@@ -219,20 +244,25 @@ function realProcess(path, contents, callback, errback) {
   var left = matches.length;
   for (var i = 0, l = left; i < l; i++) {
     var match = matches[i];
-    resolve(root, match, onResolve, fail);
+    resolve(root, match, onResolve, checkFail);
   }
   function onResolve(realPath, contents) {
     deps.push(realPath);
     process(realPath, contents, check, fail);
   }
+  function checkFail(err) {
+    console.error(err.toString());
+    if (--left) return;
+    save();
+  }
   function check(dep) {
     deps.push(dep);
     if (--left) return;
-    deps.sort();
     save();
   }
 
   function save() {
+    deps.sort();
     // Wrap and save the file
     var wrappedjs = 'window.define(' + JSON.stringify(path) + ', ' + JSON.stringify(deps) +
       ', function (module, exports, require, __dirname, __filename) { ' + contents + '});';
