@@ -201,8 +201,8 @@ var defs = {};
 require.defs = defs;
 var defCallbacks = {};
 window.define = define;
-function define(path, deps, fn) {
-  var def = { path: path, deps: deps, fn: fn };
+function define(path, fn) {
+  var def = { path: path, fn: fn };
   defs[path] = def;
   var callback = defCallbacks[path];
   delete defCallbacks[path];
@@ -238,7 +238,6 @@ function realProcess(path, contents, callback, errback) {
   // Scan for dependencies
   var root = path.match(/^(.*\/)[^\/]*$/)[1];
   var matches = mine(contents);
-  var deps = [];
   if (!matches.length) return save();
   // If there are dependencies, load them first.
   var left = matches.length;
@@ -247,7 +246,6 @@ function realProcess(path, contents, callback, errback) {
     resolve(root, match, onResolve, checkFail);
   }
   function onResolve(realPath, contents) {
-    deps.push(realPath);
     process(realPath, contents, check, fail);
   }
   function checkFail(err) {
@@ -256,18 +254,19 @@ function realProcess(path, contents, callback, errback) {
     save();
   }
   function check(dep) {
-    deps.push(dep);
     if (--left) return;
     save();
   }
 
   function save() {
-    deps.sort();
     // Wrap and save the file
-    var wrappedjs = 'window.define(' + JSON.stringify(path) + ', ' + JSON.stringify(deps) +
+    var wrappedjs = 'window.define(' + JSON.stringify(path) +
       ', function (module, exports, require, __dirname, __filename) { ' + contents + '});';
     writeFile(path.substr(1).replace(/\//g, "_"), wrappedjs, function (url) {
-      defCallbacks[path] = callback;
+      defCallbacks[path] = function () {
+        console.log("Loaded module", path);
+        return callback.apply(this, arguments);
+      }
       var script = document.createElement('script');
       script.type = 'text/javascript';
       script.src = url;

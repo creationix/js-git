@@ -1,9 +1,9 @@
 "use strict";
 
-require('html5fs.js')(function (err, fs) {
+require('git-fs-html5')(function (err, fs) {
   if (err) throw err;
   window.fs = fs;
-  require('html5fsdb.js')(fs, "/.gitdb", function (err, db) {
+  require('git-db-fs')(fs, "/.gitdb", function (err, db) {
     if (err) throw err;
     window.db = db;
   });

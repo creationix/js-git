@@ -1,0 +1,12 @@
+[submodule "deps/git-fs-html5"]
+	path = deps/git-fs-html5
+	url = https://github.com/creationix/git-fs-html5.git
+[submodule "deps/git-db-fs"]
+	path = deps/git-db-fs
+	url = https://github.com/creationix/git-db-fs.git
+[submodule "deps/min-stream-chrome"]
+	path = deps/min-stream-chrome
+	url = https://github.com/creationix/min-stream-chrome.git
+[submodule "deps/min-stream-helpers"]
+	path = deps/min-stream-helpers
+	url = https://github.com/creationix/min-stream-helpers.git
