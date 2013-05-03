@@ -3,7 +3,7 @@
   script.type = 'text/javascript';
   script.setAttribute('autorequire', "/app/main.js");
   script.setAttribute('moduledir', "/deps/");
-  script.src = "/app/module.js";
+  script.src = "/deps/chrome-app-module-loader/module.js";
   document.head.appendChild(script);
 }());
 
