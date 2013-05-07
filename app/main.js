@@ -19,16 +19,37 @@ console.log(
 var tcp = require('min-stream-chrome');
 var helpers = require('min-stream-helpers');
 
-
 tcp.createServer("0.0.0.0", 3000, function (err, server) {
   if (err) throw err;
-  var n = 0;
   console.log("TCP Echo Server Listening at localhost 3000");
-  helpers.consume(server.source, function (err, client) {
+  helpers.sink(onConnection)(server.source);
+});
+
+function onConnection(err, client) {
+  helpers.sink(onData)(client.source);
+  function onData(err, chunk) {
     if (err) throw err;
-    console.log("New client", client);
-    client.sink(client.source);
-  });
+    console.log(JSON.stringify(bufferToString(chunk)));
+  }
+}
+
+function bufferToString(buffer) {
+  if (buffer instanceof ArrayBuffer) {
+    buffer = new Uint8Array(buffer);
+  }
+  var string = "";
+  for (var i = 0, l = buffer.length; i < l; i++) {
+    string += String.fromCharCode(buffer[i]);
+  }
+  return decodeURIComponent(escape(string));
+}
+
+var tcpApp = helpers.pushToPull(function (emit) {
+  console.log("New client");
+  return function (err, chunk) {
+    console.log("event", err, chunk);
+    if (chunk === undefined) return emit(err);
+  };
 });
 
 window.httpGet = function (host) {
@@ -45,11 +66,4 @@ window.httpGet = function (host) {
   });
 }
 
-function bufferToString(buffer, callback) {
-  var reader = new FileReader();
-  reader.onload = function (evt) {
-    callback(evt.target.result);
-  };
-  reader.readAsText(new Blob([new Uint8Array(buffer)]));
-}
 
