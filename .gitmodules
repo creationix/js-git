@@ -13,3 +13,6 @@
 [submodule "deps/chrome-app-module-loader"]
 	path = deps/chrome-app-module-loader
 	url = https://github.com/creationix/chrome-app-module-loader.git
+[submodule "deps/min-stream-http-codec"]
+	path = deps/min-stream-http-codec
+	url = https://github.com/creationix/min-stream-http-codec.git
