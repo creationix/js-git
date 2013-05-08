@@ -18,52 +18,36 @@ console.log(
 
 var tcp = require('min-stream-chrome');
 var helpers = require('min-stream-helpers');
+var http = require('min-stream-http-codec');
 
 tcp.createServer("0.0.0.0", 3000, function (err, server) {
   if (err) throw err;
-  console.log("TCP Echo Server Listening at localhost 3000");
+  console.log("HTTP Server Listening at localhost 3000");
   helpers.sink(onConnection)(server.source);
 });
 
 function onConnection(err, client) {
-  helpers.sink(onData)(client.source);
-  function onData(err, chunk) {
+  if (client === undefined) {
     if (err) throw err;
-    console.log(JSON.stringify(bufferToString(chunk)));
+    console.log("Server is now closed");
+    return;
   }
+  console.log("A new TCP client is connected");
+  helpers.chain()
+    .addPush(app)
+    .pushWrap(http.decoder, http.encoder)
+    .run(client.source, client.sink);
 }
 
-function bufferToString(buffer) {
-  if (buffer instanceof ArrayBuffer) {
-    buffer = new Uint8Array(buffer);
-  }
-  var string = "";
-  for (var i = 0, l = buffer.length; i < l; i++) {
-    string += String.fromCharCode(buffer[i]);
-  }
-  return decodeURIComponent(escape(string));
-}
-
-var tcpApp = helpers.pushToPull(function (emit) {
-  console.log("New client");
-  return function (err, chunk) {
-    console.log("event", err, chunk);
-    if (chunk === undefined) return emit(err);
-  };
-});
-
-window.httpGet = function (host) {
-  window.helpers = helpers;
-  tcp.connect(host, 80, function (err, socket) {
-    if (err) throw err;
-    var pipe = helpers.makePipe();
-    socket.sink(pipe.read);
-    helpers.consume(socket.source, function (err, item) {
-      if (err) throw err;
-      bufferToString(item, console.log.bind(console));
+function app(respond) {
+  return function (err, request) {
+    console.log(request);
+    respond(null, {
+      statusCode: 200,
+      headers: ["Content-Length", "12"]
     });
-    pipe.emit(null, "GET / HTTP/1.1\r\nHost: " + host + "\r\n\r\n");
-  });
+    respond(null, "Hello World\n");
+    respond();
+  };
 }
-
 
