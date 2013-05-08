@@ -16,3 +16,6 @@
 [submodule "deps/min-stream-http-codec"]
 	path = deps/min-stream-http-codec
 	url = https://github.com/creationix/min-stream-http-codec.git
+[submodule "deps/buffer-tools"]
+	path = deps/buffer-tools
+	url = https://github.com/creationix/buffer-tools.git

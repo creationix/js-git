@@ -1,4 +1,0 @@
-
-
-function clone(url, callback) {
-}  
