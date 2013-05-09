@@ -5,6 +5,7 @@ var helpers = require('min-stream-helpers');
 var bops = require('bops');
 
 
+
 function lsRemote(host, path) {
 
   tcp.connect(host, 9418, function (err, client) {
@@ -13,17 +14,28 @@ function lsRemote(host, path) {
     console.log("Connected to %s, sending git-upload-pack request", host);
     helpers.chain()
       .addPush(app)
-      .pushWrap(pktLine.decoder, pktLine.encoder)
+      .pushWrap(pktLine.deframer, pktLine.framer)
       .run(client.source, client.sink);
 
   });
 
   function app(emit) {
-    emit(null, bops.from("git-upload-pack " + path + "\0host=" + host + "\0"));
+    var state = "ref-discovery";
+    var states = {
+      "ref-discovery": function (message) {
+        if (message === null) {
+          console.log("TODO: handle next state");
+          return;
+        }
+        message = pktLine.decode(message);
+        console.log(message);
+      }
+    };
+    emit(null, pktLine.encode(["git-upload-pack", path], {host: host}, true));
     return function (err, item) {
-      console.log(item);
       if (item === undefined) return emit(err);
-      console.log("RESPONSE", toString(item));
+      console.log(state, toString(item));
+      states[state](item);
     };
   }
 
