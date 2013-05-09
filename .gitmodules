@@ -19,3 +19,9 @@
 [submodule "deps/buffer-tools"]
 	path = deps/buffer-tools
 	url = https://github.com/creationix/buffer-tools.git
+[submodule "deps/min-stream-pkt-line"]
+	path = deps/min-stream-pkt-line
+	url = https://github.com/creationix/min-stream-pkt-line.git
+[submodule "deps/bops"]
+	path = deps/bops
+	url = https://github.com/chrisdickinson/bops.git
