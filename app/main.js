@@ -24,11 +24,14 @@ var http = require('min-stream-http-codec');
 var app = function (respond) {
   var fn = function (err, request) {
     if (request === undefined) return respond(err);
-    if (typeof request === "function") debugger;
     console.log(request);
     respond(null, {
       statusCode: 200,
-      headers: ["Content-Length", "12"]
+      headers: [
+        "Content-Length", "12",
+        "Server", navigator.userAgent,
+        "Date", (new Date()).toUTCString()
+      ]
     });
     respond(null, "Hello World\n");
     respond();
