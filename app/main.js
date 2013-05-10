@@ -20,6 +20,25 @@ var tcp = require('min-stream-chrome');
 var helpers = require('min-stream-helpers');
 var http = require('min-stream-http-codec');
 
+
+var app = function (respond) {
+  var fn = function (err, request) {
+    if (request === undefined) return respond(err);
+    if (typeof request === "function") debugger;
+    console.log(request);
+    respond(null, {
+      statusCode: 200,
+      headers: ["Content-Length", "12"]
+    });
+    respond(null, "Hello World\n");
+    respond();
+  };
+  fn.is = "min-stream-write";
+  return fn;
+};
+app.is = "min-stream-push-filter";
+
+
 tcp.createServer("0.0.0.0", 3000, function (err, server) {
   if (err) throw err;
   console.log("HTTP Server Listening at localhost 3000");
@@ -33,21 +52,13 @@ function onConnection(err, client) {
     return;
   }
   console.log("A new TCP client is connected");
-  helpers.chain()
-    .addPush(app)
-    .pushWrap(http.decoder, http.encoder)
-    .run(client.source, client.sink);
+  helpers.run([
+    client.source,
+    http.decoder,
+    app,
+    http.encoder,
+    client.sink
+  ]);
 }
 
-function app(respond) {
-  return function (err, request) {
-    console.log(request);
-    respond(null, {
-      statusCode: 200,
-      headers: ["Content-Length", "12"]
-    });
-    respond(null, "Hello World\n");
-    respond();
-  };
-}
 
