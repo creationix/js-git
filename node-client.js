@@ -8,7 +8,7 @@ var bops = require('bops');
 
 function lsRemote(host, path) {
 
-  tcp.connect(host, 9418, function (err, client) {
+  tcp.connect(host, 3000, function (err, client) {
     if (err) throw err;
 
     console.log("Connected to %s, sending git-upload-pack request", host);
@@ -72,4 +72,4 @@ function toString(value) {
   return bops.to(value);
 }
 
-lsRemote("github.com", "/creationix/conquest.git");
+lsRemote("localhost", "/conquest.git");
