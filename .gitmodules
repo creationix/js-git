@@ -25,3 +25,6 @@
 [submodule "deps/min-stream-node"]
 	path = deps/min-stream-node
 	url = https://github.com/creationix/min-stream-node.git
+[submodule "deps/leb128-frame"]
+	path = deps/leb128-frame
+	url = https://github.com/creationix/leb128-frame
