@@ -1,7 +1,9 @@
 #!/usr/bin/env node
+"use strict";
 
 var argv = require('optimist')
   .usage("Create a logging tcp proxy")
+  .demand("logfile")
   .options("remotehost", {
     default: "localhost"
   })
@@ -14,14 +16,15 @@ var argv = require('optimist')
   .options("localport", {
     default: 3000
   })
-  .demand("logfile")
   .argv;
 
 
 var tcp = require('min-stream-node/tcp.js');
 var fs = require('min-stream-node/fs.js');
 var msgpack = require('msgpack-js');
+var leb128 = require('leb128-frame');
 var helpers = require('min-stream-helpers');
+var inspect = require('util').inspect;
 
 if (argv.logfile.indexOf(".") < 0) {
   argv.logfile += ".msgpack";
@@ -39,73 +42,49 @@ tcp.createServer(argv.localhost, argv.localport, function (err, server) {
 });
 
 function onConnection(err, local) {
-  if (err) {
-    console.error(err.stack);
-    return;
-  }
+  if (err) return console.error(err.stack);
   console.log("New local client");
+
   tcp.connect(argv.remotehost, argv.remoteport, function (err, remote) {
-    if (err) {
-      console.error(err.stack);
-      return;
-    }
-    console.log("Connected");
-    remote.sink(local.source);
-    local.sink(remote.source);
+    if (err) return console.error(err.stack);
+    console.log("Connected to remote server");
+
+    fs.createWriteStream(argv.logfile, {}, function (err, log) {
+      if (err) return console.error(err.stack);
+      console.log("Log file opened");
+
+      // Create stream generators since we want to split the two sources.
+      var localGen = helpers.splitter(local.source);
+      var remoteGen = helpers.splitter(remote.source);
+
+      // Split out a copy of each stream and multiplex them together
+      // Serialize and log to disk.
+      var start = Date.now();
+      helpers.run([
+        helpers.joiner([
+          helpers.mapToPull(function (item) {
+            return [ "local", item ];
+          })(localGen()),
+          helpers.mapToPull(function (item) {
+            return [ "remote", item ];
+          })(remoteGen()),
+        ]),
+        function (item) {
+          // Add in the current timestamp from stream start.
+          item.push(Date.now() - start);
+          console.log(inspect(item, {colors: true}));
+          return msgpack.encode(item);
+        },
+        leb128.framer,
+        log.sink
+      ]);
+      console.log("Logging conversation to disk");
+
+      // The actual proxy connection
+      remote.sink(localGen());
+      local.sink(remoteGen());
+      console.log("Wired up proxy connection");
+    });
   });
 }
-
-
-function splitter(read) {
-  var readers = [];
-  var readQueues = [];
-  var event = null;
-  var reading = false;
-  
-  function onRead() {
-    reading = false;
-    event = arguments;
-    check();
-  }
-  
-  function check() {
-    if (event) {
-      for (var i = 0, l = readers.length; i < l; i++) {
-        var queue = readQueues[i];
-        if (!(queue && queue.length)) return;
-      }
-      var data = event;
-      event = null;
-      var callbacks = readQueues.map(function (queue) {
-        return queue.shift();
-      });
-      callbacks.forEach(function (callback) {
-        callback.apply(null, data);
-      });
-    }
-    if (!event) {
-      reading = true;
-      read(onRead);
-    }
-  }
-  
-  return function () {
-    var fn = function (close, callback) {
-      if (close) {
-        throw new Error("TODO: Implement close");
-        // TODO: Implement
-        // Remove this reader from the readers list
-        // remove it's readQueue
-        // If it was the last, close upstream
-      }
-      var index = readers.indexOf(fn);
-      readQueues[index].push(callback);
-      check();
-    };
-    readers.push(fn);
-    readQueues.push([]);
-  };
-}
-
-
 
