@@ -28,3 +28,6 @@
 [submodule "deps/leb128-frame"]
 	path = deps/leb128-frame
 	url = https://github.com/creationix/leb128-frame
+[submodule "app"]
+	path = app
+	url = git@github.com:creationix/js-git-app.git

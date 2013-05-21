@@ -1,22 +1,6 @@
 "use strict";
 
-require('git-fs-html5')(function (err, fs) {
-  if (err) throw err;
-  window.fs = fs;
-  require('git-db-fs')(fs, "/.gitdb", function (err, db) {
-    if (err) throw err;
-    window.db = db;
-  });
-});
-
-console.log(
-  "Welcome to the js-git demo.\n" +
-  "There are some global objects you can use to manipulate the sandbox.\n" +
-  "They are `fs`, `git`, and `db`.\n" +
-  "Use auto-complete to explore their capabilities"
-);
-
-var tcp = require('min-stream-chrome');
+var tcp = require('min-stream-node');
 var helpers = require('min-stream-helpers');
 var http = require('min-stream-http-codec');
 
@@ -29,7 +13,7 @@ var app = function (respond) {
       statusCode: 200,
       headers: [
         "Content-Length", "12",
-        "Server", navigator.userAgent,
+        "Server", "node.js " + process.version,
         "Date", (new Date()).toUTCString()
       ]
     });

@@ -63,10 +63,10 @@ function onConnection(err, local) {
       helpers.run([
         helpers.joiner([
           helpers.mapToPull(function (item) {
-            return [ "local", item ];
+            return [ 0, item ];
           })(localGen()),
           helpers.mapToPull(function (item) {
-            return [ "remote", item ];
+            return [ 1, item ];
           })(remoteGen()),
         ]),
         function (item) {

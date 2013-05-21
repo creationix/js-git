@@ -8,7 +8,7 @@ var bops = require('bops');
 
 function lsRemote(host, path) {
 
-  tcp.connect(host, 3000, function (err, client) {
+  tcp.connect(host, 9418, function (err, client) {
     if (err) throw err;
 
     console.log("Connected to %s, sending git-upload-pack request", host);
@@ -33,11 +33,10 @@ function lsRemote(host, path) {
           console.log({refs:refs,caps:caps});
           var clientCaps = [
             // "multi_ack_detailed",
-            // "side-band-64k",
+            "side-band-64k",
             // "thin-pack",
             // "ofs-delta",
             "agent=js-git/0.0.0"
-            // "agent=git/1.8.1.2"
           ];
           emit(null, pktLine.encode(["want", refs.HEAD].concat(clientCaps)));
           // emit(null, pktLine.encode(["want", refs["refs/heads/master"]]));
@@ -54,7 +53,7 @@ function lsRemote(host, path) {
         refs[message[1]] = message[0];
       },
       "pack": function (message) {
-
+        // throw new Error
       }
     };
     emit(null, pktLine.encode(["git-upload-pack", path], {host: host}, true));
@@ -72,4 +71,4 @@ function toString(value) {
   return bops.to(value);
 }
 
-lsRemote("localhost", "/conquest.git");
+lsRemote("github.com", "/creationix/conquest.git");
