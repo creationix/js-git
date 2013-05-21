@@ -6,6 +6,7 @@
 
 ## Open Web Warrior
 
+ - Michael Bradley <https://github.com/michaelsbradleyjr>
  - Scott González <http://scottgonzalez.com>
  - Paolo Fragomeni <http://github.com/hij1nx>
  - nearForm <http://www.nearform.com>
