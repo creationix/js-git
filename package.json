@@ -1,0 +1,30 @@
+{
+  "name": "js-git",
+  "version": "0.0.0",
+  "description": "A JavaScript implementation of the git scm system.",
+  "main": "index.js",
+  "dependencies": {
+    "bops": "~0.0.6"
+  },
+  "devDependencies": {
+    "tape": "~1.0.2"
+  },
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/creationix/js-git.git"
+  },
+  "keywords": [
+    "git",
+    "min-stream",
+    "protocol"
+  ],
+  "author": "Tim Caswell <tim@creationix.com>",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/creationix/js-git/issues"
+  }
+}
