@@ -26,6 +26,10 @@ Not all parts of js-git are in this package.  Of node, the min-stream code is al
  - [min-stream-chrome][] - Another implementation of the tcp and fs API, but wrapping chrome packaged apps's special APIs.
  - [min-stream-http-codec][] - A set of filters that makes implementing HTTP clients and servers easy.
 
+## Projects using JS-Git
+
+ - [js-git-app][] - A chrome packaged app used to demo/test using js-git in a chrome environment.
+ - [js-git-node][] - A node CLI tool used to demo/test using js-git in the node.js environment.
 
 [node.js]: http://nodejs.org
 [git]: http://git-scm.com/
@@ -36,3 +40,5 @@ Not all parts of js-git are in this package.  Of node, the min-stream code is al
 [min-stream-uv]: https://github.com/creationix/min-stream-uv
 [min-stream-chrome]: https://github.com/creationix/min-stream-chrome
 [min-stream-http-codec]: https://github.com/creationix/min-stream-http-codec
+[js-git-app]: https://github.com/creationix/js-git-app
+[js-git-node]: https://github.com/creationix/js-git-node

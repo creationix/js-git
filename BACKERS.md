@@ -30,6 +30,10 @@
  - http://www.linkedin.com/pub/iain-cooke/5/226/64a/
  - Reuben Katz
 
+## Code Backer
+
+ - Chris Dickinson <https://github.com/chrisdickinson/>
+
 ## Believer
 
  - Luke Arduini
