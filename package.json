@@ -13,6 +13,17 @@
   "scripts": {
     "test": "node test.js"
   },
+  "testling": {
+    "files": "test.js",
+    "browsers": [
+      "ie/9..latest",
+      "firefox/19..latest",
+      "chrome/25..latest",
+      "safari/latest",
+      "iphone/6",
+      "ipad/6"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/creationix/js-git.git"
