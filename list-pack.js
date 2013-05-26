@@ -1,6 +1,10 @@
+// NOTE: This is just copied out of chrisdickinson/git-list-pack's min.js
+// TODO: either make part of js-git properly by reformatting or find the best
+// way to link to external libraries.
+
 module.exports = unpack
 
-var inflate = require('inflate/min.js')
+var inflate = require('./inflate.js')
   , binary = require('bops')
 
 var OFS_DELTA = 6

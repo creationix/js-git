@@ -1,3 +1,6 @@
+// NOTE: This is just copied out of chrisdickinson/inflate's min.js                                                    
+// TODO: either make part of js-git properly by reformatting or find the best                                                
+// way to link to external libraries.                                                                                        
 module.exports = inflate
 
 var binary = require('bops')
