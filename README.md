@@ -1,5 +1,9 @@
 # JS Git
 
+[![node support](https://travis-ci.org/creationix/min-stream.png)](https://travis-ci.org/creationix/min-stream)
+
+[![browser support](https://ci.testling.com/creationix/min-stream.png)](https://ci.testling.com/creationix/min-stream)
+
 This is a pure JavaScript implementation of the [git][] version control system for use from various JavaScript environments.  Goals are to target environments like [node.js][], [chrome packaged apps][], HTML5 webapps, WinJS apps, FirefoxOS apps, etc...
 
 ![JS Git](https://s3.amazonaws.com/ksr/projects/487331/photo-main.jpg)
