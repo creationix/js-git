@@ -11,7 +11,7 @@
     "min-stream": "~0.0.4"
   },
   "scripts": {
-    "test": "node test.js"
+    "test": "node test/test.js"
   },
   "testling": {
     "files": "test.js",

@@ -1,6 +1,6 @@
 "use strict";
 
-var pktLine = require('../pkt-line.js');
+var pktLine = require('../src/pkt-line.js');
 var bops = require('bops');
 var min = require('min-stream');
 var test = require('tape');
