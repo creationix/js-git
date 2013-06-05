@@ -1,0 +1,16 @@
+{
+  // Enforcing options, without name - set to false to ignore violations
+  "-W017": false, // 'Bad operand.'
+  "-W030": false, // 'Expected an assignment or function call and instead saw an expression.'
+  "-W058": false, // 'Missing '()' invoking a constructor.'
+
+  // Relaxing options - set to true to ignore violations
+  "asi": true,
+  "boss": true,
+  "laxcomma": true,
+  "shadow": true,
+
+  // Environments - set to true to allow environment variables
+  "browser": true,
+  "node": true
+}
