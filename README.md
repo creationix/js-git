@@ -1,24 +1,80 @@
-# JS Git
+# JS-Git
 
-[![node support](https://travis-ci.org/creationix/js-git.png)](https://travis-ci.org/creationix/js-git)
+JS-Git is an open source project implementing git client and server in pure JavaScript.
 
-[![browser support](https://ci.testling.com/creationix/js-git.png)](https://ci.testling.com/creationix/js-git)
+## Why Re-implement Git in JavaScript?
 
-This is a pure JavaScript implementation of the [git][] version control system for use from various JavaScript environments.  Goals are to target environments like [node.js][], [chrome packaged apps][], HTML5 webapps, WinJS apps, FirefoxOS apps, etc...
+JavaScript has farther reach than any other programming language out there.  It can run on tablets, phones, laptops, Chromebooks, and pretty much anything that has a browser.  Also thanks to node.js, it can run in many headless server environments as well.
 
-![JS Git](https://s3.amazonaws.com/ksr/projects/487331/photo-main.jpg)
+Git is an amazing tool for sharing code and data in a distributed manner.  Adding this to everyone's tool-chain will enable many great tools and products.
 
+### Target Platforms
 
-## Modules
+My goal is to target every platform that has enough primitives to make sense.  This includes:
 
-This repository is a meta-package of js-git related modules.  It's packaged as a common-js package and can be used in browser environments with tools like [browserify][]
+ - ChromeOS Apps
+ - Firefox OS Apps
+ - Windows RT WinJS Apps
+ - HTML5 Web Apps (on all modern browsers, including IE 10)
+ - PhoneGap Apps
+ - Desktop Chrome Apps
+ - Anything else that has network access, persistent storage, and binary data support in JavaScript.
 
-### pkt-line
+### Feature Goals
 
-This module contains pkt-line deframer and framer as min-stream-push-filters.
+I don't intent to make a 100% clone of all the features of the official git program.  That would be insane and require a lot more money than I'm asking for.  My main goal is to enable the 90% case of interesting stuff:
 
- - `pktLine.deframer(emit)` -> `emit`
- - `pktLine.framer(emit)` -> `emit`
+ - Clone remote repositories to local storage over http, git, or ssh.
+ - Make and commit local changes offline.
+ - Manage tags and branches offline.
+ - Push changes back up to remote repositories.
+ - Serve git repositories over http, git, or ssh.
+ - Be very modular so bits can be used by any software that needs them.
+
+### Potential Products
+
+Some example products that would be enabled by this are:
+
+ - ChromeOS IDE for developing *on* Chromebooks.
+ - Node.JS blog engine with git as the database.
+ - Custom Git hosting using custom storage back-ends.
+ - GIT CLI for restricted environments.
+ - Standalone GIT GUI desktop app.
+ - Git based deployment tools.
+ - JavaScript package management for server and client.
+ - Whatever else you come up with.
+
+### For the Children
+
+My main driving force is to build a programming environment to teach kids to program.  It needs to run on the devices that the kids already have.  There are a lot of youth who have access to tablets or Chromebooks, but have no way to program properly on them.  I want to change this and give them the tools to eventually become professional programmers.
+
+### Current Status
+
+Thanks to my [kickstarter][], I've been working on js-git for almost two months.  I'm just now starting to make real progress on the feature sets.
+
+I had spent the first few weeks analyzing the work that Chris Dickinson had already done.  I designed a [stream system][] that's both lightweight and works great in both node.js and browser environments.  I spent a day creating a module loader for chrome apps so I could use common.js style modules.  There were [debates][] about how the project should be organized.  Not to mention it's conference season and I've been traveling a bit.
+
+All of this took a lot of time and caused me to have a slower start than I anticipated.
+
+I am however, very optimistic about this next round of work.  Things are moving very fast and I have a much better idea how I want to do things.  In the last week alone I've created a node.js CLI tool complete with full cloning of any branch.
+
+I'm confident that given a second round of time, some amazing things will be finished and we'll finally have this amazing tool.
+
+#### JS-Git in a Chrome App
+
+One sample application that I'm using to test my code is known as [js-git-app][].
+
+![JS-Git App](http://creationix.com/js-git-app.png)
+
+This app is still in the early stages, It's available in the Chrome [app store] to test on any device that has Chrome installed.
+
+#### JS-Git as a Node.JS CLI Tool
+
+Another sample usage is [js-git-node][].
+
+![JS-Git Node Clone](http://creationix.com/js-git-node-clone.png)
+
+This is a CLI tool that can replace a subset of the git command-line tool.  This is useful on platforms that have node.js, but it's still hard to install git. (windows, crosh shell, etc...)
 
 ## Related Packages
 
