@@ -48,25 +48,13 @@ Some example products that would be enabled by this are:
 
 My main driving force is to build a programming environment to teach kids to program.  It needs to run on the devices that the kids already have.  There are a lot of youth who have access to tablets or Chromebooks, but have no way to program properly on them.  I want to change this and give them the tools to eventually become professional programmers.
 
-### Current Status
-
-Thanks to my [kickstarter][], I've been working on js-git for almost two months.  I'm just now starting to make real progress on the feature sets.
-
-I had spent the first few weeks analyzing the work that Chris Dickinson had already done.  I designed a [stream system][] that's both lightweight and works great in both node.js and browser environments.  I spent a day creating a module loader for chrome apps so I could use common.js style modules.  There were [debates][] about how the project should be organized.  Not to mention it's conference season and I've been traveling a bit.
-
-All of this took a lot of time and caused me to have a slower start than I anticipated.
-
-I am however, very optimistic about this next round of work.  Things are moving very fast and I have a much better idea how I want to do things.  In the last week alone I've created a node.js CLI tool complete with full cloning of any branch.
-
-I'm confident that given a second round of time, some amazing things will be finished and we'll finally have this amazing tool.
-
 #### JS-Git in a Chrome App
 
 One sample application that I'm using to test my code is known as [js-git-app][].
 
 ![JS-Git App](http://creationix.com/js-git-app.png)
 
-This app is still in the early stages, It's available in the Chrome [app store] to test on any device that has Chrome installed.
+This app is still in the early stages, It's available in the Chrome [app store][] to test on any device that has Chrome installed.
 
 #### JS-Git as a Node.JS CLI Tool
 
@@ -102,3 +90,4 @@ Not all parts of js-git are in this package.  Of node, the min-stream code is al
 [min-stream-http-codec]: https://github.com/creationix/min-stream-http-codec
 [js-git-app]: https://github.com/creationix/js-git-app
 [js-git-node]: https://github.com/creationix/js-git-node
+[app store]: https://chrome.google.com/webstore/detail/js-git-test-app/gcipadbniegpaccphmnfnpgklahgennp
