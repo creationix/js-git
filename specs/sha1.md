@@ -17,7 +17,6 @@ But, it can be used with ES5 code as well.
 
 ```js
 // ES5 syntax
-
 sha1(source)(function (err, hash) {
   if (err) return handle(err);
   // handle hash
