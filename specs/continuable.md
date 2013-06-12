@@ -6,7 +6,7 @@ JS-Git uses continuables internally in place of callback-last for async function
 
 ## Consuming a Continuable with Generators
 
-If you're lucky enough to have a platform with ES6 generators, I highly recommend using something like [gen-run][] to comsume them.
+If you're lucky enough to have a platform with ES6 generators, I highly recommend using something like [gen-run][] to consume them.
 
 ```js
 var stat = fs.stat("/path/to/file");
