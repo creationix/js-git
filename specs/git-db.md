@@ -4,7 +4,7 @@ This interface describes the git database used to store git objects (blobs, tree
 
 The objects are stored by the sha1 of their binary representation as the key.  The refs are more like key/value entries where key is the name and value if the hash or symbolic name.
 
-All examples use `yield` to consume [continuables][], assuming generators with [gen-run][] wrapping, but can be used with ES5 code as well.
+All examples use `yield` to consume [continuables][], assuming generators with [gen-run][] wrapping, but can be used with ES5 code as well.  Streams are in [min-stream][] format.
 
 ```js
 // ES6 syntax
@@ -106,3 +106,4 @@ There isn't one yet, but a generic one that builds on top of a generic K/V store
 [gen-run]: https://github.com/creationix/gen-run
 [continuables]: https://github.com/creationix/js-git/blob/master/specs/continuable.md
 [sha1]: https://github.com/creationix/js-git/blob/master/specs/sha1.md
+[min-stream]: https://github.com/creationix/js-git/blob/master/specs/min-stream.md
