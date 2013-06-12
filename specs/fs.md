@@ -110,4 +110,4 @@ yield fs.mkdir("/path/to/create");
 
 [gen-run]: https://github.com/creationix/gen-run
 [continuables]: https://github.com/creationix/js-git/blob/master/specs/continuable.md
-[min-stream]: https://github.com/creationix/js-git/blob/master/specs/min-stream.md
+[min-stream]: https://github.com/creationix/min-stream#the-interface
