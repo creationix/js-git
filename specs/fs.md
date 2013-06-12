@@ -2,7 +2,7 @@
 
 This interface describes the filesystem interface used in the js-git project.
 
-All examples use `yield` to consume [continuables][], assuming generators with [gen-run][] wrapping, but can be used using ES5 code as well.
+All examples use `yield` to consume [continuables][], assuming generators with [gen-run][] wrapping, but can be used with ES5 code as well.
 
 ```js
 // ES6 syntax
