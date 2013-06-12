@@ -72,3 +72,9 @@ yield sink(
   )
 );
 ```
+
+# Projects Implementing or Using Min Streams
+
+ - [min-stream](https://github.com/creationix/min-stream)
+ - [min-stream-node](https://github.com/creationix/min-stream-node)
+ - [min-stream-chrome](https://github.com/creationix/min-stream-chrome)
