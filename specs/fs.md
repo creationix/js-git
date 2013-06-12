@@ -2,7 +2,7 @@
 
 This interface describes the filesystem interface used in the js-git project.
 
-All examples use `yield` to consume [continuables][], assuming generators with [gen-run][] wrapping, but can be used with ES5 code as well.
+All examples use `yield` to consume [continuables][], assuming generators with [gen-run][] wrapping, but can be used with ES5 code as well.  Streams are in [min-stream][] format.
 
 ```js
 // ES6 syntax
@@ -110,3 +110,4 @@ yield fs.mkdir("/path/to/create");
 
 [gen-run]: https://github.com/creationix/gen-run
 [continuables]: https://github.com/creationix/js-git/blob/master/specs/continuable.md
+[min-stream]: https://github.com/creationix/js-git/blob/master/specs/min-stream.md
