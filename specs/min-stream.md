@@ -48,7 +48,7 @@ function filter(read) {
 }
 ```
 
-### sink(source) -> continuable
+## sink(source) -> continuable
 
 A sink represents something like the writable end of a TCP socket or a writable file.  You can't write directly to it.  Rather, you hand it a source function and it pulls at the rate it can handle.  This way backpressure works automatically without having to deal with pause, resume, drain, and ready.
 
@@ -72,6 +72,40 @@ yield sink(
   )
 );
 ```
+
+## General Behavior
+
+In a min-stream chain, errors can happen at any point and at any time.  There is s method to how well-behaved modules should propagate errors.  Here are some use cases.
+
+### Friendly Infinite Stream
+
+This is the simplest type of stream.  The source *always* calls the `callback(null, item)`, the filters pass the item through transformed in some way and the sink consumes repeatedly calling `read(null, callback)`
+
+### Source Terminated Stream
+
+If the source is a finite resource (like reading a file), then at some point the stream ends.  In this case it acts just like the friendly infinite stream, except when the source is done, it sends a `callback()` event down.  The filters pass it through and the sink stops reading and fulfills it's continuable.
+
+Also if the source encounters an error (can't open the file for reading, permission denied, can't read offset of a pipe, etc...), it will send an end event encoded as `callback(err)` which gets forwarded down to the sink's continuable.
+
+### Filter or Sink Terminated Stream
+
+Filters and Sinks (anything that calls `read(...)`) can terminate the stream early.  In this case it needs to call `read(...)` with a truthy value.  The value of `true` means to close the stream, but there was no error.  Any other truthy value is interpreted to mean an error.
+
+In either case (error or normal close), the `close` value will be forwarded by all filters till it reaches the source.  The source will clean up it's resources and callback.  If it was a non-error close, then it should respond with `callback(falsy)`.  If it was an error, it should echo the error message back down `callback(err)`.
+
+When the filters see this coming back down, they keep forwarding it till it gets to the sink who reports it to it's continuable.
+
+### Splitters
+
+If a helper library splits a source stream into two streams, then upstream close events are reflected back (as if the jumction was a source) for all but the last of the output streams.  Then the last output stream will act like a non-split chain and forward all the way back up to the source.
+
+End and error downstream events are duplicated among all child streams.
+
+### Joiners
+
+If a helper library joins several sources into a single source, then closes it receives are duplicated upstream to all sources.
+
+When the echo's come back, it's up to the junction's semantics as far as when to forward the end to it's children.  It could remember all the end codes and send the strongest when all have ended.
 
 # Projects Implementing or Using Min Streams
 
