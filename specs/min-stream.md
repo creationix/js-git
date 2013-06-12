@@ -1,4 +1,4 @@
-## Min Stream
+# Min Stream
 
 The min-stream system is an interface more than anything.  This has three main types: sources, filters, and sinks.
 
