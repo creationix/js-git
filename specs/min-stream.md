@@ -109,6 +109,7 @@ When the echo's come back, it's up to the junction's semantics as far as when to
 
 # Projects Implementing or Using Min Streams
 
- - [min-stream](https://github.com/creationix/min-stream)
- - [min-stream-node](https://github.com/creationix/min-stream-node)
- - [min-stream-chrome](https://github.com/creationix/min-stream-chrome)
+ - [min-stream](https://github.com/creationix/min-stream) - Generic min-stream helpers
+ - [min-fs](https://github.com/creationix/min-fs) - FS interface for node.js using min-streams
+ - [min-tcp](https://github.com/creationix/min-tcp) - TCP interface for node.js using min-streams
+ - [min-stream-node](https://github.com/creationix/min-stream-node) - Node stream to min-stream converter helpers.
