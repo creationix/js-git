@@ -106,7 +106,7 @@ yield fs.mkdir("/path/to/create");
 
 # Concrete Implementations
 
- - [min-stream-node/fs.js](https://github.com/creationix/min-stream-node/blob/master/fs.js)
+ - [min-fs](https://github.com/creationix/min-fs)
 
 [gen-run]: https://github.com/creationix/gen-run
 [continuables]: https://github.com/creationix/js-git/blob/master/specs/continuable.md
