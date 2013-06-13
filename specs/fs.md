@@ -15,7 +15,7 @@ fs.readlink("/path/to/symlink")(function (err, target) {
 });
 ```
 
-## stat(path) -> continuable
+## stat(path) -> continuable&lt;stat>
 
 Stat a file getting mtime, ctime, size, mode, etc as a JS object with the following structure:
 
@@ -32,7 +32,7 @@ Stat a file getting mtime, ctime, size, mode, etc as a JS object with the follow
 var stat = yield fs.stat("/path/to/my/file.txt");
 ```
 
-## read(path, [options]) -> source
+## read(path, [options]) -> source&lt;binary>
 
 Open a file by path for reading and return a min-stream read stream.
 
@@ -64,7 +64,7 @@ Delete a file from working directory by path.  returns a continuable.
 yield fs.unlink("/file/i/want/to/delete.log");
 ```
 
-## readlink(path) -> continuable
+## readlink(path) -> continuable&lt;target>
 
 Read a symlink and give the string it points to.
 
@@ -80,7 +80,7 @@ Create a symlink at path with given target.
 yield fs.symlink("/path.to/symlink", "../target");
 ```
 
-## readdir(path) -> source
+## readdir(path) -> source&lt;name>
 
 Returns a stream of filenames in the target path.
 
