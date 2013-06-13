@@ -66,7 +66,7 @@ This is a CLI tool that can replace a subset of the git command-line tool.  This
 
 ## Related Packages
 
-Not all parts of js-git are in this package.  Of node, the min-stream code is already factored out into several standalone packages.
+Not all parts of js-git are in this package.  Of note, the min-stream code is already factored out into several standalone packages.
 
  - [min-stream][] - Helpers for working with min-streams.
  - [min-stream-node][] - A node.js adapter that provides tcp client and server as well as file streams using min-streams.
