@@ -25,20 +25,34 @@ server(null, function (err, client) {
 });
 ```
 
-## connect(port, [host]) -> socket
+## connect(port, [host]) -> continuable<socket>
 
 Connect to a TCP server on `port` and `host` (defaulting to localhost).
 
-Returns a socket object containing source and sink min-streams representing the duplex socket.
+Returns a continuable for a socket object containing source and sink min-streams representing the duplex socket.
 
 ```js
-var socket = tcp.connect(8080);
-// Make the server talk to itself
-socket.sink(socket.source);
+tcp.connect(8080)(function (err, socket) {
+  if (err) throw err;
+  // Make the server talk to itself
+  socket.sink(socket.source)(function (err) {
+    if (err) throw err;
+    console.log("Connection ended");
+  });
+});
+```
+
+Or using [gen-run][] and [continuables][]:
+
+```js
+var socket = yield tcp.connect(8080);
+yield socket.sink(socket.source);
 ```
 
 # Concrete Implementations
 
- - [min-stream-node/tcp.js](https://github.com/creationix/min-stream-node/blob/master/tcp.js)
+ - [min-tcp](https://github.com/creationix/min-tcp) - Implementation for Node.JS
 
-[min-stream]: https://github.com/creationix/min-stream#the-interface
+[min-stream]: https://github.com/creationix/js-git/blob/master/specs/min-stream.md
+[gen-run]: https://github.com/creationix/gen-run
+[continuables]: https://github.com/creationix/js-git/blob/master/specs/continuable.md
