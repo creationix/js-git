@@ -75,7 +75,7 @@ yield sink(
 
 ## General Behavior
 
-In a min-stream chain, errors can happen at any point and at any time.  There is s method to how well-behaved modules should propagate errors.  Here are some use cases.
+In a min-stream chain, errors can happen at any point and at any time.  There is a method to how well-behaved modules should propagate errors.  Here are some use cases.
 
 ### Friendly Infinite Stream
 
