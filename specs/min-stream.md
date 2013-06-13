@@ -97,7 +97,7 @@ When the filters see this coming back down, they keep forwarding it till it gets
 
 ### Splitters
 
-If a helper library splits a source stream into two streams, then upstream close events are reflected back (as if the jumction was a source) for all but the last of the output streams.  Then the last output stream will act like a non-split chain and forward all the way back up to the source.
+If a helper library splits a source stream into two or more streams, then upstream close events are reflected back (as if the junction was a source) for all but the last of the output streams.  Then the last output stream will act like a non-split chain and forward all the way back up to the source.
 
 End and error downstream events are duplicated among all child streams.
 
