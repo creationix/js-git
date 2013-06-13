@@ -106,7 +106,7 @@ yield fs.mkdir("/path/to/create");
 
 # Concrete Implementations
 
- - [min-fs](https://github.com/creationix/min-fs)
+ - [min-fs](https://github.com/creationix/min-fs) - Implementation for Node.JS
 
 [gen-run]: https://github.com/creationix/gen-run
 [continuables]: https://github.com/creationix/js-git/blob/master/specs/continuable.md
