@@ -4,7 +4,7 @@ This interface describes the TCP client and server interface used in the js-git 
 
 Streams are in [min-stream][] format.
 
-## createServer(port, [host]) -> stream<socket>
+## createServer(port, [host]) -> stream&lt;socket>
 
 Create a TCP server listening on `port` and `host` (defaulting to localhost).  The stream is a connection stream.  It emits an event every time a new client connects.
 
@@ -25,7 +25,7 @@ server(null, function (err, client) {
 });
 ```
 
-## connect(port, [host]) -> continuable<socket>
+## connect(port, [host]) -> continuable&lt;socket>
 
 Connect to a TCP server on `port` and `host` (defaulting to localhost).
 
