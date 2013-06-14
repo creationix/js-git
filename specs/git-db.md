@@ -17,6 +17,14 @@ fs.readlink("/path/to/symlink")(function (err, target) {
 });
 ```
 
+## load(hash) -> source&lt;binary>
+
+Given an object hash, return a data stream.  
+
+```js
+var stream = db.load(hash);
+```
+
 ## save(source) -> continuable&lt;hash>
 
 Save an object to the database.  Source is a binary data stream already git encoded.
@@ -27,28 +35,12 @@ The output is the SHA1 hash (hex encoded) of the stream's contents where the dat
 var hash = yield db.save(stream);
 ```
 
-## load(hash) -> source&lt;binary>
+## read(path) -> continuable&lt;hash>
 
-Given an object hash, return a data stream.  
-
-```js
-var stream = db.load(hash);
-```
-
-## removeHash(hash) -> continuable
-
-Given a hash, remove an object from the database.
+Read a ref by path.  This will auto-resolve symbolic refs.
 
 ```js
-yield db.removeHash(hash);
-```
-
-## listHashes() -> source&lt;hash>
-
-Create a stream of all the hash keys in the database.
-
-```js
-var hashStream = db.listHashes();
+var hash = yield db.read("HEAD");
 ```
 
 ## write(path, hash) -> continuable
@@ -67,14 +59,6 @@ Write a symbolic ref to the database.
 yield sb.writeSym("HEAD", "/refs/heads/master");
 ```
 
-## read(path) -> continuable&lt;hash>
-
-Read a ref by path.  This will auto-resolve symbolic refs.
-
-```js
-var hash = yield db.read("HEAD");
-```
-
 ## readSym(path) -> continuable&lt;path>
 
 Read a ref by path, but don't auto-resolve symbolic refs.
@@ -83,12 +67,12 @@ Read a ref by path, but don't auto-resolve symbolic refs.
 var HEAD = yield db.readSym("HEAD");
 ```
 
-## removeRef(path) -> continuable
+## listObjects() -> source&lt;hash>
 
-Delete a ref by path.
+Create a stream of all the hash keys in the database.
 
 ```js
-yield db.removeRef("/refs/heads/temp");
+var hashStream = db.listObjects();
 ```
 
 ## listRefs() -> source&lt;path>
@@ -97,6 +81,22 @@ Create a stream that emits all ref paths.
 
 ```js
 var pathStream = db.listRefs();
+```
+
+## removeObject(hash) -> continuable
+
+Given a hash, remove an object from the database.
+
+```js
+yield db.removeObject(hash);
+```
+
+## removeRef(path) -> continuable
+
+Delete a ref by path.
+
+```js
+yield db.removeRef("/refs/heads/temp");
 ```
 
 # Concrete Implementations
