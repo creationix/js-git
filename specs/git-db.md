@@ -17,7 +17,7 @@ fs.readlink("/path/to/symlink")(function (err, target) {
 });
 ```
 
-## save(source) -> continuable
+## save(source) -> continuable&lt;hash>
 
 Save an object to the database.  Source is a binary data stream already git encoded.
 
@@ -27,7 +27,7 @@ The output is the SHA1 hash (hex encoded) of the stream's contents where the dat
 var hash = db.save(stream);
 ```
 
-## load(hash) -> source
+## load(hash) -> source&lt;binary>
 
 Given an object hash, return a data stream.  
 
@@ -43,7 +43,7 @@ Given a hash, remove an object from the database.
 yield db.removeHash(hash);
 ```
 
-## listHashes() -> source
+## listHashes() -> source&lt;hash>
 
 Create a stream of all the hash keys in the database.
 
@@ -67,7 +67,7 @@ Write a symbolic ref to the database.
 yield sb.writeSym("HEAD", "/refs/heads/master");
 ```
 
-## read(path) -> continuable
+## read(path) -> continuable&lt;hash>
 
 Read a ref by path.  This will auto-resolve symbolic refs.
 
@@ -75,7 +75,7 @@ Read a ref by path.  This will auto-resolve symbolic refs.
 var hash = yield db.read("HEAD");
 ```
 
-## readSym(path) -> continuable
+## readSym(path) -> continuable&lt;path>
 
 Read a ref by path, but don't auto-resolve symbolic refs.
 
@@ -83,7 +83,7 @@ Read a ref by path, but don't auto-resolve symbolic refs.
 var HEAD = yield.db.readSym("HEAD");
 ```
 
-## remoteRef(path) -> continuable
+## removeRef(path) -> continuable
 
 Delete a ref by path.
 
@@ -91,7 +91,7 @@ Delete a ref by path.
 yield db.removeRef("/refs/heads/temp");
 ```
 
-## listRefs() -> source
+## listRefs() -> source&lt;path>
 
 Create a stream that emits all ref paths.
 
