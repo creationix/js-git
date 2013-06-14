@@ -104,6 +104,14 @@ Create a directory
 yield fs.mkdir("/path/to/create");
 ```
 
+## rename(old, new) -> continuable
+
+Rename a file or directory.
+
+```js
+yield fs.rename("/.git/1ae5mir17t298lcu.tmp", ".git/objects/e7/aecb2c038b16c2ef544b1413d41cbe40aa514d");
+```
+
 ## Chroot Capabilities
 
 The exports object is also itself a chroot function.  This returns a new version of the fs with a path prefix added.
