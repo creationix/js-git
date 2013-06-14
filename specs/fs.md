@@ -104,6 +104,16 @@ Create a directory
 yield fs.mkdir("/path/to/create");
 ```
 
+## Chroot Capabilities
+
+The exports object is also itself a chroot function.  This returns a new version of the fs with a path prefix added.
+
+```js
+var fs = require('my-fs-implementation')('/home/tim/Code/js-git');
+var metaFs = fs(".git");
+// fs now points to the working tree and metaFs points to the .git folder inside it.
+```
+
 # Concrete Implementations
 
  - [min-fs](https://github.com/creationix/min-fs) - Implementation for Node.JS
