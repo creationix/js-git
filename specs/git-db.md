@@ -103,6 +103,8 @@ yield db.removeRef("/refs/heads/temp");
 
 There isn't one yet, but a generic one that builds on top of a generic K/V store and the [sha1][] interface could easly be build as long as the K/V store allowed for renames or naming after writing.
 
+- [git-repo/fs-db.js](https://github.com/creationix/git-repo/blob/master/fs-db.js) An in-progress implementation that sits on top of a fs interface isntance.
+
 [gen-run]: https://github.com/creationix/gen-run
 [continuables]: https://github.com/creationix/js-git/blob/master/specs/continuable.md
 [sha1]: https://github.com/creationix/js-git/blob/master/specs/sha1.md
