@@ -24,7 +24,7 @@ Save an object to the database.  Source is a binary data stream already git enco
 The output is the SHA1 hash (hex encoded) of the stream's contents where the data can later be retrieved.
 
 ```js
-var hash = db.save(stream);
+var hash = yield db.save(stream);
 ```
 
 ## load(hash) -> source&lt;binary>
@@ -80,7 +80,7 @@ var hash = yield db.read("HEAD");
 Read a ref by path, but don't auto-resolve symbolic refs.
 
 ```js
-var HEAD = yield.db.readSym("HEAD");
+var HEAD = yield db.readSym("HEAD");
 ```
 
 ## removeRef(path) -> continuable
