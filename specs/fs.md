@@ -36,9 +36,9 @@ var stat = yield fs.stat("/path/to/my/file.txt");
 
 Read a file as a single string or binary buffer
 
-## save(path, value, [encoding]) -> continuable
+## write(path, value, [encoding]) -> continuable
 
-Save a file as a single string or binary buffer
+Write a file as a single string or binary buffer
 
 ## readStream(path, [options]) -> source&lt;binary>
 
