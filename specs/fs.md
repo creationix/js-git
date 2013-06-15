@@ -51,7 +51,7 @@ Open a file by path for reading and return a min-stream read stream.
 var input = fs.readStream("/path/to/my/file.txt");
 ```
 
-## writeStream(path, sink, [options]) -> sink -> continuable
+## writeStream(path, [options]) -> sink -> continuable
 
 Create a min-stream sink that saves the stream to disk.
 
