@@ -32,7 +32,15 @@ Stat a file getting mtime, ctime, size, mode, etc as a JS object with the follow
 var stat = yield fs.stat("/path/to/my/file.txt");
 ```
 
-## read(path, [options]) -> source&lt;binary>
+## read(path, [encoding]) -> continuable<binary_or_string>
+
+Read a file as a single string or binary buffer
+
+## save(path, value, [encoding]) -> continuable
+
+Save a file as a single string or binary buffer
+
+## readStream(path, [options]) -> source&lt;binary>
 
 Open a file by path for reading and return a min-stream read stream.
 
@@ -40,17 +48,17 @@ Open a file by path for reading and return a min-stream read stream.
   - options.end - end at offset
 
 ```js
-var input = fs.read("/path/to/my/file.txt");
+var input = fs.readStream("/path/to/my/file.txt");
 ```
 
-## write(path, [options]) -> sink
+## writeStream(path, sink, [options]) -> sink -> continuable
 
 Create a min-stream sink that saves the stream to disk.
 
   - options.mode - create file with custom mode (base 8 string or integer)
 
 ```js
-var save = fs.write("/path/to/output.txt");
+var save = fs.writeStream("/path/to/output.txt");
 console.log("Saving input to disk...");
 yield save(input);
 console.log("Saved");
