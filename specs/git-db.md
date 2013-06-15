@@ -51,22 +51,6 @@ Write a ref to the database.
 yield db.write("/refs/heads/master", hash);
 ```
 
-## readSym(path) -> continuable&lt;path>
-
-Read a ref by path, but don't auto-resolve symbolic refs.
-
-```js
-var HEAD = yield db.readSym("HEAD");
-```
-
-## writeSym(path, target) -> continuable
-
-Write a symbolic ref to the database.
-
-```js
-yield sb.writeSym("HEAD", "/refs/heads/master");
-```
-
 ## listObjects() -> source&lt;hash>
 
 Create a stream of all the hash keys in the database.
