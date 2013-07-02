@@ -8,8 +8,8 @@ Store the stream to named bucket.  Continuable resolves on completion or error.
 
 ## load(name) -> stream
 
-Load back a saved store.
+Load back a saved store.  If it's not there, wait for it to be there.
 
 ## clear() -> continuable
 
-We're done with the store, release all saved resources.
+We're done with the store, release all saved resources.  If there are any waiting load calls, flush them all with ENOENT errors.
