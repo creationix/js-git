@@ -8,7 +8,7 @@ Store the stream to named bucket.  Continuable resolves on completion or error.
 
 ## load(name) -> stream
 
-Load back a saved store.  If it's not there, wait for it to be there.
+Load back a saved store.  If it's not there, wait for it to be there before emitting events on the stream.
 
 ## clear() -> continuable
 
