@@ -15,17 +15,17 @@ var stream = {
 };
 ```
 
-This is a pull stream meaning that no data flows till the consumer asks for it.  Thus there is no problem with data events getting emitted when there is nobody to handle them.  Also it prevents exxecive buffering of data when the consumer is slower than the producer.
+This is a pull stream meaning that no data flows till the consumer asks for it.  Thus there is no problem with data events getting emitted when there is nobody to handle them.  Also it prevents excessive buffering of data when the consumer is slower than the producer.
 
 ## read(callback)
 
-The `read` function if the primary interface in a stream.  The consumer will repeatedly call `read` passing in `callback(err, item)` to get the next item in the stream.
+The `read` function is the primary interface in a stream.  The consumer will repeatedly call `read` passing in `callback(err, item)` to get the next item in the stream.
 
 If there are no more items or there was an error upstream, the callback will be called with `item === undefined`.
 
 ## abort(callback)
 
-Sometimes you want to tell the upstream source that you are no longer interested in reading more data.  Call this to let the source know it can close things and cleanup it's resources.  You may still get 0 or more data events that are pending in the pipeline after calling `abort`.
+Sometimes you want to tell the upstream source that you are no longer interested in reading more data.  Call this to let the source know it can close things and clean up it's resources.  You may still get 0 or more data events that are pending in the pipeline after calling `abort`.
 
 ```js
 // Create an infinite stream
