@@ -88,7 +88,7 @@ Create a symlink at path with given target.
 yield fs.symlink("/path.to/symlink", "../target");
 ```
 
-## readdir(path) -> continuable&lt;<stream>
+## readdir(path) -> continuable&lt;stream>
 
 Returns a stream of filenames in the target path.
 
