@@ -40,7 +40,7 @@ Read a file as a single string or binary buffer
 
 Write a file as a single string or binary buffer
 
-## readStream(path, [options]) -> stream&lt;binary>
+## readStream(path, [options]) -> continuable&lt;stream>
 
 Open a file by path for reading and return a simple-stream.
 
@@ -48,17 +48,17 @@ Open a file by path for reading and return a simple-stream.
   - options.end - end at offset
 
 ```js
-var input = fs.readStream("/path/to/my/file.txt");
+var input = yield fs.readStream("/path/to/my/file.txt");
 ```
 
-## writeStream(path, [options]) -> sink -> continuable
+## writeStream(path, [options]) -> continuable&lt;sink>
 
 Create a simple-stream sink that saves the stream to disk.
 
   - options.mode - create file with custom mode (base 8 string or integer)
 
 ```js
-var save = fs.writeStream("/path/to/output.txt");
+var save = yield fs.writeStream("/path/to/output.txt");
 console.log("Saving input to disk...");
 yield save(input);
 console.log("Saved");
@@ -88,12 +88,12 @@ Create a symlink at path with given target.
 yield fs.symlink("/path.to/symlink", "../target");
 ```
 
-## readdir(path) -> stream&lt;name>
+## readdir(path) -> continuable&lt;<stream>
 
 Returns a stream of filenames in the target path.
 
 ```js
-var nameStream = fs.readdir("..");
+var nameStream = yield fs.readdir("..");
 ```
 
 ## rmdir(path) -> continuable
