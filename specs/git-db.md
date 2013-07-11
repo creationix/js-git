@@ -1,3 +1,6 @@
+*WARNING* This spec is out of date, update coming shortly.  See <https://github.com/creationix/git-fs-db> for now.
+
+
 # Git Database
 
 This interface describes the git database used to store git objects (blobs, trees, commits, and tags) as well as refs (bookmarks to hashes).
