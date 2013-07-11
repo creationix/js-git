@@ -2,7 +2,7 @@
 
 This interface describes the filesystem interface used in the js-git project.
 
-All examples use `yield` to consume [continuables][], assuming generators with [gen-run][] wrapping, but can be used with ES5 code as well.  Streams are in [min-stream][] format.
+All examples use `yield` to consume [continuables][], assuming generators with [gen-run][] wrapping, but can be used with ES5 code as well.  Streams are in [simple-stream][] format.
 
 ```js
 // ES6 syntax
@@ -40,9 +40,9 @@ Read a file as a single string or binary buffer
 
 Write a file as a single string or binary buffer
 
-## readStream(path, [options]) -> source&lt;binary>
+## readStream(path, [options]) -> stream&lt;binary>
 
-Open a file by path for reading and return a min-stream read stream.
+Open a file by path for reading and return a simple-stream.
 
   - options.start - start at offset
   - options.end - end at offset
@@ -53,7 +53,7 @@ var input = fs.readStream("/path/to/my/file.txt");
 
 ## writeStream(path, [options]) -> sink -> continuable
 
-Create a min-stream sink that saves the stream to disk.
+Create a simple-stream sink that saves the stream to disk.
 
   - options.mode - create file with custom mode (base 8 string or integer)
 
@@ -88,7 +88,7 @@ Create a symlink at path with given target.
 yield fs.symlink("/path.to/symlink", "../target");
 ```
 
-## readdir(path) -> source&lt;name>
+## readdir(path) -> stream&lt;name>
 
 Returns a stream of filenames in the target path.
 
@@ -132,8 +132,8 @@ var metaFs = fs(".git");
 
 # Concrete Implementations
 
- - [min-fs](https://github.com/creationix/min-fs) - Implementation for Node.JS
+ - [simple-fs](https://github.com/creationix/simple-fs) - Implementation for Node.JS
 
 [gen-run]: https://github.com/creationix/gen-run
 [continuables]: https://github.com/creationix/js-git/blob/master/specs/continuable.md
-[min-stream]: https://github.com/creationix/js-git/blob/master/specs/min-stream.md
+[simple-stream]: https://github.com/creationix/js-git/blob/master/specs/simple-stream.md
