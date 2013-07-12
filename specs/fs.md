@@ -125,9 +125,20 @@ yield fs.rename("/.git/1ae5mir17t298lcu.tmp", ".git/objects/e7/aecb2c038b16c2ef5
 The exports object is also itself a chroot function.  This returns a new version of the fs with a path prefix added.
 
 ```js
-var fs = require('my-fs-implementation')('/home/tim/Code/js-git');
+// This example uses simple-fs, but the idea is the same for all.
+var fs = require('simple-fs')('/home/tim/Code/js-git');
 var metaFs = fs(".git");
 // fs now points to the working tree and metaFs points to the .git folder inside it.
+```
+
+If your module requires a callback to initialize the filesystem, simply make sure that the final exported instance is a chroot function.
+
+```js
+require('simple-html5-fs')('/js-git', function (err, fs) {
+  if (err) throw err;
+  var metaFs = fs(".git");
+  // fs now points to the working tree and metaFs points to the .git folder inside it.
+});
 ```
 
 # Concrete Implementations
