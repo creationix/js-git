@@ -5,6 +5,9 @@ var db = require('../lib/fs-db.js')(platform)("test.git", true);
 // And wrap in a repo API
 var repo = require('../lib/repo.js')(db);
 
+var run = require('gen-run');
+var parallel = require('../lib/parallel.js');
+
 // Mock data for generating some history
 var author = "Tim Caswell <tim@creationix.com>";
 var committer = "JS-Git <js-git@creationix.com>";
@@ -24,48 +27,40 @@ var commits = {
   }
 };
 
-repo.init(function (err) {
-  if (err) throw err;
+run(function *() {
 
+  yield repo.init();
   console.log("Git database Initialized");
 
   var parent;
-  serialEach(commits, function (message, files, next) {
+  yield* each(commits, function* (message, files) {
     // Start building a tree object.
     var tree = {};
-    parallelEach(files, function (name, contents, next) {
-      repo.saveBlob(contents, function (err, hash) {
-        if (err) return next(err);
-        tree[name] = {
-          mode: 0100644,
-          hash: hash
-        };
-        next();
-      });
-    }, function (err) {
-      if (err) return next(err);
-      repo.saveTree(tree, function (err, hash) {
-        if (err) return next(err);
-        var now = gitDate(new Date);
-        var commit = {
-          tree: hash,
-          parent: parent,
-          author: author + " " + now,
-          committer: committer + " " + now,
-          message: message
-        };
-        if (!parent) delete commit.parent;
-        repo.saveCommit(commit, function (err, hash) {
-          if (err) return next(err);
-          parent = hash;
-          repo.updateHead(hash, next);
-        });
-      });
+
+    yield* each(files, function* (name, contents) {
+      tree[name] = {
+        mode: 0100644,
+        hash: yield repo.saveBlob(contents)
+      };
     });
-  }, function (err) {
-    if (err) throw err;
-    console.log("Done");
+
+    var now = gitDate(new Date);
+    var commit = {
+      tree: yield repo.saveTree(tree),
+      parent: parent,
+      author: author + " " + now,
+      committer: committer + " " + now,
+      message: message
+    };
+
+    if (!parent) delete commit.parent;
+
+    parent = yield repo.saveCommit(commit);
+    
+    yield repo.updateHead(parent);
   });
+
+  console.log("Done");
 
 });
 
@@ -77,33 +72,10 @@ function gitDate(date) {
 }
 
 // Mini control-flow library
-function serialEach(object, fn, callback) {
+function* each(object, fn) {
   var keys = Object.keys(object);
-  next();
-  function next(err) {
-    if (err) return callback(err);
-    var key = keys.shift();
-    if (!key) return callback();
-    fn(key, object[key], next);
+  for (var i = 0, l = keys.length; i < l; i++) {
+    var key = keys[i];
+    yield* fn(key, object[key]);
   }
 }
-function parallelEach(object, fn, callback) {
-  var keys = Object.keys(object);
-  var left = keys.length + 1;
-  var done = false;
-  keys.forEach(function (key) {
-    fn(key, object[key], check);
-  });
-  check();
-  function check(err) {
-    if (done) return;
-    if (err) {
-      done = true;
-      return callback(err);
-    }
-    if (--left) return;
-    done = true;
-    callback();
-  }
-}
-
