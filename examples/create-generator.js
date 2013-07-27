@@ -5,9 +5,6 @@ var db = require('../lib/fs-db.js')(platform)("test.git", true);
 // And wrap in a repo API
 var repo = require('../lib/repo.js')(db);
 
-var run = require('gen-run');
-var parallel = require('../lib/parallel.js');
-
 // Mock data for generating some history
 var author = "Tim Caswell <tim@creationix.com>";
 var committer = "JS-Git <js-git@creationix.com>";
@@ -27,7 +24,7 @@ var commits = {
   }
 };
 
-run(function *() {
+require('gen-run')(function *() {
 
   yield repo.init();
   console.log("Git database Initialized");
