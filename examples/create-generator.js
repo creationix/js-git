@@ -53,7 +53,7 @@ require('gen-run')(function *() {
     if (!parent) delete commit.parent;
 
     parent = yield repo.saveCommit(commit);
-    
+
     yield repo.updateHead(parent);
   });
 

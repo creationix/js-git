@@ -63,6 +63,10 @@ function stat(path, callback) {
 }
 
 function read(path, encoding, callback) {
+  if (typeof encoding === "function") {
+    callback = encoding;
+    encoding = undefined;
+  }
   if (!callback) return read.bind(this, path, encoding);
   fs.readFile(path, encoding, callback);
 }
