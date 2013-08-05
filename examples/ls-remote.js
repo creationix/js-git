@@ -5,5 +5,7 @@ var lsRemote = require('../lib/ls-remote.js')(require('./node'));
 
 lsRemote(url, function (err, refs, caps) {
   if (err) throw err;
-  console.log(refs);
+  Object.keys(refs).forEach(function (ref) {
+    console.log(refs[ref] + "\t" + ref);
+  });
 });
