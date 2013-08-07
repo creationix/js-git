@@ -14,7 +14,7 @@ function deframer(emit) {
     if (item === undefined) return emit();
 
     // Once we're in pack mode, everything goes straight through
-    if (state === 3) return emit(["pack", item]);
+    if (state === 3) return emit(item);
 
     // Otherwise parse the data using a state machine.
     for (var i = 0, l = item.length; i < l; i++) {
@@ -34,11 +34,11 @@ function deframer(emit) {
         if (offset === 0) {
           if (length === 4) {
             offset = 4;
-            emit(["line", ""]);
+            emit("");
           }
           else if (length === 0) {
             offset = 4;
-            emit(["line", null]);
+            emit(null);
           }
           else if (length > 4) {
             length -= 4;
@@ -58,16 +58,16 @@ function deframer(emit) {
           state = 0;
           length = 0;
           if (data[0] === 1) {
-            emit(["pack", bops.subarray(data, 1)]);
+            emit(bops.subarray(data, 1));
           }
           else if (data[0] === 2) {
-            emit(["progress", bops.to(bops.subarray(data, 1))]);
+            emit({progress: bops.to(bops.subarray(data, 1))});
           }
           else if (data[0] === 3) {
-            emit(["error", bops.to(bops.subarray(data, 1))]);
+            emit({error: bops.to(bops.subarray(data, 1))});
           }
           else {
-            emit(["line", bops.to(data)]);
+            emit(bops.to(data));
           }
         }
       }
@@ -76,7 +76,7 @@ function deframer(emit) {
           continue;
         }
         state = 3;
-        emit(["pack", bops.join([PACK, bops.subarray(item, i)])]);
+        emit(bops.join([PACK, bops.subarray(item, i)]));
         break;
       }
       else {
