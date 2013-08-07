@@ -1,4 +1,4 @@
-
+var each = require('../helpers/each.js');
 var platform = require('./node');
 var proto = require('../protocols/auto.js')(platform);
 var fsDb = require('../lib/fs-db.js')(platform);
@@ -12,31 +12,37 @@ if (!opts.protocol) {
 if (process.env.TRACE) opts.trace = require('./trace.js');
 var path = opts.pathname.match(/[^\/]*$/)[0];
 var connection = proto(opts);
+var repo = require('../lib/repo.js')(fsDb(path, true));
 
 connection.discover(function (err, result) {
   if (err) throw err;
   var refs = result.refs;
+  var wants = [];
+  each(refs, function (name, hash) {
+    if (name === "HEAD" || name.indexOf('^') > 0) return;
+    wants.push("want " + hash);
+  });
+
+  connection.negotiate(wants, {
+    serverCaps: result.caps,
+    includeTag: true,
+    onProgress: function (data) {
+      process.stdout.write(data);
+    },
+    onError: function (data) {
+      process.stderr.write(data);
+    }
+  }, function (err, packStream) {
+    if (err) return callback(err);
+    repo.init(function (err) {
+      if (err) throw err;
+      repo.importRefs(refs, function (err) {
+        if (err) throw err;
+        repo.unpack(packStream, function (err) {
+          if (err) throw err;
+          console.log("DONE");
+        });
+      });
+    });
+  });
 });
-
-
-
-// var url = process.argv[2] || "git://github.com/creationix/conquest.git";
-// var path = url.split("/");
-// path = path[path.length - 1];
-// var repo = require('../lib/repo.js')(fsDb(path, true));
-
-// repo.init(function (err) {
-//   if (err) throw err;
-//   fetch(url, repo, {
-//     includeTag: true,
-//     onProgress: function (data) {
-//       process.stdout.write(data);
-//     },
-//     onError: function (data) {
-//       process.stderr.write(data);
-//     }
-//   }, function (err, report) {
-//     if (err) throw err;
-//     console.log("report", report);
-//   });
-// });

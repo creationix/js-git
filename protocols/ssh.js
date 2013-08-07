@@ -2,7 +2,7 @@ var extract = require('../helpers/extract.js');
 var pushToPull = require('push-to-pull');
 var deframer = pushToPull(require('../lib/pkt-line.js').deframer);
 var framer = pushToPull(require('../lib/pkt-line.js').framer);
-var writable = require('../lib/writable.js');
+var writable = require('../helpers/writable.js');
 
 module.exports = sshTransport;
 function sshTransport(platform) {
