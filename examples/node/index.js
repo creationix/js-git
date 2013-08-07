@@ -4,6 +4,5 @@ module.exports = {
   sha1: require('./sha1.js'),
   inflate: require('./inflate.js'),
   deflate: require('./deflate.js'),
-  urlParse: require('./url-parse.js'),
   agent: "jsgit/" + require('../../package.json').version
 };

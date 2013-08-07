@@ -6,14 +6,12 @@ var opts = urlParse(url);
 if (process.env.TRACE) opts.trace = require('./trace.js');
 var connection = tcp(opts);
 
-connection.discover(function (err, result) {
-  if (err) throw err;
-  var refs = result.refs;
+require('gen-run')(function *() {
+  var results = yield connection.discover();
+  var refs = results.refs;
   Object.keys(refs).forEach(function (ref) {
     console.log(refs[ref] + "\t" + ref);
   });
-  connection.close(function (err) {
-    if (err) throw err;
-  });
+  yield connection.close();
 });
 
