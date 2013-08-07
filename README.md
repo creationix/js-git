@@ -22,7 +22,7 @@ My goal is to target every platform that has enough primitives to make sense.  T
 
 ### Feature Goals
 
-I don't intent to make a 100% clone of all the features of the official git program.  That would be insane and require a lot more money than I'm asking for.  My main goal is to enable the 90% case of interesting stuff:
+I don't intend to make a 100% clone of all the features of the official git program.  That would be insane and require a lot more money than I'm asking for.  My main goal is to enable the 90% case of interesting stuff:
 
  - Clone remote repositories to local storage over http, git, or ssh.
  - Make and commit local changes offline.
