@@ -54,7 +54,7 @@ One sample application that I'm using to test my code is known as [js-git-app][]
 
 ![JS-Git App](http://creationix.com/js-git-app.png)
 
-This app is still in the early stages, It's available in the Chrome [app store][] to test on any device that has Chrome installed.
+This app is still in the early stages. It's available in the Chrome [app store][] to test on any device that has Chrome installed.
 
 #### JS-Git as a Node.JS CLI Tool
 
