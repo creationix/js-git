@@ -1,19 +1,19 @@
 var pushToPull = require('push-to-pull');
 var deframer = pushToPull(require('./pkt-line.js').deframer);
 var framer = pushToPull(require('./pkt-line.js').framer);
-var demux = require('./demux.js');
 var writable = require('./writable.js');
 
 module.exports = function (socket, machine, callback) {
 
-  var line = demux(deframer(socket), ["line"]).line;
+  var stream = deframer(socket);
+  stream = trace("\u2190", stream);
   var write = writable(socket.abort);
 
   var state = machine(write, function (result) {
     finish(null, result);
   });
 
-  line.read(onRead);
+  stream.read(onRead);
   function onRead(err, item) {
     if (err) return finish(err);
     try {
@@ -22,8 +22,10 @@ module.exports = function (socket, machine, callback) {
     catch (err) {
       return finish(err);
     }
-    if (state) line.read(onRead);
+    if (state) stream.read(onRead);
   }
+
+  write = trace("\u2192", write);
   socket.sink(framer(write), function (err) {
     if (err) return finish(err);
   });
@@ -35,3 +37,15 @@ module.exports = function (socket, machine, callback) {
     callback(err, result);
   }
 };
+
+var inspect = require('util').inspect
+function trace(message, stream) {
+  return { read: traceRead, abort: stream.abort };
+  function traceRead(callback) {
+    stream.read(function (err, item) {
+      if (err) return callback(err);
+      console.log(message, inspect(item, {colors:true}));
+      callback(null, item);
+    });
+  }
+}
