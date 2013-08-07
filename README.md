@@ -46,7 +46,7 @@ Some example products that would be enabled by this are:
 
 ### For the Children
 
-My main driving force is to build a programming environment to teach kids to program.  It needs to run on the devices that the kids already have.  There are a lot of youth who have access to tablets or Chromebooks, but have no way to program properly on them.  I want to change this and give them the tools to eventually become professional programmers.
+My main driving force is to build a programming environment to teach kids to program.  It needs to run on the devices that the kids already have.  There are many youths who have access to tablets or Chromebooks, but have no way to program properly on them.  I want to change this and give them the tools to eventually become professional programmers.
 
 #### JS-Git in a Chrome App
 
