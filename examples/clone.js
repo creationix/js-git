@@ -10,6 +10,7 @@ var repo = require('../lib/repo.js')(fsDb(path, true));
 repo.init(function (err) {
   if (err) throw err;
   fetch(url, repo, {
+    includeTag: true,
     onProgress: function (data) {
       process.stdout.write(data);
     },
