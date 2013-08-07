@@ -26,6 +26,11 @@
     "url": "https://github.com/creationix/js-git/issues"
   },
   "dependencies": {
-    "bops": "0.0.6"
+    "bops": "~0.0.6"
+  },
+  "devDependencies": {
+    "ssh2": "~0.2.11",
+    "gen-run": "~0.1.0",
+    "push-to-pull": "~0.1.0"
   }
 }
