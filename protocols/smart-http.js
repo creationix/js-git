@@ -47,6 +47,7 @@ function smartHttp(platform) {
         tls: opts.tls,
         port: opts.port,
         path: opts.pathname + "/info/refs?service=git-upload-pack",
+        auth: opts.auth,
         headers: headers
       }, function (err, code, headers, body) {
         if (err) return callback(err);
