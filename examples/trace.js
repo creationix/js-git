@@ -1,6 +1,8 @@
 var inspect = require('util').inspect
 
 var messages = {
+  request: "\u21A0",
+  response: "\u219E",
   input: "\u2190",
   output: "\u2192"
 };
