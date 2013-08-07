@@ -15,6 +15,10 @@ module.exports = function (platform) {
       smartHttpProto = smartHttpProto || require('./smart-http.js')(platform);
       return(smartHttpProto(opts));
     }
+    if (opts.protocol === "ssh:") {
+      sshProto = sshProto || require('./ssh.js')(platform);
+      return(sshProto(opts));
+    }
     throw new TypeError("Unknown protocol " + opts.protocol);
   };
 };

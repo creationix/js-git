@@ -30,6 +30,10 @@ function tcpTransport(platform) {
     function connect(callback) {
       return tcp.connect(opts.port, opts.hostname, function (err, socket) {
         if (err) return callback(err);
+        if (opts.trace) opts.trace("connect", null, {
+          host: opts.hostname,
+          port: opts.port
+        });
         var input = deframer(socket);
         if (opts.trace) input = opts.trace("input", input);
 
@@ -103,7 +107,7 @@ function tcpTransport(platform) {
         write();
       }
       if (abort) {
-        return abort(callback);  
+        return abort(callback);
       }
       callback();
     }
