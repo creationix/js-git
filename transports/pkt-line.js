@@ -97,7 +97,7 @@ function framer(emit) {
     if (typeof item === "string") {
       item = bops.from(item);
     }
-    emit(frameHead(item.length));
+    emit(frameHead(item.length + 4));
     emit(item);
   };
 }
