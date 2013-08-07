@@ -5,9 +5,12 @@ var messages = {
   output: "\u2192"
 };
 
-module.exports = function (type, stream) {
+module.exports = function (type, stream, item) {
   var message = messages[type];
   if (!message) return stream;
+  if (!stream) {
+    return console.log(message, inspect(item, {colors:true}));
+  }
   return { read: traceRead, abort: stream.abort };
   function traceRead(callback) {
     stream.read(function (err, item) {
