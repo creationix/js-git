@@ -6,7 +6,7 @@ var writable = require('./writable.js');
 module.exports = function (socket, machine, callback) {
 
   var stream = deframer(socket);
-  stream = trace("\u2190", stream);
+  // stream = trace("\u2190", stream);
   var write = writable(socket.abort);
 
   var state = machine(write, function (result) {
@@ -25,7 +25,7 @@ module.exports = function (socket, machine, callback) {
     if (state) stream.read(onRead);
   }
 
-  write = trace("\u2192", write);
+  // write = trace("\u2192", write);
   socket.sink(framer(write), function (err) {
     if (err) return finish(err);
   });
