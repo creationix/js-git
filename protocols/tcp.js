@@ -52,40 +52,42 @@ function tcpTransport(platform) {
     // outputs refs and caps
     function discover(callback) {
       if (!callback) return discover.bind(this);
+      if (!read) {
+        return connect(function (err) {
+          if (err) return callback(err);
+          return discover(callback);
+        });
+      }
       var refs = {};
       var caps = null;
-      connect(function (err) {
+
+      write("git-upload-pack " + opts.pathname + "\0host=" + opts.hostname + "\0");
+      read(onLine);
+
+      function onLine(err, line) {
         if (err) return callback(err);
-
-        write("git-upload-pack " + opts.pathname + "\0host=" + opts.hostname + "\0");
-        read(onLine);
-
-        function onLine(err, line) {
-          if (err) return callback(err);
-          if (line === null) {
-            return callback(null, {
-              refs: refs,
-              caps: caps
-            });
-          }
-          line = line.trim();
-          if (!caps) line = pullCaps(line);
-          var index = line.indexOf(" ");
-          refs[line.substr(index + 1)] = line.substr(0, index);
-          read(onLine);
-        }
-
-        function pullCaps(line) {
-          var index = line.indexOf("\0");
-          caps = {};
-          line.substr(index + 1).split(" ").map(function (cap) {
-            var pair = cap.split("=");
-            caps[pair[0]] = pair[1] || true;
+        if (line === null) {
+          return callback(null, {
+            refs: refs,
+            caps: caps
           });
-          return line.substr(0, index);
         }
-        
-      });
+        line = line.trim();
+        if (!caps) line = pullCaps(line);
+        var index = line.indexOf(" ");
+        refs[line.substr(index + 1)] = line.substr(0, index);
+        read(onLine);
+      }
+
+      function pullCaps(line) {
+        var index = line.indexOf("\0");
+        caps = {};
+        line.substr(index + 1).split(" ").map(function (cap) {
+          var pair = cap.split("=");
+          caps[pair[0]] = pair[1] || true;
+        });
+        return line.substr(0, index);
+      }
     }
 
     function negotiate(callback) {
