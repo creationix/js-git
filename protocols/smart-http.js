@@ -4,6 +4,7 @@ var agent = platform.require("agent");
 var pushToPull = require('push-to-pull');
 var deframer = pushToPull(require('../lib/pkt-line.js').deframer);
 var trace = platform.require('trace');
+var sharedDiscover = require('./discover.js');
 
 // opts.hostname - host to connect to (github.com)
 // opts.pathname - path to repo (/creationix/conquest.git)
@@ -32,8 +33,6 @@ module.exports = function (opts) {
       "Accept-Encoding": "gzip",
       "Pragma": "no-cache"
     };
-    var refs = {};
-    var caps = null;
 
     http.request({
       method: "GET",
@@ -63,37 +62,9 @@ module.exports = function (opts) {
           if (line !== null) {
             return callback(new Error("Missing expected terminator"));
           }
-          body.read(onLine);
+          sharedDiscover(body, callback);
         });
       });
-
-      function onLine(err, line) {
-        if (err) return callback(err);
-        if (line === null) {
-          return callback(null, {
-            refs: refs,
-            caps: caps
-          });
-        }
-        line = line.trim();
-        if (!caps) line = pullCaps(line);
-        var index = line.indexOf(" ");
-        refs[line.substr(index + 1)] = line.substr(0, index);
-        body.read(onLine);
-      }
-
-      function pullCaps(line) {
-        var index = line.indexOf("\0");
-        caps = {};
-        line.substr(index + 1).split(" ").map(function (cap) {
-          var pair = cap.split("=");
-          caps[pair[0]] = pair[1] || true;
-        });
-        return line.substr(0, index);
-      }
-
-
-
     });
   }
 
