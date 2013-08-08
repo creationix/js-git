@@ -18,8 +18,7 @@ module.exports = function (opts) {
   if (!opts.pathname) throw new TypeError("pathname is a required option");
   opts.port = opts.port ? opts.port | 0 : 22;
 
-  var connection;
-  var read, abort, write;
+  var tunnel, connection;
 
   return {
     discover: discover,
@@ -31,16 +30,18 @@ module.exports = function (opts) {
     if (connection) return callback();
     ssh(opts, function (err, result) {
       if (err) return callback(err);
-      connection = result;
-      connection.exec(command, function (err, socket) {
+      tunnel = result;
+      tunnel.exec(command, function (err, socket) {
         if (err) return callback(err);
         var input = deframer(socket);
         if (trace) input = trace("input", input);
 
-        read = input.read;
-        abort = input.abort;
-        write = writable(abort);
-        var output = write;
+        var output = writable(input.abort);
+        connection = {
+          read: input.read,
+          abort: input.abort,
+          write: output
+        };
         if (trace) output = trace("output", output);
         output = framer(output);
         socket.sink(output)(function (err) {
@@ -57,34 +58,30 @@ module.exports = function (opts) {
   // outputs refs and caps
   function discover(callback) {
     if (!callback) return discover.bind(this);
-    if (!connection) {
-      return connect("git-upload-pack", function (err) {
-        if (err) return callback(err);
-        return discover(callback);
-      });
-    }
-    sharedDiscover({
-      read: read,
-      write: write,
-      abort: abort
-    }, callback);
+    if (!connection) return connect("git-upload-pack", function (err) {
+      if (err) return callback(err);
+      return discover(callback);
+    });
+    sharedDiscover(connection, callback);
   }
 
-
-  function fetch(wants, opts, callback) {
-    if (!callback) return fetch.bind(this);
-    if (!read) return callback(new Error("Can't fetch till connected"));
-    sharedFetch(wants, opts, {
-      read: read,
-      write: write,
-      abort: abort
-    }, callback);
+  function fetch(opts, callback) {
+    if (!callback) return fetch.bind(this, opts);
+    discover(function (err, result) {
+      if (err) return callback(err);
+      opts.refs = result.refs;
+      opts.caps = result.caps;
+      sharedFetch(connection, opts, callback);
+    });
   }
 
   function close(callback) {
     if (!callback) return close.bind(this);
-    if (write) write();
-    connection.close(callback);
+    connection.write();
+    tunnel.close(function (err) {
+      if (err) return callback(err);
+      callback(null, result);
+    });
   }
 
 };

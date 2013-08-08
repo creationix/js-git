@@ -1,15 +1,23 @@
 var platform = require('../lib/platform.js');
 var writable = require('../helpers/writable.js');
 var agent = platform.require('agent');
+var each = require('../helpers/each.js');
 
 module.exports = fetch;
-function fetch(wants, opts, socket, callback) {
+function fetch(socket, opts, callback) {
   var read = socket.read,
       write = socket.write,
       abort = socket.abort;
-  var serverCaps = opts.serverCaps;
+  var want = opts.want,
+      have = opts.have,
+      onProgress = opts.onProgress,
+      onError = opts.onError,
+      refs = opts.refs,
+      serverCaps = opts.caps;
+
   var caps = [];
   if (serverCaps["ofs-delta"]) caps.push("ofs-delta");
+  if (serverCaps["thin-pack"]) caps.push("thin-pack");
   if (opts.includeTag && serverCaps["include-tag"]) caps.push("include-tag");
   if ((opts.onProgress || opts.onError) &&
       (serverCaps["side-band-64k"] || serverCaps["side-band"])) {
@@ -19,6 +27,16 @@ function fetch(wants, opts, socket, callback) {
     }
   }
   if (serverCaps.agent) caps.push("agent=" + agent);
+
+  if (want) throw new Error("TODO: Implement dynamic wants");
+  if (have) throw new Error("TODO: Implement dynamic have");
+
+  var wants = [];
+  each(refs, function (name, hash) {
+    if (name === "HEAD" || name.indexOf('^') > 0) return;
+    wants.push("want " + hash);
+  });
+
   wants[0] += " " + caps.join(" ");
   wants.forEach(function (want) {
     write(want + "\n");
@@ -34,7 +52,8 @@ function fetch(wants, opts, socket, callback) {
     }
     callback(null, {
       read: packStream.read,
-      abort: packStream.abort
+      abort: packStream.abort,
+      refs: refs
     });
     read(onItem);
   });
