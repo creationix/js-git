@@ -14,9 +14,8 @@ if (!opts.protocol) {
 
 // Do the action
 var connection = autoProto(opts);
-connection.discover(function (err, result) {
+connection.discover(function (err, refs) {
   if (err) throw err;
-  var refs = result.refs;
   Object.keys(refs).forEach(function (ref) {
     console.log(refs[ref] + "\t" + ref);
   });

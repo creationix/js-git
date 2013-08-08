@@ -67,10 +67,10 @@ module.exports = function (opts) {
 
   function fetch(opts, callback) {
     if (!callback) return fetch.bind(this, opts);
-    discover(function (err, result) {
+    discover(function (err, refs, caps) {
       if (err) return callback(err);
-      opts.refs = result.refs;
-      opts.caps = result.caps;
+      opts.refs = refs;
+      opts.caps = caps;
       sharedFetch(connection, opts, callback);
     });
   }

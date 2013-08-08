@@ -12,10 +12,7 @@ function discover(socket, callback) {
   function onLine(err, line) {
     if (err) return callback(err);
     if (line === null) {
-      return callback(null, {
-        refs: refs,
-        caps: caps
-      });
+      return callback(null, refs, caps);
     }
     line = line.trim();
     if (!caps) line = pullCaps(line);
