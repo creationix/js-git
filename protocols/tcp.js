@@ -91,7 +91,7 @@ module.exports = function (opts) {
     if (!callback) return negotiate.bind(this);
     if (!read) return callback(new Error("Can't negotiate till connected"));
     var caps = [];
-    if (serverCaps["ofs-delta"]) caps.push("ofs-delta");
+    // if (serverCaps["ofs-delta"]) caps.push("ofs-delta");
     if (opts.includeTag && serverCaps["include-tag"]) caps.push("include-tag");
     if ((opts.onProgress || opts.onError) &&
         (serverCaps["side-band-64k"] || serverCaps["side-band"])) {
