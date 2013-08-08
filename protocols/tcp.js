@@ -79,9 +79,6 @@ module.exports = function (opts) {
       write(null);
       write();
     }
-    if (abort) {
-      return abort(callback);
-    }
     callback();
   }
 
