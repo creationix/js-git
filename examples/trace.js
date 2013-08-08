@@ -7,6 +7,8 @@ var messages = {
   output: "\u2192",
   exec: "exec",
   connect: "connect",
+  save: "\u2906",
+  load: "\u2907",
 };
 
 module.exports = function (type, stream, item) {
