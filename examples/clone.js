@@ -27,7 +27,7 @@ connection.discover(function (err, result) {
     wants.push("want " + hash);
   });
 
-  connection.negotiate(wants, {
+  connection.fetch(wants, {
     serverCaps: result.caps,
     includeTag: true,
     // onProgress: onProgress,
