@@ -3,6 +3,7 @@ var http = platform.require("http");
 var agent = platform.require("agent");
 var pushToPull = require('push-to-pull');
 var deframer = pushToPull(require('../lib/pkt-line.js').deframer);
+var trace = platform.require('trace');
 
 // opts.hostname - host to connect to (github.com)
 // opts.pathname - path to repo (/creationix/conquest.git)
@@ -35,7 +36,6 @@ module.exports = function (opts) {
     var caps = null;
 
     http.request({
-      trace: opts.trace,
       method: "GET",
       hostname: opts.hostname,
       tls: opts.tls,
@@ -51,7 +51,7 @@ module.exports = function (opts) {
       }
 
       body = deframer(body);
-      if (opts.trace) body = opts.trace("input", body);
+      if (trace) body = trace("input", body);
 
       body.read(function (err, line) {
         if (err) return callback(err);

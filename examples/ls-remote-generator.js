@@ -12,7 +12,6 @@ var opts = urlParse(url);
 if (!opts.protocol) {
   opts = urlParse("ssh://" + url);
 }
-if (process.env.TRACE) opts.trace = require('./trace.js');
 
 // Do the action
 run(function* () {

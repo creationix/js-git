@@ -1,6 +1,7 @@
 var Connection = require('ssh2');
 var wrapStream = require('./stream.js').wrapStream;
 var Duplex = require('stream').Duplex;
+var trace = require('./trace.js');
 
 module.exports = function (opts, callback) {
   var config = {
@@ -38,10 +39,7 @@ module.exports = function (opts, callback) {
     callback(err);
   }
   function onReady() {
-    if (opts.trace) opts.trace("connect", null, {
-      host: config.username + "@" + config.host,
-      port: config.port,
-    });
+    if (trace) trace("connect", null, config.username + "@" + config.host + ":" + config.port);
     clear();
     callback(null, {
       exec: exec,
@@ -51,7 +49,7 @@ module.exports = function (opts, callback) {
 
   function exec(command, callback) {
     command += " " + opts.pathname;
-    if (opts.trace) opts.trace("exec", null, command);
+    if (trace) trace("exec", null, command);
     c.exec(command, function (err, stream) {
       if (err) return callback(err);
       callback(null, wrapStream((new Duplex).wrap(stream)));

@@ -13,7 +13,6 @@ var opts = urlParse(url);
 if (!opts.protocol) {
   opts = urlParse("ssh://" + url);
 }
-if (process.env.TRACE) opts.trace = require('./trace.js');
 var path = opts.pathname.match(/[^\/]*$/)[0];
 
 var connection = autoProto(opts);
@@ -43,7 +42,6 @@ connection.discover(function (err, result) {
         if (err) throw err;
         repo.unpack(packStream, {
           // onProgress: onProgress,
-          trace: opts.trace
         }, function (err) {
           if (err) throw err;
           console.log("DONE");

@@ -1,4 +1,5 @@
 var wrapStream = require('./stream.js').wrapStream;
+var trace = require('./trace.js');
 
 module.exports = {
   request: request
@@ -6,7 +7,7 @@ module.exports = {
 
 function request(opts, callback) {
   var base = opts.tls ? require('https') : require('http');
-  if (opts.trace) opts.trace("request", null, {
+  if (trace) trace("request", null, {
     method: opts.method,
     host: opts.hostname,
     port: opts.port,
@@ -14,7 +15,7 @@ function request(opts, callback) {
     headers: opts.headers
   });
   var req = base.request(opts, function (res) {
-    if (opts.trace) opts.trace("response", null, {
+    if (trace) trace("response", null, {
       code: res.statusCode,
       headers: res.headers
     });

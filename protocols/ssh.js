@@ -5,6 +5,7 @@ var framer = pushToPull(require('../lib/pkt-line.js').framer);
 var writable = require('../helpers/writable.js');
 var ssh = platform.require('ssh');
 var agent = platform.require('agent');
+var trace = platform.require('trace');
 
 // opts.hostname - host to connect to (github.com)
 // opts.pathname - path to repo (/creationix/conquest.git)
@@ -50,13 +51,13 @@ module.exports = function (opts) {
     connection.exec("git-upload-pack", function (err, socket) {
       if (err) return callback(err);
       var input = deframer(socket);
-      if (opts.trace) input = opts.trace("input", input);
+      if (trace) input = trace("input", input);
 
       read = input.read;
       abort = input.abort;
       write = writable(abort);
       var output = write;
-      if (opts.trace) output = opts.trace("output", output);
+      if (trace) output = trace("output", output);
       output = framer(output);
       socket.sink(output)(function (err) {
         throw err;

@@ -1,5 +1,6 @@
 var net = require('net');
 var wrapStream = require('./stream.js').wrapStream;
+var trace = require('./trace.js');
 
 module.exports = {
   createServer: createServer,
@@ -23,17 +24,17 @@ function createServer(port, address, onConnection) {
   return server;
 }
 
-function connect(port, address, callback) {
-  if (typeof address === "function" && typeof callback === "undefined") {
-    callback = address;
-    address = "127.0.0.1";
+function connect(port, host, callback) {
+  if (typeof host === "function" && typeof callback === "undefined") {
+    callback = host;
+    host = "127.0.0.1";
   }
-  if (!callback) return connect.bind(this, port, address);
+  if (!callback) return connect.bind(this, port, host);
   if (typeof port !== "number") throw new TypeError("port must be number");
-  if (typeof address !== "string") throw new TypeError("address must be string");
+  if (typeof host !== "string") throw new TypeError("host must be string");
   if (typeof callback !== "function") throw new TypeError("callback must be function");
 
-  var stream = net.connect(port, address);
+  var stream = net.connect(port, host);
 
   stream.on("error", finish);
   stream.on("connect", onConnect);
@@ -48,6 +49,7 @@ function connect(port, address, callback) {
   }
 
   function onConnect() {
+    if (trace) trace("connect", null, host + ":" + port);
     finish(null, wrapStream(stream));
   }
 
