@@ -26,7 +26,8 @@
     "url": "https://github.com/creationix/js-git/issues"
   },
   "dependencies": {
-    "bops": "~0.0.6"
+    "bops": "~0.0.6",
+    "git-apply-delta": "0.0.7"
   },
   "devDependencies": {
     "ssh2": "~0.2.11",

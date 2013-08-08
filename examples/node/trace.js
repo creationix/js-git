@@ -10,6 +10,7 @@ if (process.env.TRACE) {
     connect: "connect",
     save: "\u2906",
     load: "\u2907",
+    remove: "\u2716",
   };
 
   module.exports = function (type, stream, item) {
