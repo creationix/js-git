@@ -1,9 +1,11 @@
-// Inject the dependencies to fsDb to work using node.js
-var platform = require('./node');
-// And create a db instance
-var db = require('../lib/fs-db.js')(platform)("test.git", true);
-// And wrap in a repo API
-var repo = require('../lib/repo.js')(db);
+// Bootstrap the platform to run on node.js
+require('../lib/platform.js')(require('./node'));
+
+// Load the libraries
+var fsDb = require('../lib/fs-db.js');
+var wrap = require('../lib/repo.js');
+
+var repo = wrap(fsDb("test.git", true));
 
 console.log("Looking up hash that HEAD points to...");
 repo.getHead(function (err, head) {
