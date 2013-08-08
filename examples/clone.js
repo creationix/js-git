@@ -31,9 +31,7 @@ connection.discover(function (err, result) {
   connection.negotiate(wants, {
     serverCaps: result.caps,
     includeTag: true,
-    onProgress: function (data) {
-      process.stdout.write(data);
-    },
+    onProgress: onProgress,
     onError: function (data) {
       process.stderr.write(data);
     }
@@ -43,7 +41,9 @@ connection.discover(function (err, result) {
       if (err) throw err;
       repo.importRefs(refs, function (err) {
         if (err) throw err;
-        repo.unpack(packStream, function (err) {
+        repo.unpack(packStream, {
+          onProgress: onProgress
+        }, function (err) {
           if (err) throw err;
           console.log("DONE");
         });
@@ -51,3 +51,7 @@ connection.discover(function (err, result) {
     });
   });
 });
+
+function onProgress(data) {
+  process.stdout.write(data);
+}
