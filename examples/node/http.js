@@ -21,5 +21,6 @@ function request(opts, callback) {
     });
     callback(null, res.statusCode, res.headers, wrapStream(res));
   });
-  req.end();
+  if (opts.body) req.end(opts.body);
+  else req.end();
 }
