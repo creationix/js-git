@@ -7,6 +7,9 @@ var wrap = require('../lib/repo.js');
 var each = require('../helpers/each.js');
 var autoProto = require('../protocols/auto.js');
 var urlParse = require('url').parse;
+var serial = require('../helpers/serial.js');
+var parallel = require('../helpers/parallel.js');
+var parallelData = require('../helpers/parallel-data.js');
 
 var url = process.argv[2] || "git://github.com/creationix/conquest.git";
 var opts = urlParse(url);
@@ -18,40 +21,41 @@ var path = opts.pathname.match(/[^\/]*$/)[0];
 var connection = autoProto(opts);
 var repo = wrap(fsDb(path, true));
 
-connection.discover(function (err, result) {
+parallelData({
+  init: repo.init(),
+  discover: connection.discover(),
+}, function (err, result) {
   if (err) throw err;
-  var refs = result.refs;
+  var refs = result.discover.refs;
   var wants = [];
   each(refs, function (name, hash) {
     if (name === "HEAD" || name.indexOf('^') > 0) return;
     wants.push("want " + hash);
   });
 
-  connection.fetch(wants, {
-    serverCaps: result.caps,
+  var config = {
+    serverCaps: result.discover.caps,
     includeTag: true,
     // onProgress: onProgress,
     onError: function (data) {
       process.stderr.write(data);
     }
-  }, function (err, packStream) {
+  };
+
+  connection.fetch(wants, config, function (err, pack) {
     if (err) throw err;
-    repo.init(function (err) {
+    serial(
+      parallel(
+        repo.importRefs(refs),
+        repo.unpack(pack, {})
+      ),
+      connection.close()
+    )(function (err) {
       if (err) throw err;
-      repo.importRefs(refs, function (err) {
-        if (err) throw err;
-        repo.unpack(packStream, {
-          // onProgress: onProgress,
-        }, function (err) {
-          if (err) throw err;
-          connection.close(function (err) {
-            if (err) throw err;
-            console.log("DONE");
-          });
-        });
-      });
+      console.log("DONE");
     });
   });
+
 });
 
 function onProgress(data) {
