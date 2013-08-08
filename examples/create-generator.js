@@ -1,9 +1,10 @@
-// Inject the dependencies to fsDb to work using node.js
-var platform = require('./node');
-// And create a db instance
-var db = require('../lib/fs-db.js')(platform)("test.git", true);
-// And wrap in a repo API
-var repo = require('../lib/repo.js')(db);
+// Bootstrap the platform to run on node.js
+require('../lib/platform.js')(require('./node'));
+
+// Load the libraries
+var fsDb = require('../lib/fs-db.js');
+var wrap = require('../lib/repo.js');
+var run = require('gen-run');
 
 // Mock data for generating some history
 var author = "Tim Caswell <tim@creationix.com>";
@@ -24,7 +25,8 @@ var commits = {
   }
 };
 
-require('gen-run')(function *() {
+run(function *() {
+  var repo = wrap(fsDb("test.git", true));
 
   yield repo.init();
   console.log("Git database Initialized");
