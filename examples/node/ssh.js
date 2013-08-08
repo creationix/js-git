@@ -1,5 +1,5 @@
 var Connection = require('ssh2');
-var wrapStream = require('./stream.js').wrapStream;
+var wrapStream = require('./ssh-stream.js').wrapStream;
 var Duplex = require('stream').Duplex;
 var trace = require('./trace.js');
 
@@ -52,7 +52,7 @@ module.exports = function (opts, callback) {
     if (trace) trace("exec", null, command);
     c.exec(command, function (err, stream) {
       if (err) return callback(err);
-      callback(null, wrapStream((new Duplex).wrap(stream)));
+      callback(null, wrapStream(stream));
     });
   }
 

@@ -44,7 +44,10 @@ connection.discover(function (err, result) {
           // onProgress: onProgress,
         }, function (err) {
           if (err) throw err;
-          console.log("DONE");
+          connection.close(function (err) {
+            if (err) throw err;
+            console.log("DONE");
+          });
         });
       });
     });

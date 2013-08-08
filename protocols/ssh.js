@@ -83,10 +83,7 @@ module.exports = function (opts) {
 
   function close(callback) {
     if (!callback) return close.bind(this);
-    if (write) {
-      write(null);
-      write();
-    }
+    if (write) write();
     connection.close(callback);
   }
 
