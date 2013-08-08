@@ -21,43 +21,29 @@ var path = opts.pathname.match(/[^\/]*$/)[0];
 var connection = autoProto(opts);
 var repo = wrap(fsDb(path, true));
 
+var config = {
+  includeTag: true,
+  onProgress: function (data) {
+    process.stdout.write(data);
+  },
+  onError: function (data) {
+    process.stderr.write(data);
+  }
+};
+
 parallelData({
   init: repo.init(),
-  discover: connection.discover(),
+  pack: connection.fetch(config),
 }, function (err, result) {
   if (err) throw err;
-  var refs = result.discover.refs;
-  var wants = [];
-  each(refs, function (name, hash) {
-    if (name === "HEAD" || name.indexOf('^') > 0) return;
-    wants.push("want " + hash);
-  });
-
-  var config = {
-    serverCaps: result.discover.caps,
-    includeTag: true,
-    // onProgress: onProgress,
-    onError: function (data) {
-      process.stderr.write(data);
-    }
-  };
-
-  connection.fetch(wants, config, function (err, pack) {
+  serial(
+    parallel(
+      repo.importRefs(result.pack.refs),
+      repo.unpack(result.pack, config)
+    ),
+    connection.close()
+  )(function (err) {
     if (err) throw err;
-    serial(
-      parallel(
-        repo.importRefs(refs),
-        repo.unpack(pack, {})
-      ),
-      connection.close()
-    )(function (err) {
-      if (err) throw err;
-      console.log("DONE");
-    });
+    console.log("DONE");
   });
-
 });
-
-function onProgress(data) {
-  process.stdout.write(data);
-}

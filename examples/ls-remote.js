@@ -22,6 +22,7 @@ connection.discover(function (err, result) {
   });
   connection.close(function (err) {
     if (err) throw err;
+    console.log("DONE");
   });
 });
 
