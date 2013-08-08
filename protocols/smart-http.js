@@ -62,7 +62,7 @@ module.exports = function (opts) {
       tls: opts.tls,
       port: opts.port,
       auth: opts.auth,
-      path: path,
+      path: opts.pathname + path,
       headers: headers,
       body: body
     }, callback);
@@ -152,7 +152,7 @@ module.exports = function (opts) {
         "Accept": "application/x-git-upload-pack-result",
       }, body, function (err, code, headers, body) {
         if (err) return callback(err);
-        console.log({code:code,headers:headers,body:body});
+        // console.log({code:code,headers:headers,body:body});
       })
 
 //   var packStream = writable(abort);
