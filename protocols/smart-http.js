@@ -152,8 +152,22 @@ module.exports = function (opts) {
         "Accept": "application/x-git-upload-pack-result",
       }, body, function (err, code, headers, body) {
         if (err) return callback(err);
-        // console.log({code:code,headers:headers,body:body});
+        if (code !== 200) return callback(new Error("Unexpected status code " + code));
+        if (headers['content-type'] !== 'application/x-git-upload-pack-result') {
+          return callback(new Error("Wrong content-type in server response"));
+        }
+        body = deframer(body);
+        if (trace) body = trace("input", body);
+        process(body);
+      });
+    });
+
+    function process(body) {
+      body.read(function (err, item) {
+        if (err) return callback(err);
+
       })
+    }
 
 //   var packStream = writable(abort);
 
@@ -192,8 +206,6 @@ module.exports = function (opts) {
 // }
 
 
-
-    });
   }
 
   function close(callback) {
