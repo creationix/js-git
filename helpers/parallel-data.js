@@ -2,7 +2,7 @@ module.exports = parallelData;
 
 // Run many actions in parallel and preserve the results
 function parallelData(actions, callback) {
-  if (!callback) return both.bind(this, a, b);
+  if (!callback) return parallelData.bind(this, actions);
   var results = {};
   var names = Object.keys(actions);
   var left = names.length;

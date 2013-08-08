@@ -8,9 +8,11 @@ if (process.env.TRACE) {
     output: "\u2192",
     exec: "exec",
     connect: "connect",
-    save: "\u2906",
-    load: "\u2907",
+    save: "\u2907",
+    load: "\u2906",
     remove: "\u2716",
+    read: "\u2770",
+    write: "\u2771",
   };
 
   module.exports = function (type, stream, item) {

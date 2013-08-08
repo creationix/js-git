@@ -64,7 +64,7 @@ module.exports = function (opts) {
   }
 
   function fetch(wants, opts, callback) {
-    if (!callback) return fetch.bind(this);
+    if (!callback) return fetch.bind(this, wants, opts);
     if (!read) return callback(new Error("Can't fetch till connected"));
     sharedFetch(wants, opts, {
       read: read,
