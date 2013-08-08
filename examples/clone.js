@@ -38,7 +38,7 @@ connection.discover(function (err, result) {
       process.stderr.write(data);
     }
   }, function (err, packStream) {
-    if (err) return callback(err);
+    if (err) throw err;
     repo.init(function (err) {
       if (err) throw err;
       repo.importRefs(refs, function (err) {
