@@ -7,7 +7,6 @@ var framer = pushToPull(require('../lib/pkt-line.js').framer);
 var trace = platform.require('trace');
 var sharedDiscover = require('./discover.js');
 var each = require('../helpers/each.js');
-var pktLine = require('../lib/pkt-line.js');
 var bops = require('bops');
 var writable = require('../helpers/writable.js');
 

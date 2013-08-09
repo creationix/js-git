@@ -1,8 +1,6 @@
 module.exports = discover;
 function discover(socket, callback) {
-  var read = socket.read,
-      write = socket.write,
-      abort = socket.abort;
+  var read = socket.read;
 
   var refs = {};
   var caps = null;
