@@ -1,4 +1,4 @@
-# Kickstarter Backer
+# Kickstarter Backers
 
 Originally JS-Git started at a [kickstarter project][].  This was to enable me to spend the time required to get the project off the ground.  These are the people who contributed to this fund raiser and wanted to be listed at backers.
 
