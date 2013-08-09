@@ -9,10 +9,8 @@ function writable(abort) {
   write.error = error;
   return write;
   
-  function write() {
-    for (var i = 0, l = arguments.length; i < l; i++) {
-      queue.push([null, arguments[i]]);
-    }
+  function write(item) {
+    queue.push([null, item]);
     check();
   }
   

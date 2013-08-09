@@ -62,7 +62,7 @@ function fetch(socket, opts, callback) {
     if (err) return packStream.error(err);
     if (item) {
       if (item.progress) {
-        if (opts.onProgress) opts.onProgress("remote: " + item.progress);
+        if (opts.onProgress) opts.onProgress(item.progress);
       }
       else if (item.error) {
         if (opts.onError) opts.onError(item.error);

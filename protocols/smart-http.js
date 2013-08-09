@@ -3,11 +3,14 @@ var http = platform.require("http");
 var agent = platform.require("agent");
 var pushToPull = require('push-to-pull');
 var deframer = pushToPull(require('../lib/pkt-line.js').deframer);
+var framer = pushToPull(require('../lib/pkt-line.js').framer);
 var trace = platform.require('trace');
 var sharedDiscover = require('./discover.js');
 var each = require('../helpers/each.js');
 var pktLine = require('../lib/pkt-line.js');
 var bops = require('bops');
+var writable = require('../helpers/writable.js');
+
 
 // opts.hostname - host to connect to (github.com)
 // opts.pathname - path to repo (/creationix/conquest.git)
@@ -48,24 +51,49 @@ module.exports = function (opts) {
     }, callback);
   }
 
+  function buffer(body, callback) {
+    var parts = [];
+    body.read(onRead);
+    function onRead(err, item) {
+      if (err) return callback(err);
+      if (item === undefined) {
+        return callback(null, bops.join(parts));
+      }
+      parts.push(item);
+      body.read(onRead);
+    }
+  }
+
   function post(path, headers, body, callback) {
     headers = addDefaults(headers);
     if (typeof body === "string") {
       body = bops.from(body);
     }
     if (bops.is(body)) {
-      headers["Content-Length"] = body.length
+      headers["Content-Length"] = body.length;
     }
-    http.request({
-      method: "POST",
-      hostname: opts.hostname,
-      tls: opts.tls,
-      port: opts.port,
-      auth: opts.auth,
-      path: opts.pathname + path,
-      headers: headers,
-      body: body
-    }, callback);
+    else {
+      if (headers['Transfer-Encoding'] !== 'chunked') {
+        return buffer(body, function (err, body) {
+          if (err) return callback(err);
+          headers["Content-Length"] = body.length;
+          send(body);
+        });
+      }
+    }
+    send(body);
+    function send(body) {
+      http.request({
+        method: "POST",
+        hostname: opts.hostname,
+        tls: opts.tls,
+        port: opts.port,
+        auth: opts.auth,
+        path: opts.pathname + path,
+        headers: headers,
+        body: body
+      }, callback);
+    }
   }
 
   // Send initial git-upload-pack request
@@ -128,29 +156,36 @@ module.exports = function (opts) {
       if (want) throw new Error("TODO: Implement dynamic wants");
       if (have) throw new Error("TODO: Implement dynamic have");
 
-      var wants = [];
+      var write = writable();
+      var output = {
+        read: write.read,
+        abort: write.abort
+      };
+      if (trace) output = trace("output", output);
+      output = framer(output);
+
+
+      var first = true;
       each(refs, function (name, hash) {
         if (name === "HEAD" || name.indexOf('^') > 0) return;
-        wants.push("want " + hash);
-      });
-
-      wants[0] += " " + caps.join(" ");
-      wants.push(null, "done\n");
-
-      var body = [];
-      wants.forEach(function (line) {
-        if (line === null) {
-          return body.push(bops.from("0000"));
+        var line = "want " + hash;
+        if (first) {
+          first = false;
+          line += " " + caps.join(" ");
         }
-        line = bops.from(line);
-        body.push(pktLine.frameHead(line), line);
+        write(line + "\n");
       });
-      body = bops.join(body);
+
+      write(null);
+      write("done\n");
+      write();
+
+      var packStream = writable();
 
       post("/git-upload-pack", {
         "Content-Type": "application/x-git-upload-pack-request",
         "Accept": "application/x-git-upload-pack-result",
-      }, body, function (err, code, headers, body) {
+      }, output, function (err, code, headers, body) {
         if (err) return callback(err);
         if (code !== 200) return callback(new Error("Unexpected status code " + code));
         if (headers['content-type'] !== 'application/x-git-upload-pack-result') {
@@ -158,53 +193,39 @@ module.exports = function (opts) {
         }
         body = deframer(body);
         if (trace) body = trace("input", body);
-        process(body);
+        body.read(function (err, nak) {
+          if (err) return callback(err);
+          if (nak.trim() !== "NAK") {
+            return callback(Error("Expected NAK"));
+          }
+          callback(null, {
+            read: packStream.read,
+            abort: packStream.abort,
+            refs: refs
+          });
+          body.read(onItem);
+        });
+        function onItem(err, item) {
+          if (err) return packStream.error(err);
+          if (item) {
+            if (item.progress) {
+              if (onProgress) onProgress(item.progress);
+            }
+            else if (item.error) {
+              if (onError) onError(item.error);
+            }
+            else {
+              packStream(item);
+            }
+          }
+          if (item === undefined) {
+            packStream(undefined);
+          }
+          else body.read(onItem);
+        }
       });
+
     });
-
-    function process(body) {
-      body.read(function (err, item) {
-        if (err) return callback(err);
-
-      })
-    }
-
-//   var packStream = writable(abort);
-
-//   read(function (err, nak) {
-//     if (err) return callback(err);
-//     if (nak.trim() !== "NAK") {
-//       return callback(Error("Expected NAK"));
-//     }
-//     callback(null, {
-//       read: packStream.read,
-//       abort: packStream.abort,
-//       refs: refs
-//     });
-//     read(onItem);
-//   });
-
-//   function onItem(err, item) {
-//     if (err) return packStream.error(err);
-//     if (item) {
-//       if (item.progress) {
-//         if (opts.onProgress) opts.onProgress("remote: " + item.progress);
-//       }
-//       else if (item.error) {
-//         if (opts.onError) opts.onError(item.error);
-//       }
-//       else {
-//         packStream(item);
-//       }
-//     }
-//     if (item === undefined) {
-//       packStream(undefined);
-//     }
-//     else read(onItem);
-//   }
-
-// }
-
 
   }
 
@@ -213,4 +234,4 @@ module.exports = function (opts) {
     callback();
   }
 
-}
+};
