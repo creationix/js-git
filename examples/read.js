@@ -8,7 +8,7 @@ var wrap = require('../lib/repo.js');
 var repo = wrap(fsDb("test.git", true));
 
 console.log("Looking up hash that HEAD points to...");
-repo.getHead(function (err, head) {
+repo.get("HEAD", function (err, head) {
   if (err) throw err;
 
   console.log("HEAD", head);

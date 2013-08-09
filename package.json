@@ -26,6 +26,6 @@
   "devDependencies": {
     "js-git-node-platform": "~0.2.0",
     "gen-run": "~0.1.0",
-    "js-hint": "~2.1.9"
+    "jshint": "~2.1.9"
   }
 }

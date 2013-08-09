@@ -11,7 +11,7 @@ run(function*() {
   var repo = wrap(fsDb("test.git", true));
 
   console.log("Looking up hash that HEAD points to...");
-  var hash = yield repo.getHead();
+  var hash = yield repo.get("HEAD");
   console.log("HEAD", hash);
 
   do {
