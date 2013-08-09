@@ -64,30 +64,11 @@ Another sample usage is [js-git-node][].
 
 This is a CLI tool that can replace a subset of the git command-line tool.  This is useful on platforms that have node.js, but it's still hard to install git. (windows, crosh shell, etc...)
 
-## Related Packages
-
-Not all parts of js-git are in this package.  Of note, the min-stream code is already factored out into several standalone packages.
-
- - [min-stream][] - Helpers for working with min-streams.
- - [min-stream-node][] - A node.js adapter that provides tcp client and server as well as file streams using min-streams.
- - [min-stream-uv][] - A crazy experiment to implement the same interface as min-stream-node, but using node's private internal libuv bindings for maximum speed and unstability.
- - [min-stream-chrome][] - Another implementation of the tcp and fs API, but wrapping chrome packaged apps's special APIs.
- - [min-stream-http-codec][] - A set of filters that makes implementing HTTP clients and servers easy.
-
-## Projects using JS-Git
-
- - [js-git-app][] - A chrome packaged app used to demo/test using js-git in a chrome environment.
- - [js-git-node][] - A node CLI tool used to demo/test using js-git in the node.js environment.
 
 [node.js]: http://nodejs.org
 [git]: http://git-scm.com/
 [browserify]: http://browserify.org/
 [chrome packaged apps]: http://developer.chrome.com/apps/
-[min-stream]: https://github.com/creationix/min-stream
-[min-stream-node]: https://github.com/creationix/min-stream-node
-[min-stream-uv]: https://github.com/creationix/min-stream-uv
-[min-stream-chrome]: https://github.com/creationix/min-stream-chrome
-[min-stream-http-codec]: https://github.com/creationix/min-stream-http-codec
 [js-git-app]: https://github.com/creationix/js-git-app
 [js-git-node]: https://github.com/creationix/js-git-node
 [app store]: https://chrome.google.com/webstore/detail/js-git-test-app/gcipadbniegpaccphmnfnpgklahgennp
