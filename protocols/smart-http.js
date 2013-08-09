@@ -24,7 +24,7 @@ module.exports = function (opts) {
   return {
     discover: discover,
     fetch: fetch,
-    close: close
+    close: closeConnection
   };
 
   function addDefaults(extras) {
@@ -228,7 +228,7 @@ module.exports = function (opts) {
 
   }
 
-  function close(callback) {
+  function closeConnection(callback) {
     if (!callback) return close.bind(this);
     callback();
   }

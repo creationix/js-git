@@ -23,7 +23,7 @@ module.exports = function (opts) {
   return {
     discover: discover,
     fetch: fetch,
-    close: close
+    close: closeConnection
   };
 
   function connect(command, callback) {
@@ -58,10 +58,12 @@ module.exports = function (opts) {
   // outputs refs and caps
   function discover(callback) {
     if (!callback) return discover.bind(this);
-    if (!connection) return connect("git-upload-pack", function (err) {
-      if (err) return callback(err);
-      return discover(callback);
-    });
+    if (!connection) {
+      return connect("git-upload-pack", function (err) {
+        if (err) return callback(err);
+        return discover(callback);
+      });
+    }
     sharedDiscover(connection, callback);
   }
 
@@ -75,7 +77,7 @@ module.exports = function (opts) {
     });
   }
 
-  function close(callback) {
+  function closeConnection(callback) {
     if (!callback) return close.bind(this);
     connection.write();
     tunnel.close(function (err) {
