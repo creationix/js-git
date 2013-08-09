@@ -23,7 +23,7 @@ Stat a file getting mtime, ctime, size, mode, etc as a JS object with the follow
   - mtime [seconds, nanoseconds]
   - dev
   - ino
-  - mode 1000,1010,1110 | 0755,0644
+  - mode (executable file 0100755, normal file 0100644, symlink 0120000)
   - uid
   - gid
   - size
@@ -32,37 +32,13 @@ Stat a file getting mtime, ctime, size, mode, etc as a JS object with the follow
 var stat = yield fs.stat("/path/to/my/file.txt");
 ```
 
-## read(path, [encoding]) -> continuable<binary_or_string>
+## read(path, encoding) -> continuable<binary_or_string>
 
 Read a file as a single string or binary buffer
 
-## write(path, value, [encoding]) -> continuable
+## write(path, value, mode) -> continuable
 
 Write a file as a single string or binary buffer
-
-## readStream(path, [options]) -> continuable&lt;stream>
-
-Open a file by path for reading and return a simple-stream.
-
-  - options.start - start at offset
-  - options.end - end at offset
-
-```js
-var input = yield fs.readStream("/path/to/my/file.txt");
-```
-
-## writeStream(path, [options]) -> continuable&lt;sink>
-
-Create a simple-stream sink that saves the stream to disk.
-
-  - options.mode - create file with custom mode (base 8 string or integer)
-
-```js
-var save = yield fs.writeStream("/path/to/output.txt");
-console.log("Saving input to disk...");
-yield save(input);
-console.log("Saved");
-```
 
 ## unlink(path) -> continuable
 
@@ -88,12 +64,12 @@ Create a symlink at path with given target.
 yield fs.symlink("/path.to/symlink", "../target");
 ```
 
-## readdir(path) -> continuable&lt;stream>
+## readdir(path) -> continuable&lt;files>
 
-Returns a stream of filenames in the target path.
+Returns an array of filenames in the target path.
 
 ```js
-var nameStream = yield fs.readdir("..");
+var files = yield fs.readdir("..");
 ```
 
 ## rmdir(path) -> continuable
@@ -143,7 +119,7 @@ require('simple-html5-fs')('/js-git', function (err, fs) {
 
 # Concrete Implementations
 
- - [simple-fs](https://github.com/creationix/simple-fs) - Implementation for Node.JS
+ - [js-git-node-platform](https://github.com/creationix/js-git-node-platform) - Implementation for Node.JS
 
 [gen-run]: https://github.com/creationix/gen-run
 [continuables]: https://github.com/creationix/js-git/blob/master/specs/continuable.md
