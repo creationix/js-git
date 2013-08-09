@@ -1,5 +1,5 @@
 // Bootstrap the platform to run on node.js
-require('../lib/platform.js')(require('./node'));
+require('../lib/platform.js')(require('js-git-node-platform'));
 
 // Load the libraries
 var fsDb = require('../lib/fs-db.js');

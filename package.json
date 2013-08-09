@@ -1,6 +1,6 @@
 {
   "name": "js-git",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Git Implemented in JavaScript",
   "repository": {
     "type": "git",
@@ -17,11 +17,11 @@
   },
   "dependencies": {
     "bops": "~0.0.6",
-    "git-apply-delta": "0.0.7"
+    "git-apply-delta": "0.0.7",
+    "push-to-pull": "~0.1.0"
   },
   "devDependencies": {
-    "ssh2": "~0.2.11",
-    "gen-run": "~0.1.0",
-    "push-to-pull": "~0.1.0"
+    "js-git-node-platform": "~0.2.0",
+    "gen-run": "~0.1.0"
   }
 }

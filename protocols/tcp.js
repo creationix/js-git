@@ -35,7 +35,7 @@ module.exports = function (opts) {
         read: input.read,
         abort: input.abort,
         write: output
-      }
+      };
       if (trace) output = trace("output", output);
       output = framer(output);
       socket.sink(output)(function (err) {
@@ -72,7 +72,6 @@ module.exports = function (opts) {
   function close(callback) {
     if (!callback) return close.bind(this);
     connection.write(null);
-    connection.write();
     callback();
   }
-}
+};
