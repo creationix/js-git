@@ -15,6 +15,9 @@
   "bugs": {
     "url": "https://github.com/creationix/js-git/issues"
   },
+  "scripts": {
+    "test": "find . -name '*.js' | grep -v node_modules | grep -v min.js | xargs jshint"
+  },
   "dependencies": {
     "bops": "~0.0.6",
     "git-apply-delta": "0.0.7",
@@ -22,6 +25,7 @@
   },
   "devDependencies": {
     "js-git-node-platform": "~0.2.0",
-    "gen-run": "~0.1.0"
+    "gen-run": "~0.1.0",
+    "js-hint": "~2.1.9"
   }
 }
