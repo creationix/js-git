@@ -1,10 +1,16 @@
-# Backers
+# Kickstarter Backer
+
+Originally JS-Git started at a [kickstarter project][].  This was to enable me to spend the time required to get the project off the ground.  These are the people who contributed to this fund raiser and wanted to be listed at backers.
 
 ## Deep Backer
+
+> You really wish this project existed and probably derive some sort of commercial value out of its existence. If you're within the continental United States. I'll come to your company and spend a day helping you integrate the library into your project. Your name, url, and short blurb will be in the BACKERS.md file for all history to see.
 
  - Mozilla <https://www.mozilla.org>
 
 ## Open Web Warrior
+
+> You believe in enabling the web platform and put your money where your mouth is. To reward your generosity, I'll give personal assistance to you or your company integrating the library into your project. This can be up to an hour of video chat or several email/chat sessions. You will get a sheet of laptop stickers and your name, and optional url will be in the BACKERS.md file for all history to see.
 
  - Michael Bradley <https://github.com/michaelsbradleyjr>
  - Scott González <http://scottgonzalez.com>
@@ -32,9 +38,13 @@
 
 ## Code Backer
 
+> Chris decided to back with code and had been immensely helpful in getting this project started.  I sent him a pack of stickers as reward.
+
  - Chris Dickinson <https://github.com/chrisdickinson/>
 
 ## Believer
+
+> You believe this project is important and want to enable me to create it. I'll send you a vinyl laptop sticker with the awesome JSGit logo on it so you can show off your support. Your name will be in the BACKERS.md file for all history to see.
 
  - Luke Arduini
  - garza
@@ -141,6 +151,8 @@
  - Manuel Alejandro de Brito Fontes
 
 ## Supporter
+
+> You really support this idea and want to do your part to help see it happen. Your name will be in the BACKERS.md file for all history to see.
 
  - Eric Knudtson
  - Damien Klinnert
@@ -336,3 +348,5 @@
  - Antoine Brault
  - Bruno Vieira, @bmpvieira
  - Charles Moncrief
+
+[kickstarter project]: http://www.kickstarter.com/projects/creationix/js-git
