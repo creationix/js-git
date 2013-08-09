@@ -1,13 +1,10 @@
-*WARNING* This spec is out of date, update coming shortly.  See <https://github.com/creationix/git-fs-db> for now.
-
-
 # Git Database
 
 This interface describes the git database used to store git objects (blobs, trees, commits, and tags) as well as refs (bookmarks to hashes).
 
 The objects are stored by the sha1 of their binary representation as the key.  The refs are more like key/value entries where key is the name and value if the hash or symbolic name.
 
-All examples use `yield` to consume [continuables][], assuming generators with [gen-run][] wrapping, but can be used with ES5 code as well.  Streams are in [min-stream][] format.
+All examples use `yield` to consume [continuables][], assuming generators with [gen-run][] wrapping, but can be used with ES5 code as well.  Streams are in [simple-stream][] format.
 
 ```js
 // ES6 syntax
@@ -20,79 +17,67 @@ fs.readlink("/path/to/symlink")(function (err, target) {
 });
 ```
 
-## load(hash) -> source&lt;binary>
+## fs (working directory)
 
-Given an object hash, return a data stream.  
+If the db also has a working directory (a non-bare repo), then fs is the [fs interface][] instance to the working directory.
+
+## load(hash) -> continuable&lt;object>
+
+Given an object hash, return a raw object.
 
 ```js
 var stream = db.load(hash);
 ```
 
-## save(source) -> continuable&lt;hash>
+Raw objects have the following structure:
 
-Save an object to the database.  Source is a binary data stream already git encoded.
+```js
+{
+  type: ("tree" | "blob" | "commit" | or "tag")
+  body: Buffer
+}
+```
 
-The output is the SHA1 hash (hex encoded) of the stream's contents where the data can later be retrieved.
+## save(object) -> continuable&lt;hash>
+
+Save a raw object to the database.  Note that the body needs to be already encoded, but not include the type and length headers.
+
+The output is the SHA1 hash (hex encoded) of the data (header included) where the data can later be retrieved.
 
 ```js
 var hash = yield db.save(stream);
 ```
 
-## read(path) -> continuable&lt;hash>
+## read(path) -> continuable&lt;string>
 
-Read a ref by path.  This will auto-resolve symbolic refs.
+Read a ref by path.  This does not auto-resolve symbolic refs.
 
 ```js
-var hash = yield db.read("HEAD");
+var sym = yield db.read("HEAD");
 ```
 
-## write(path, hash) -> continuable
+## write(path, string) -> continuable
 
 Write a ref to the database.
 
 ```js
 yield db.write("/refs/heads/master", hash);
+yield db.write("HEAD", "ref: /refs/heads/master");
 ```
 
-## listObjects() -> source&lt;hash>
-
-Create a stream of all the hash keys in the database.
-
-```js
-var hashStream = db.listObjects();
-```
-
-## listRefs() -> source&lt;path>
-
-Create a stream that emits all ref paths.
-
-```js
-var pathStream = db.listRefs();
-```
-
-## removeObject(hash) -> continuable
+## remove(hash) -> continuable
 
 Given a hash, remove an object from the database.
 
 ```js
-yield db.removeObject(hash);
-```
-
-## removeRef(path) -> continuable
-
-Delete a ref by path.
-
-```js
-yield db.removeRef("/refs/heads/temp");
+yield db.remove(hash);
 ```
 
 # Concrete Implementations
 
-There isn't one yet, but a generic one that builds on top of a generic K/V store and the [sha1][] interface could easly be build as long as the K/V store allowed for renames or naming after writing.
-
-- [git-repo/fs-db.js](https://github.com/creationix/git-repo/blob/master/fs-db.js) An in-progress implementation that sits on top of a fs interface isntance.
+JS-Git comes with an adapter that implements this interface on top of a [fs interface] instance at `require('js-git/lib/fs-db.js')`.
 
 [gen-run]: https://github.com/creationix/gen-run
 [continuables]: https://github.com/creationix/js-git/blob/master/specs/continuable.md
-[sha1]: https://github.com/creationix/js-git/blob/master/specs/sha1.md
-[min-stream]: https://github.com/creationix/js-git/blob/master/specs/min-stream.md
+[simple-stream]: https://github.com/creationix/js-git/blob/master/specs/simple-stream.md
+[fs interface]: https://github.com/creationix/js-git/blob/master/specs/fs.md
