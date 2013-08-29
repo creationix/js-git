@@ -80,10 +80,7 @@ module.exports = function (opts) {
   function closeConnection(callback) {
     if (!callback) return closeConnection.bind(this);
     connection.write();
-    tunnel.close(function (err) {
-      if (err) return callback(err);
-      callback(null, result);
-    });
+    tunnel.close(callback);
   }
 
 };

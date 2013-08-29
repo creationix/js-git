@@ -19,10 +19,10 @@ function fetch(socket, opts, callback) {
   if (serverCaps["ofs-delta"]) caps.push("ofs-delta");
   if (serverCaps["thin-pack"]) caps.push("thin-pack");
   if (opts.includeTag && serverCaps["include-tag"]) caps.push("include-tag");
-  if ((opts.onProgress || opts.onError) &&
+  if ((onProgress || onError) &&
       (serverCaps["side-band-64k"] || serverCaps["side-band"])) {
     caps.push(serverCaps["side-band-64k"] ? "side-band-64k" : "side-band");
-    if (!opts.onProgress && serverCaps["no-progress"]) {
+    if (!onProgress && serverCaps["no-progress"]) {
       caps.push("no-progress");
     }
   }
@@ -62,10 +62,10 @@ function fetch(socket, opts, callback) {
     if (err) return packStream.error(err);
     if (item) {
       if (item.progress) {
-        if (opts.onProgress) opts.onProgress(item.progress);
+        if (onProgress) onProgress(item.progress);
       }
       else if (item.error) {
-        if (opts.onError) opts.onError(item.error);
+        if (onError) onError(item.error);
       }
       else {
         packStream(item);
