@@ -39,7 +39,7 @@ module.exports = function (opts) {
       if (trace) output = trace("output", output);
       output = framer(output);
       socket.sink(output)(function (err) {
-        throw err;
+        if (err) console.error(err.stack || err);
         // TODO: handle this better somehow
         // maybe allow writable streams
       });
