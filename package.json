@@ -1,6 +1,6 @@
 {
   "name": "js-git",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Git Implemented in JavaScript",
   "repository": {
     "type": "git",
@@ -19,7 +19,8 @@
     "test": "find . -name '*.js' | grep -v node_modules | grep -v min.js | xargs jshint"
   },
   "dependencies": {
-    "push-to-pull": "~0.1.0"
+    "push-to-pull": "~0.1.0",
+    "varint": "0.0.3"
   },
   "devDependencies": {
     "js-git-node-platform": "~0.2.0",
