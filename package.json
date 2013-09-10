@@ -1,6 +1,6 @@
 {
   "name": "js-git",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Git Implemented in JavaScript",
   "repository": {
     "type": "git",
@@ -14,17 +14,5 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/creationix/js-git/issues"
-  },
-  "scripts": {
-    "test": "find . -name '*.js' | grep -v node_modules | grep -v min.js | xargs jshint"
-  },
-  "dependencies": {
-    "push-to-pull": "~0.1.0",
-    "varint": "0.0.3"
-  },
-  "devDependencies": {
-    "js-git-node-platform": "~0.2.0",
-    "gen-run": "~0.1.0",
-    "jshint": "~2.1.9"
   }
 }
