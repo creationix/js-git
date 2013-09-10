@@ -68,21 +68,20 @@ function newRepo(conf, platform) {
       if (err) return callback(err);
       return db.load(hash, function (err, buffer) {
         if (err) return callback(err);
-        var checkHash, type, object;
+        var type, object;
         try {
+          if (sha1(buffer) !== hash) {
+            throw new Error("Hash checksum failed for " + hash);
+          };
           var pair = deframe(buffer);
           type = pair[0];
           buffer = pair[1];
-          checkHash = sha1(buffer);
           object = {
             type: type,
             body: decoders[type](buffer)
           };
         } catch (err) {
           if (err) return callback(err);
-        }
-        if (checkHash !== hash) {
-          return callback(new Error("Hash checksum failed for " + hash));
         }
         if (trace) trace("load", hash);
         return callback(null, object);
@@ -95,8 +94,8 @@ function newRepo(conf, platform) {
     var buffer, hash;
     try {
       buffer = encoders[object.type](object.body);
-      hash = sha1(buffer);
       buffer = frame(object.type, buffer);
+      hash = sha1(buffer);
     }
     catch (err) {
       return callback(err);
@@ -273,29 +272,99 @@ function newRepo(conf, platform) {
     throw new Error("TODO: Implement repo.fetch");
   }
 
-  function deframe(buffer) {
-    throw new Error("TODO: Implement frame");
+  function indexOf(buffer, byte, i) {
+    i |= 0;
+    var length = buffer.length;
+    for (;;i++) {
+      if (i >= length) return -1;
+      if (buffer[i] === byte) return i;
+    }
   }
 
-  function frame(type, buffer) {
-    throw new Error("TODO: Implement deframe");
+  function parseAscii(buffer, start, end) {
+    var val = "";
+    while (start < end) {
+      val += String.fromCharCode(buffer[start++]);
+    }
+    return val;
+  }
 
+  function parseDec(buffer, start, end) {
+    var val = 0;
+    while (start < end) {
+      val = val * 10 + buffer[start++] - 0x30;
+    }
+    return val;
+  }
+
+  function deframe(buffer) {
+    var space = indexOf(buffer, 0x20);
+    if (space < 0) throw new Error("Invalid git object buffer");
+    var nil = indexOf(buffer, 0x00, space);
+    if (nil < 0) throw new Error("Invalid git object buffer");
+    var body = bops.subarray(buffer, nil + 1);
+    var size = parseDec(buffer, space + 1, nil);
+    if (size !== body.length) throw new Error("Invalid body length.");
+    return [
+      parseAscii(buffer, 0, space),
+      body
+    ];
+  }
+
+  function frame(type, body) {
+    return bops.join([
+      bops.from(type + " " + body.length + "\0"),
+      body
+    ]);
   }
 
   function encodeCommit(commit) {
-    throw new Error("TODO: Implement encodeCommit");
+    var str = "";
+    Object.keys(commit).forEach(function (key) {
+      if (key === "message") return;
+      var value = commit[key];
+      if (key === "parents") {
+        value.forEach(function (value) {
+          str += "parent " + value + "\n";
+        });
+      }
+      else {
+        str += key + " " + value + "\n";
+      }
+    });
+    return bops.from(str + "\n" + commit.message);
   }
 
   function encodeTag(tag) {
-    throw new Error("TODO: Implement encodeTag");
+    var str = "";
+    Object.keys(tag).forEach(function (key) {
+      if (key === "message") return;
+      var value = tag[key];
+      str += key + " " + value + "\n";
+    });
+    return bops.from(str + "\n" + tag.message);
+  }
+
+  function pathCmp(a, b) {
+    a += "/"; b += "/";
+    return a < b ? -1 : a > b ? 1 : 0;
   }
 
   function encodeTree(tree) {
-    throw new Error("TODO: Implement encodeTree");
+    var chunks = [];
+    Object.keys(tree).sort(pathCmp).forEach(function (name) {
+      var entry = tree[name];
+      chunks.push(
+        bops.from(entry.mode.toString(8) + " " + name + "\0"),
+        bops.from(entry.hash, "hex")
+      );
+    });
+    return bops.join(chunks);
   }
 
   function encodeBlob(blob) {
-    throw new Error("TODO: Implement encodeBlob");
+    if (bops.is(blob)) return blob;
+    return bops.from(blob);
   }
 
   function decodeCommit(buffer) {
