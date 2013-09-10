@@ -1,12 +1,28 @@
 module.exports = newRepo;
 
 // platform options are: db, proto, and trace
-function newRepo(platform) {
+function newRepo(conf, platform) {
   var trace = platform.trace;
-  var db = platform.db;
-  var fs = platform.fs;
-  var index = platform.index;
-  var proto = platform.proto;
+  var sha1 = platform.sha1;
+  var bops = platform.bops;
+  var db = conf.db;
+  var fs = conf.fs;
+  var index = conf.index;
+  var proto = conf.proto;
+
+  var encoders = {
+    commit: encodeCommit,
+    tag: encodeTag,
+    tree: encodeTree,
+    blob: encodeBlob
+  };
+
+  var decoders = {
+    commit: decodeCommit,
+    tag: decodeTag,
+    tree: decodeTree,
+    blob: decodeBlob
+  };
 
   var repo = {};
 
@@ -14,6 +30,8 @@ function newRepo(platform) {
     // Git Objects
     repo.load = load;       // (hashish) -> object
     repo.save = save;       // (object) -> hash
+    repo.loadAs = loadAs;   // (type, hashish) -> value
+    repo.saveAs = saveAs;   // (type, value) -> hash
     repo.remove = remove;   // (hashish)
 
     // Refs
@@ -48,8 +66,24 @@ function newRepo(platform) {
     if (!callback) return load.bind(this, hashish);
     return resolveHashish(hashish, function (err, hash) {
       if (err) return callback(err);
-      return db.load(hash, function (err, object) {
+      return db.load(hash, function (err, buffer) {
         if (err) return callback(err);
+        var checkHash, type, object;
+        try {
+          var pair = deframe(buffer);
+          type = pair[0];
+          buffer = pair[1];
+          checkHash = sha1(buffer);
+          object = {
+            type: type,
+            body: decoders[type](buffer)
+          };
+        } catch (err) {
+          if (err) return callback(err);
+        }
+        if (checkHash !== hash) {
+          return callback(new Error("Hash checksum failed for " + hash));
+        }
         if (trace) trace("load", hash);
         return callback(null, object);
       });
@@ -58,11 +92,36 @@ function newRepo(platform) {
 
   function save(object, callback) {
     if (!callback) return save.bind(this, object);
-    return db.save(object, function (err, hash) {
+    var buffer, hash;
+    try {
+      buffer = encoders[object.type](object.body);
+      hash = sha1(buffer);
+      buffer = frame(object.type, buffer);
+    }
+    catch (err) {
+      return callback(err);
+    }
+    return db.save(hash, buffer, function (err) {
       if (err) return callback(err);
       if (trace) trace("save", hash);
       return callback(null, hash);
     });
+  }
+
+  function loadAs(type, hashish, callback) {
+    if (!callback) return loadAs.bind(this, type, hashish);
+    return load(hashish, function (err, object) {
+      if (err) return callback(err);
+      if (object.type !== type) {
+        return new Error("Expected " + type + ", but found " + object.type);
+      }
+      return callback(null, object.body);
+    });
+  }
+
+  function saveAs(type, body, callback) {
+    if (!callback) return saveAs.bind(this, type, body);
+    return save({ type: type, body: body }, callback);
   }
 
   function remove(hashish, callback) {
@@ -214,6 +273,46 @@ function newRepo(platform) {
     throw new Error("TODO: Implement repo.fetch");
   }
 
+  function deframe(buffer) {
+    throw new Error("TODO: Implement frame");
+  }
+
+  function frame(type, buffer) {
+    throw new Error("TODO: Implement deframe");
+
+  }
+
+  function encodeCommit(commit) {
+    throw new Error("TODO: Implement encodeCommit");
+  }
+
+  function encodeTag(tag) {
+    throw new Error("TODO: Implement encodeTag");
+  }
+
+  function encodeTree(tree) {
+    throw new Error("TODO: Implement encodeTree");
+  }
+
+  function encodeBlob(blob) {
+    throw new Error("TODO: Implement encodeBlob");
+  }
+
+  function decodeCommit(buffer) {
+    throw new Error("TODO: Implement decodeCommit");
+  }
+
+  function decodeTag(buffer) {
+    throw new Error("TODO: Implement decodeTag");
+  }
+
+  function decodeTree(buffer) {
+    throw new Error("TODO: Implement decodeTree");
+  }
+
+  function decodeBlob(buffer) {
+    return buffer;
+  }
 
 }
 
