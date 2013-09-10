@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="New document 1">
+   sodipodi:docname="architecture.svg">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -25,8 +25,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.1793563"
-     inkscape:cx="625.20514"
-     inkscape:cy="379.02032"
+     inkscape:cx="573.15621"
+     inkscape:cy="353.54057"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -47,7 +47,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -67,120 +67,6 @@
          id="tspan2987"
          x="1596.223"
          y="216.61218">js-git</tspan></text>
-    <g
-       id="g3187"
-       transform="translate(20.00004,0)">
-      <text
-         xml:space="preserve"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         x="1836.3665"
-         y="463.61218"
-         id="text2991"
-         sodipodi:linespacing="125%"><tspan
-           sodipodi:role="line"
-           id="tspan2993"
-           x="1836.3665"
-           y="463.61218">db</tspan></text>
-      <text
-         sodipodi:linespacing="125%"
-         id="text2995"
-         y="410.61218"
-         x="1836.3665"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         xml:space="preserve"><tspan
-           y="410.61218"
-           x="1836.3665"
-           id="tspan2997"
-           sodipodi:role="line">fs</tspan></text>
-      <text
-         sodipodi:linespacing="125%"
-         id="text2999"
-         y="304.61218"
-         x="1836.3665"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         xml:space="preserve"><tspan
-           y="304.61218"
-           x="1836.3665"
-           id="tspan3001"
-           sodipodi:role="line">sha1</tspan></text>
-      <text
-         xml:space="preserve"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         x="1836.3665"
-         y="357.61218"
-         id="text3003"
-         sodipodi:linespacing="125%"><tspan
-           sodipodi:role="line"
-           id="tspan3005"
-           x="1836.3665"
-           y="357.61218">inflate</tspan></text>
-      <text
-         sodipodi:linespacing="125%"
-         id="text3007"
-         y="357.61218"
-         x="1982.3665"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         xml:space="preserve"><tspan
-           y="357.61218"
-           x="1982.3665"
-           id="tspan3009"
-           sodipodi:role="line">deflate</tspan></text>
-      <text
-         sodipodi:linespacing="125%"
-         id="text3011"
-         y="410.61218"
-         x="1982.3665"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         xml:space="preserve"><tspan
-           y="410.61218"
-           x="1982.3665"
-           id="tspan3013"
-           sodipodi:role="line">tcp</tspan></text>
-      <text
-         xml:space="preserve"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         x="1982.3665"
-         y="463.61218"
-         id="text3015"
-         sodipodi:linespacing="125%"><tspan
-           id="tspan3019"
-           sodipodi:role="line"
-           x="1982.3665"
-           y="463.61218">http</tspan></text>
-      <text
-         sodipodi:linespacing="125%"
-         id="text3023"
-         y="516.61218"
-         x="1982.3665"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         xml:space="preserve"><tspan
-           y="516.61218"
-           x="1982.3665"
-           sodipodi:role="line"
-           id="tspan3025">ssh</tspan></text>
-      <text
-         sodipodi:linespacing="125%"
-         id="text3027"
-         y="516.61218"
-         x="1836.3665"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         xml:space="preserve"><tspan
-           y="516.61218"
-           x="1836.3665"
-           id="tspan3029"
-           sodipodi:role="line">bops</tspan></text>
-      <text
-         sodipodi:linespacing="125%"
-         id="text3035"
-         y="304.61218"
-         x="1982.3665"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         xml:space="preserve"><tspan
-           y="304.61218"
-           x="1982.3665"
-           id="tspan3037"
-           sodipodi:role="line">trace</tspan></text>
-    </g>
     <g
        id="g3123"
        transform="translate(-9.9079797,0)">
@@ -244,6 +130,18 @@
            x="1908.5"
            y="32.612183">git-browser</tspan></text>
     </g>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="1057"
+       y="-103.63782"
+       id="text3075"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="1057"
+         y="-103.63782"
+         id="tspan3079"
+         style="font-weight:bold">Platform Implementations</tspan></text>
     <g
        id="g3111"
        transform="translate(102.24046,-60)">
@@ -304,18 +202,6 @@
            y="549.61218">git-proto</tspan></text>
     </g>
     <text
-       xml:space="preserve"
-       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-       x="1057"
-       y="-103.63782"
-       id="text3075"
-       sodipodi:linespacing="125%"><tspan
-         sodipodi:role="line"
-         x="1057"
-         y="-103.63782"
-         id="tspan3079"
-         style="font-weight:bold">Platform Implementations</tspan></text>
-    <text
        sodipodi:linespacing="125%"
        id="text3083"
        y="233.36218"
@@ -354,14 +240,150 @@
     <text
        sodipodi:linespacing="125%"
        id="text3141"
-       y="244.36218"
-       x="1778.2306"
+       y="131.15552"
+       x="1787.0786"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
        xml:space="preserve"><tspan
          style="font-weight:bold"
          id="tspan3143"
-         y="244.36218"
-         x="1778.2306"
-         sodipodi:role="line">Abstract Interfaces</tspan></text>
+         y="131.15552"
+         x="1787.0786"
+         sodipodi:role="line">Public Interfaces</tspan></text>
+    <g
+       id="g3318">
+      <text
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+         x="1875.2078"
+         y="188.45277"
+         id="text2991"
+         sodipodi:linespacing="125%"><tspan
+           sodipodi:role="line"
+           id="tspan2993"
+           x="1875.2078"
+           y="188.45277">db</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+         x="1979.1517"
+         y="188.45277"
+         id="text3066"
+         sodipodi:linespacing="125%"><tspan
+           sodipodi:role="line"
+           id="tspan3068"
+           x="1979.1517"
+           y="188.45277">proto</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+       x="1930.9869"
+       y="237.19321"
+       id="text3035"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3037"
+         x="1930.9869"
+         y="237.19321">trace</tspan></text>
+    <text
+       sodipodi:linespacing="125%"
+       id="text3003"
+       y="386.08664"
+       x="1739.1246"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+       xml:space="preserve"><tspan
+         y="386.08664"
+         x="1739.1246"
+         id="tspan3005"
+         sodipodi:role="line">inflate</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+       x="1906.8104"
+       y="386.08664"
+       id="text3007"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3009"
+         x="1906.8104"
+         y="386.08664">deflate</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+       x="1739.1246"
+       y="489.73218"
+       id="text3011"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3013"
+         x="1739.1246"
+         y="489.73218">tcp</tspan></text>
+    <text
+       sodipodi:linespacing="125%"
+       id="text3015"
+       y="489.73218"
+       x="1844.8335"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+       xml:space="preserve"><tspan
+         y="489.73218"
+         x="1844.8335"
+         sodipodi:role="line"
+         id="tspan3019">http</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+       x="1980.3605"
+       y="489.73218"
+       id="text3023"
+       sodipodi:linespacing="125%"><tspan
+         id="tspan3025"
+         sodipodi:role="line"
+         x="1980.3605"
+         y="489.73218">ssh</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+       x="1739.1246"
+       y="437.90942"
+       id="text2995"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2997"
+         x="1739.1246"
+         y="437.90942">fs</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+       x="1959.7411"
+       y="437.90942"
+       id="text2999"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3001"
+         x="1959.7411"
+         y="437.90942">sha1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#005c94;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+       x="1839.5629"
+       y="437.90942"
+       id="text3027"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3029"
+         x="1839.5629"
+         y="437.90942">bops</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="1724.1388"
+       y="335.03894"
+       id="text3146"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="1724.1388"
+         y="335.03894"
+         id="tspan3148"
+         style="font-weight:bold">Sub Interfaces</tspan></text>
   </g>
 </svg>
