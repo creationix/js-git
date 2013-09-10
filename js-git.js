@@ -297,6 +297,14 @@ function newRepo(conf, platform) {
     return val;
   }
 
+  function parseOct(buffer, start, end) {
+    var val = 0;
+    while (start < end) {
+      val = (val << 3) + buffer[start++] - 0x30;
+    }
+    return val;
+  }
+
   function deframe(buffer) {
     var space = indexOf(buffer, 0x20);
     if (space < 0) throw new Error("Invalid git object buffer");
@@ -367,20 +375,83 @@ function newRepo(conf, platform) {
     return bops.from(blob);
   }
 
-  function decodeCommit(buffer) {
-    throw new Error("TODO: Implement decodeCommit");
+  function decodeCommit(body) {
+    var i = 0;
+    var start;
+    var key;
+    var commit = {};
+    var parents = [];
+    while (body[i] !== 0x0a) {
+      start = i;
+      i = indexOf(body, 0x20, start);
+      if (i < 0) throw new SyntaxError("Missing space");
+      key = parseAscii(body, start, i++);
+      start = i;
+      i = indexOf(body, 0x0a, start);
+      if (i < 0) throw new SyntaxError("Missing linefeed");
+      var value = bops.to(bops.subarray(body, start, i++));
+      if (key === "parent") {
+        commit.parents = parents;
+        parents.push(value);
+      }
+      else {
+        commit[key] = value;
+      }
+    }
+    i++;
+    commit.message = bops.to(bops.subarray(body, i));
+    return commit;
   }
 
-  function decodeTag(buffer) {
-    throw new Error("TODO: Implement decodeTag");
+  function decodeTag(body) {
+    var i = 0;
+    var start;
+    var key;
+    var tag = {};
+    while (body[i] !== 0x0a) {
+      start = i;
+      i = indexOf(body, 0x20, start);
+      if (i < 0) throw new SyntaxError("Missing space");
+      key = parseAscii(body, start, i++);
+      start = i;
+      i = indexOf(body, 0x0a, start);
+      if (i < 0) throw new SyntaxError("Missing linefeed");
+      var value = bops.to(bops.subarray(body, start, i++));
+      tag[key] = value;
+    }
+    i++;
+    tag.message = bops.to(bops.subarray(body, i));
+    return tag;
   }
 
-  function decodeTree(buffer) {
-    throw new Error("TODO: Implement decodeTree");
+  function decodeTree(body) {
+    var i = 0;
+    var length = body.length;
+    var start;
+    var mode;
+    var name;
+    var hash;
+    var tree = [];
+    while (i < length) {
+      start = i;
+      i = indexOf(body, 0x20, start);
+      if (i < 0) throw new SyntaxError("Missing space");
+      mode = parseOct(body, start, i++);
+      start = i;
+      i = indexOf(body, 0x00, start);
+      name = bops.to(bops.subarray(body, start, i++));
+      hash = bops.to(bops.subarray(body, i, i += 20), "hex");
+      tree.push({
+        mode: mode,
+        name: name,
+        hash: hash
+      });
+    }
+    return tree;
   }
 
-  function decodeBlob(buffer) {
-    return buffer;
+  function decodeBlob(body) {
+    return body;
   }
 
 }
