@@ -43,5 +43,3 @@ function* map(object, onItem) {
   }
   return obj;
 }
-
-
