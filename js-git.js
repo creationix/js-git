@@ -1,5 +1,6 @@
+var version = require('./package.json').version;
 module.exports = function (platform) {
-
+  platform.agent = platform.agent || "js-git/" + version;
   return newRepo;
 
   // platform options are: db, proto, and trace
@@ -80,7 +81,7 @@ module.exports = function (platform) {
           } catch (err) {
             if (err) return callback(err);
           }
-          if (trace) trace("load", hash);
+          if (trace) trace("load", null, hash);
           return callback(null, object, hash);
         });
       });
@@ -99,7 +100,7 @@ module.exports = function (platform) {
       }
       return db.save(hash, buffer, function (err) {
         if (err) return callback(err);
-        if (trace) trace("save", hash);
+        if (trace) trace("save", null, hash);
         return callback(null, hash);
       });
     }
@@ -126,7 +127,7 @@ module.exports = function (platform) {
         if (err) return callback(err);
         return db.remove(hash, function (err) {
           if (err) return callback(err);
-          if (trace) trace("remove", hash);
+          if (trace) trace("remove", null, hash);
           return callback(null, hash);
         });
       });
@@ -141,6 +142,7 @@ module.exports = function (platform) {
       if (hashish === "HEAD") {
         return getBranch(function (err, ref) {
           if (err) return callback(err);
+          if (trace) trace("resolve", null, hashish + " " + ref);
           return resolveHashish(ref, callback);
         });
       }
@@ -150,17 +152,26 @@ module.exports = function (platform) {
       return checkBranch();
       function checkBranch(err, hash) {
         if (err) return callback(err);
-        if (hash) return resolveHashish(hash, callback);
+        if (hash) {
+          if (trace) trace("resolve", null, hashish + " " + hash);
+          return resolveHashish(hash, callback);
+        }
         return db.read("refs/heads/" + hashish, checkTag);
       }
       function checkTag(err, hash) {
         if (err) return callback(err);
-        if (hash) return resolveHashish(hash, callback);
+        if (hash) {
+          if (trace) trace("resolve", null, hashish + " " + hash);
+          return resolveHashish(hash, callback);
+        }
         return db.read("refs/tags/" + hashish, final);
       }
       function final(err, hash) {
         if (err) return callback(err);
-        if (hash) return resolveHashish(hash, callback);
+        if (hash) {
+          if (trace) trace("resolve", null, hashish + " " + hash);
+          return resolveHashish(hash, callback);
+        }
         return callback(new Error("Cannot find hashish: " + hashish));
       }
     }
@@ -169,7 +180,11 @@ module.exports = function (platform) {
       if (!callback) return updateHead.bind(this, hash);
       return getBranch(function (err, ref) {
         if (err) return callback(err);
-        return db.write(ref, hash + "\n", callback);
+        return db.write(ref, hash + "\n", function (err) {
+          if (err) return callback(err);
+          if (trace) trace("update-head", null, ref + " " + hash);
+          callback();
+        });
       });
     }
 
@@ -186,7 +201,12 @@ module.exports = function (platform) {
 
     function setBranch(branchName, callback) {
       if (!callback) return setBranch.bind(this, branchName);
-      return db.write("HEAD", "ref: refs/heads/" + branchName + "\n", callback);
+      var ref = "refs/heads/" + branchName;
+      return db.write("HEAD", "ref: " + ref + "\n", function (err) {
+        if (err) return callback(err);
+        if (trace) trace("set-branch", null, ref);
+        callback();
+      });
     }
 
     function createBranch(branchName, hash, callback) {
@@ -504,15 +524,129 @@ module.exports = function (platform) {
       });
     }
 
-    function fetch() {
-      throw new Error("TODO: Implement repo.fetch");
+    function fetch(remote, opts, callback) {
+      if (!callback) return fetch.bind(this, remote, opts);
+      remote.discover(function (err, refs, serverCaps) {
+        if (err) return callback(err);
+        var caps = processCaps(opts, serverCaps);
+        processWants(refs, opts.want, function (err, wants) {
+          if (err) return callback(err);
+          console.log({caps:caps,wants:wants});
+          // remote.fetch(repo, caps, wants, callback);
+        });
+      });
+    }
+
+    function processCaps(opts, serverCaps) {
+      var caps = [];
+      if (serverCaps["ofs-delta"]) caps.push("ofs-delta");
+      if (serverCaps["thin-pack"]) caps.push("thin-pack");
+      if (opts.includeTag && serverCaps["include-tag"]) caps.push("include-tag");
+      if ((opts.onProgress || opts.onError) &&
+          (serverCaps["side-band-64k"] || serverCaps["side-band"])) {
+        caps.push(serverCaps["side-band-64k"] ? "side-band-64k" : "side-band");
+        if (!opts.onProgress && serverCaps["no-progress"]) {
+          caps.push("no-progress");
+        }
+      }
+      if (serverCaps.agent) caps.push("agent=" + platform.agent);
+      return caps;
+    }
+
+    // Possible values for `filter`
+    // "HEAD" - fetch whatever the remote head is
+    // "refs/heads/master - ref
+    // ["refs/heads/master"] - list of refs
+    // "master" - branch
+    // ["master"] - list of branches
+    // "0.0.1" - tag
+    // ["0.0.1"] - list of tags
+    // function (ref, callback) { callback(null, true); } - interactive
+    // true - Fetch all remote refs.
+    function processWants(refs, filter, callback) {
+      if (filter === null || filter === undefined) {
+        return defaultWants(refs, callback);
+      }
+      filter = Array.isArray(filter) ? arrayFilter(filter) :
+        typeof filter === "function" ? filter = filter :
+        wantFilter(filter);
+
+      var list = Object.keys(refs);
+      var wants = {};
+      var ref, hash;
+      return shift();
+      function shift() {
+        ref = list.shift();
+        if (!ref) return callback(null, Object.keys(wants));
+        hash = refs[ref];
+        resolveHashish(ref, onResolve);
+      }
+      function onResolve(err, oldHash) {
+        // Skip refs we already have
+        if (hash === oldHash) return shift();
+        filter(ref, onFilter);
+      }
+      function onFilter(err, want) {
+        if (err) return callback(err);
+        // Skip refs the user doesn't want
+        if (want) wants[hash] = true;
+        return shift();
+      }
+    }
+
+    function defaultWants(refs, callback) {
+      // TODO: add in local refs for auto updates.
+      return processWants(refs, "HEAD", callback);
+    }
+
+    function wantMatch(ref, want) {
+      if (want === "HEAD" || want === null || want === undefined) {
+        return ref === "HEAD";
+      }
+      if (Object.prototype.toString.call(want) === '[object RegExp]') {
+        return want.test(ref);
+      }
+      if (typeof want === "boolean") return want;
+      if (typeof want !== "string") {
+        throw new TypeError("Invalid want type: " + typeof want);
+      }
+      return (/^refs\//.test(ref) && ref === want) ||
+        (ref === "refs/heads/" + want) ||
+        (ref === "refs/tags/" + want);
+    }
+
+    function wantFilter(want) {
+      return function (ref, callback) {
+        var result;
+        try {
+          result = wantMatch(ref, want);
+        }
+        catch (err) {
+          return callback(err);
+        }
+        return callback(null, result);
+      };
+    }
+
+    function arrayFilter(want) {
+      var length = want.length;
+      return function (ref, callback) {
+        var result;
+        try {
+          for (var i = 0; i < length; ++i) {
+            if (result = wantMatch(ref, want[i])) break;
+          }
+        }
+        catch (err) {
+          return callback(err);
+        }
+        return callback(null, result);
+      };
     }
 
     function push() {
       throw new Error("TODO: Implement repo.fetch");
     }
-
-
 
   }
 
