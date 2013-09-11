@@ -19,7 +19,7 @@ run(function *() {
     return head = yield repo.saveAs("commit", {
       tree: yield repo.saveAs("tree", yield* map(files, function* (contents) {
         return {
-          mode: 33188, // 0100644,
+          mode: 33188, // 0o100644,
           hash: yield repo.saveAs("blob", contents)
         };
       })),
