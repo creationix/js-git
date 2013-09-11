@@ -4,8 +4,8 @@ var fsDb = require('git-fs-db')(platform);
 var fs = platform.fs;
 
 // Mock data for generating some history
-var author = "Tim Caswell <tim@creationix.com>";
-var committer = "JS-Git <js-git@creationix.com>";
+var author = { name: "Tim Caswell", email: "tim@creationix.com" };
+var committer = { name: "JS-Git", email: "js-git@creationix.com" };
 var commits = {
   "Initial Commit\n": {
     "README.md": "# This is a test Repo\n\nIt's generated entirely by JavaScript\n"
@@ -49,12 +49,11 @@ repo.setBranch("master", function (err) {
       if (err) return next(err);
       repo.saveAs("tree", tree, function (err, hash) {
         if (err) return next(err);
-        var now = gitDate(new Date);
         var commit = {
           tree: hash,
           parent: parent,
-          author: author + " " + now,
-          committer: committer + " " + now,
+          author: author,
+          committer: committer,
           message: message
         };
         if (!parent) delete commit.parent;
@@ -71,13 +70,6 @@ repo.setBranch("master", function (err) {
   });
 
 });
-
-// Format a js data object into the data format expected in git commits.
-function gitDate(date) {
-  var timezone = date.getTimezoneOffset() / 60;
-  var seconds = Math.floor(date.getTime() / 1000);
-  return seconds + " " + (timezone > 0 ? "-0" : "0") + timezone + "00";
-}
 
 // Mini control-flow library
 function serialEach(object, fn, callback) {

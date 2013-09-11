@@ -328,30 +328,55 @@ module.exports = function (platform) {
       ]);
     }
 
+    // A sequence of bytes not containing the ASCII character byte
+    // values NUL (0x00), LF (0x0a), '<' (0c3c), or '>' (0x3e).
+    // The sequence may not begin or end with any bytes with the
+    // following ASCII character byte values: SPACE (0x20),
+    // '.' (0x2e), ',' (0x2c), ':' (0x3a), ';' (0x3b), '<' (0x3c),
+    // '>' (0x3e), '"' (0x22), "'" (0x27).
+    function safe(string) {
+      return string.replace(/(?:^[\.,:;<>"']+|[\0\n<>]+|[\.,:;<>"']+$)/gm, "");
+    }
+
+    function formatDate(date) {
+      var timezone = (date.timeZoneoffset || date.getTimezoneOffset()) / 60;
+      var seconds = Math.floor(date.getTime() / 1000);
+      return seconds + " " + (timezone > 0 ? "-0" : "0") + timezone + "00";
+    }
+
+    function encodePerson(person) {
+      if (!person.name || !person.email) {
+        throw new TypeError("Name and email are required for person fields");
+      }
+      return safe(person.name) +
+        " <" + safe(person.email) + "> " +
+        formatDate(person.date || new Date());
+    }
+
     function encodeCommit(commit) {
-      var str = "";
-      Object.keys(commit).forEach(function (key) {
-        if (key === "message") return;
-        var value = commit[key];
-        if (key === "parents") {
-          value.forEach(function (value) {
-            str += "parent " + value + "\n";
-          });
-        }
-        else {
-          str += key + " " + value + "\n";
-        }
-      });
-      return bops.from(str + "\n" + commit.message);
+      if (!commit.tree || !commit.author || !commit.message) {
+        throw new TypeError("Tree, author, and message are require for commits");
+      }
+      var parents = commit.parents || (commit.parent ? [ commit.parent ] : []);
+      var str = "tree " + commit.tree;
+      for (var i = 0, l = parents.length; i < l; ++i) {
+        str += "\nparent " + parents[i];
+      }
+      str += "\nauthor " + encodePerson(commit.author) +
+             "\ncommitter " + encodePerson(commit.committer || commit.author) +
+             "\n\n" + commit.message;
+      return bops.from(str);
     }
 
     function encodeTag(tag) {
-      var str = "";
-      Object.keys(tag).forEach(function (key) {
-        if (key === "message") return;
-        var value = tag[key];
-        str += key + " " + value + "\n";
-      });
+      if (!tag.object || !tag.type || !tag.tag || !tag.tagger || !tag.message) {
+        throw new TypeError("Object, type, tag, tagger, and message required");
+      }
+      var str = "object " + tag.object +
+        "\ntype " + tag.type +
+        "\ntag " + tag.tag +
+        "\ntagger " + encodePerson(tag.tagger) +
+        "\n\n" + tag.message;
       return bops.from(str + "\n" + tag.message);
     }
 
@@ -377,12 +402,33 @@ module.exports = function (platform) {
       return bops.from(blob);
     }
 
+    function decodePerson(string) {
+      console.log(JSON.stringify(string))
+      var match = string.match(/^([^<]*) <([^>]*)> ([^ ]*) (.*)$/);
+      if (!match) throw new Error("Improperly formatted person string");
+      var sec = parseInt(match[3], 10);
+      var date = new Date(sec * 1000);
+      date.timeZoneoffset = parseInt(match[4], 10) / 100 * -60;
+      return {
+        name: match[1],
+        email: match[2],
+        date: date
+      };
+    }
+
+
     function decodeCommit(body) {
       var i = 0;
       var start;
       var key;
-      var commit = {};
       var parents = [];
+      var commit = {
+        tree: "",
+        parents: parents,
+        author: "",
+        committer: "",
+        message: ""
+      };
       while (body[i] !== 0x0a) {
         start = i;
         i = indexOf(body, 0x20, start);
@@ -393,10 +439,12 @@ module.exports = function (platform) {
         if (i < 0) throw new SyntaxError("Missing linefeed");
         var value = bops.to(bops.subarray(body, start, i++));
         if (key === "parent") {
-          commit.parents = parents;
           parents.push(value);
         }
         else {
+          if (key === "author" || key === "committer") {
+            value = decodePerson(value);
+          }
           commit[key] = value;
         }
       }
@@ -419,6 +467,7 @@ module.exports = function (platform) {
         i = indexOf(body, 0x0a, start);
         if (i < 0) throw new SyntaxError("Missing linefeed");
         var value = bops.to(bops.subarray(body, start, i++));
+        if (key === "tagger") value = decodePerson(value);
         tag[key] = value;
       }
       i++;
