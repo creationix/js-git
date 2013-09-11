@@ -55,7 +55,7 @@ module.exports = function (platform) {
 
     // Network Protocols
     if (proto) {
-      repo.lsRemote = proto.lsRemote;
+      repo.lsRemote = lsRemote;
       if (db) {
         repo.fetch = fetch;
         repo.push = push;
@@ -263,15 +263,6 @@ module.exports = function (platform) {
           });
         }
       }
-    }
-
-
-    function fetch() {
-      throw new Error("TODO: Implement repo.fetch");
-    }
-
-    function push() {
-      throw new Error("TODO: Implement repo.fetch");
     }
 
     function indexOf(buffer, byte, i) {
@@ -506,6 +497,27 @@ module.exports = function (platform) {
     function decodeBlob(body) {
       return body;
     }
+
+    function lsRemote(callback) {
+      if (!callback) return lsRemote.bind(this);
+      proto.discover(function (err, refs) {
+        if (err) return callback(err);
+        proto.close(function (err) {
+          if (err) return callback(err);
+          callback(null, refs);
+        });
+      });
+    }
+
+    function fetch() {
+      throw new Error("TODO: Implement repo.fetch");
+    }
+
+    function push() {
+      throw new Error("TODO: Implement repo.fetch");
+    }
+
+
 
   }
 
