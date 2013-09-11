@@ -7,9 +7,12 @@
     "type": "git",
     "url": "git://github.com/creationix/js-git.git"
   },
+  "dependencies": {
+    "push-to-pull": "~0.1.0",
+    "git-pkt-line": "~0.1.0"
+  },
   "devDependencies": {
     "git-fs-db": "~0.1.0",
-    "git-tcp-proto": "~0.0.1",
     "git-node-platform": "~0.1.2",
     "gen-run": "~0.1.1"
   },

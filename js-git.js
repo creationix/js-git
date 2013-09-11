@@ -496,7 +496,24 @@ module.exports = function (platform) {
 
 
     function processUrl(url) {
-
+      var opts = urlParse(url);
+      if (opts.protocol === "git:") {
+        if (!platform.tcp) throw new Error("Platform does not support git: urls");
+        return require('./lib/tcp.js')(opts, platform.tcp);
+      }
+      if (opts.protocol === "http:" || opts.protocol === "https:") {
+        if (!platform.http) throw new Error("Platform does not support http(s): urls");
+        return require('./lib/smart-http.js')(opts, platform.http);
+      }
+      if (opts.protocol === "ws:" || opts.protocol === "wss:") {
+        if (!platform.ws) throw new Error("Platform does not support ws(s): urls");
+        return require('./lib/ws.js')(opts, platform.ws);
+      }
+      if (opts.protocol === "ssh:") {
+        if (!platform.ssh) throw new Error("Platform does not support ssh: urls");
+        return require('./lib/ssh.js')(opts, platform.ssh);
+      }
+      throw new Error("Unknown protocol " + opts.protocol);
     }
 
     function lsRemote(url, callback) {
