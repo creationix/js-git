@@ -32,6 +32,7 @@ module.exports = function (platform) {
       repo.loadAs = loadAs;   // (type, hashish) -> value
       repo.saveAs = saveAs;   // (type, value) -> hash
       repo.remove = remove;   // (hashish)
+      repo.unpack = unpack;   // (opts, packStream)
 
       // Refs
       repo.resolveHashish = resolveHashish; // (hashish) -> hash
@@ -44,6 +45,7 @@ module.exports = function (platform) {
       repo.createTag = createTag;           // (tagName, hash)
       repo.deleteTag = deleteTag;           // (tagName)
       repo.listTags = listTags;             // () -> tagNames
+      repo.listRefs = listRefs;             // () -> refs
 
       if (workDir) {
         // TODO: figure out API for working repos
@@ -239,12 +241,31 @@ module.exports = function (platform) {
 
     function listBranches(callback) {
       if (!callback) return listBranches.bind(this);
-      return listThings("refs/heads/", callback);
+      return listThings("refs/heads", function (err, refs) {
+        if (err) return callback(err);
+        var branches = {};
+        for (var key in refs) {
+          branches[key.substr(11)] = refs[key];
+        }
+        callback(null, branches);
+      });
     }
 
     function listTags(callback) {
       if (!callback) return listTags.bind(this);
-      return listThings("refs/tags/", callback);
+      return listThings("refs/tags", function (err, refs) {
+        if (err) return callback(err);
+        var branches = {};
+        for (var key in refs) {
+          branches[key.substr(10)] = refs[key];
+        }
+        callback(null, branches);
+      });
+    }
+
+    function listRefs(callback) {
+      if (!callback) return listRefs.bind(this);
+      return listThings("refs", callback);
     }
 
     function listThings(prefix, callback) {
@@ -255,9 +276,13 @@ module.exports = function (platform) {
       });
 
       function loadDir(dir, callback) {
-        var list;
+        var list = [];
+
         return db.readdir(dir, function (err, names) {
-          if (err) return callback(err);
+          if (err) {
+            if (err.code === "ENOENT") return callback();
+            return callback(err);
+          }
           list = new Array(names.length);
           for (var i = 0, l = names.length; i < l; ++i) {
             list[i] = dir + "/" + names[i];
@@ -269,9 +294,12 @@ module.exports = function (platform) {
           var target = list.shift();
           if (!target) return callback();
           return db.read(target, function (err, hash) {
-            if (err) return callback(err);
+            if (err) {
+              if (err.code === "EISDIR") return loadDir(target, shift);
+              return callback(err);
+            }
             if (hash) {
-              branches[target.substr(11)] = hash.trim();
+              branches[target] = hash.trim();
               return shift();
             }
             return loadDir(target, shift);
@@ -526,13 +554,20 @@ module.exports = function (platform) {
 
     function fetch(remote, opts, callback) {
       if (!callback) return fetch.bind(this, remote, opts);
-      remote.discover(function (err, refs, serverCaps) {
+      return remote.discover(function (err, refs, serverCaps) {
         if (err) return callback(err);
         var caps = processCaps(opts, serverCaps);
-        processWants(refs, opts.want, function (err, wants) {
+        return processWants(refs, opts.want, function (err, wants) {
           if (err) return callback(err);
-          console.log({caps:caps,wants:wants});
-          // remote.fetch(repo, caps, wants, callback);
+          opts.caps = caps;
+          opts.wants = wants;
+          return remote.fetch(repo, opts, function (err, packStream) {
+            if (err) return callback(err);
+            return unpack(opts, packStream, function (err) {
+              if (err) return callback(err);
+              return remote.close(callback);
+            });
+          });
         });
       });
     }
@@ -646,6 +681,16 @@ module.exports = function (platform) {
 
     function push() {
       throw new Error("TODO: Implement repo.fetch");
+    }
+
+    function unpack(opts, packStream, callback) {
+      // TODO: save the stream to the local repo.
+      packStream.read(onRead);
+      function onRead(err, chunk) {
+        if (chunk === undefined) return callback(err);
+        packStream.read(onRead);
+      }
+
     }
 
   }
