@@ -1,6 +1,7 @@
-var jsGit = require('../.');
 var platform = require('git-node-platform');
-var fsDb = require('git-fs-db');
+var jsGit = require('../.')(platform);
+var fsDb = require('git-fs-db')(platform);
+var fs = platform.fs;
 
 // Mock data for generating some history
 var author = "Tim Caswell <tim@creationix.com>";
@@ -23,9 +24,9 @@ var commits = {
 
 
 // Create a filesystem backed bare repo
-var repo = jsGit({
-  db: fsDb(platform.fs("test.git"), platform),
-}, platform);
+var fs = fs("test.git");
+var db = fsDb(fs);
+var repo = jsGit({ db: db });
 
 repo.setBranch("master", function (err) {
   if (err) throw err;
