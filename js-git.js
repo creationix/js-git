@@ -7,7 +7,6 @@ module.exports = function (platform) {
     var trace = platform.trace;
     var sha1 = platform.sha1;
     var bops = platform.bops;
-    var urlParse = require('./lib/url-parse.js');
 
     var encoders = {
       commit: encodeCommit,
@@ -494,40 +493,11 @@ module.exports = function (platform) {
       return body;
     }
 
-
-    function processUrl(url) {
-      var opts = urlParse(url);
-      if (opts.protocol === "git:") {
-        if (!platform.tcp) throw new Error("Platform does not support git: urls");
-        return require('./lib/tcp.js')(opts, platform.tcp);
-      }
-      if (opts.protocol === "http:" || opts.protocol === "https:") {
-        if (!platform.http) throw new Error("Platform does not support http(s): urls");
-        return require('./lib/smart-http.js')(opts, platform.http);
-      }
-      if (opts.protocol === "ws:" || opts.protocol === "wss:") {
-        if (!platform.ws) throw new Error("Platform does not support ws(s): urls");
-        return require('./lib/ws.js')(opts, platform.ws);
-      }
-      if (opts.protocol === "ssh:") {
-        if (!platform.ssh) throw new Error("Platform does not support ssh: urls");
-        return require('./lib/ssh.js')(opts, platform.ssh);
-      }
-      throw new Error("Unknown protocol " + opts.protocol);
-    }
-
-    function lsRemote(url, callback) {
-      if (!callback) return lsRemote.bind(this);
-      var proto;
-      try {
-        proto = processUrl(url);
-      }
-      catch (err) {
-        return callback(err);
-      }
-      proto.discover(function (err, refs) {
+    function lsRemote(remote, callback) {
+      if (!callback) return lsRemote.bind(this, remote);
+      remote.discover(function (err, refs) {
         if (err) return callback(err);
-        proto.close(function (err) {
+        remote.close(function (err) {
           if (err) return callback(err);
           callback(null, refs);
         });
