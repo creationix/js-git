@@ -563,7 +563,7 @@ module.exports = function (platform) {
           opts.wants = wants;
           return remote.fetch(repo, opts, function (err, packStream) {
             if (err) return callback(err);
-            return unpack(opts, packStream, function (err) {
+            return unpack(packStream, opts, function (err) {
               if (err) return callback(err);
               return remote.close(callback);
             });
@@ -683,12 +683,34 @@ module.exports = function (platform) {
       throw new Error("TODO: Implement repo.fetch");
     }
 
-    function unpack(opts, packStream, callback) {
+    function unpack(packStream, opts, callback) {
+      if (!callback) return unpack.bind(this, packStream, opts);
       // TODO: save the stream to the local repo.
-      packStream.read(onRead);
-      function onRead(err, chunk) {
-        if (chunk === undefined) return callback(err);
+      var version, num, count = 0;
+
+      packStream.read(function (err, stats) {
+        if (err) return callback(err);
+        version = stats.version;
+        num = stats.num;
         packStream.read(onRead);
+      });
+      function onRead(err, item) {
+        if (opts.onProgress) {
+          var percent = Math.round(count / num * 100);
+          opts.onProgress("Receiving objects: " + percent + "% (" + count + "/" + num + ")   " + (item ? "\r" : "\n"));
+          count++;
+        }
+        if (item === undefined) return callback(err);
+        var buffer = bops.join([
+          bops.from(item.type + " " + item.size + "\0"),
+          item.body
+        ]);
+        var hash = sha1(buffer);
+        db.save(hash, buffer, function (err) {
+          if (err) return callback(err);
+          if (trace) trace("save", null, hash);
+          packStream.read(onRead);
+        });
       }
 
     }

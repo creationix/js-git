@@ -15,7 +15,13 @@ var repo = jsGit(fsDb(fs(path)));
 
 console.log("Cloning %s to %s", url, path);
 
-repo.fetch(remote, {}, function (err) {
+var opts = {
+  onProgress: function (progress) {
+    process.stdout.write(progress);
+  }
+};
+
+repo.fetch(remote, opts, function (err) {
   if (err) throw err;
   console.log("Done");
 });
