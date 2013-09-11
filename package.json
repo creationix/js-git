@@ -9,7 +9,8 @@
   },
   "devDependencies": {
     "git-fs-db": "~0.1.0",
-    "git-node-platform": "~0.1.0"
+    "git-node-platform": "~0.1.0",
+    "gen-run": "~0.1.1"
   },
   "keywords": [
     "git",

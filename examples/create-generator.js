@@ -15,33 +15,34 @@ run(function *() {
   yield repo.setBranch("master");
   console.log("Git database Initialized");
 
-  var parent;
-  yield* each(mock.commits, function* (message, files) {
-    var tree = {};
-    yield* each(files, function * (name, contents) {
-      tree[name] = {
-        mode: 0100644,
-        hash: yield repo.saveAs("blob", contents)
-      };
-    });
-    var commit = {
-      tree: yield repo.saveAs("tree", tree),
-      parent: parent,
+  var head;
+  console.log(yield* map(mock.commits, function* (files, message) {
+    return head = yield repo.saveAs("commit", {
+      tree: yield repo.saveAs("tree", yield* map(files, function* (contents) {
+        return {
+          mode: 0100644,
+          hash: yield repo.saveAs("blob", contents)
+        };
+      })),
+      parent: head,
       author: mock.author,
       committer: mock.committer,
       message: message
-    };
-    var hash = yield repo.saveAs("commit", commit);
-    parent = hash;
-    yield repo.updateHead(hash);
-  });
+    });
+  }));
+
+  yield repo.updateHead(head);
   console.log("Done");
 
 });
 
-function* each(object, onItem) {
+function* map(object, onItem) {
+  var obj = {};
   for (var key in object) {
     var value = object[key];
-    yield* onItem(key, value);
+    obj[key] = yield* onItem(value, key);
   }
+  return obj;
 }
+
+

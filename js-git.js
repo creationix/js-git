@@ -358,6 +358,9 @@ module.exports = function (platform) {
         throw new TypeError("Tree, author, and message are require for commits");
       }
       var parents = commit.parents || (commit.parent ? [ commit.parent ] : []);
+      if (!Array.isArray(parents)) {
+        throw new TypeError("Parents must be an array");
+      }
       var str = "tree " + commit.tree;
       for (var i = 0, l = parents.length; i < l; ++i) {
         str += "\nparent " + parents[i];

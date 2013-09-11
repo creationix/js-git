@@ -3,37 +3,19 @@ var jsGit = require('../.')(platform);
 var fsDb = require('git-fs-db')(platform);
 var fs = platform.fs;
 
-// Mock data for generating some history
-var author = { name: "Tim Caswell", email: "tim@creationix.com" };
-var committer = { name: "JS-Git", email: "js-git@creationix.com" };
-var commits = {
-  "Initial Commit\n": {
-    "README.md": "# This is a test Repo\n\nIt's generated entirely by JavaScript\n"
-  },
-  "Add package.json and blank module\n": {
-    "README.md": "# This is a test Repo\n\nIt's generated entirely by JavaScript\n",
-    "package.json": '{\n  "name": "awesome-lib",\n  "version": "3.1.3",\n  "main": "awesome.js"\n}\n',
-    "awesome.js": 'module.exports = function () {\n  throw new Error("TODO: Implement Awesome");\n};\n'
-  },
-  "Implement awesome and bump version to 3.1.4\n": {
-    "README.md": "# This is a test Repo\n\nIt's generated entirely by JavaScript\n",
-    "package.json": '{\n  "name": "awesome-lib",\n  "version": "3.1.4",\n  "main": "awesome.js"\n}\n',
-    "awesome.js": 'module.exports = function () {\n  return 42;\n};\n'
-  }
-};
-
-
 // Create a filesystem backed bare repo
 var fs = fs("test.git");
 var db = fsDb(fs);
 var repo = jsGit({ db: db });
+
+var mock = require('./mock.js');
 
 repo.setBranch("master", function (err) {
   if (err) throw err;
   console.log("Git database Initialized");
 
   var parent;
-  serialEach(commits, function (message, files, next) {
+  serialEach(mock.commits, function (message, files, next) {
     // Start building a tree object.
     var tree = {};
     parallelEach(files, function (name, contents, next) {
@@ -52,8 +34,8 @@ repo.setBranch("master", function (err) {
         var commit = {
           tree: hash,
           parent: parent,
-          author: author,
-          committer: committer,
+          author: mock.author,
+          committer: mock.committer,
           message: message
         };
         if (!parent) delete commit.parent;
