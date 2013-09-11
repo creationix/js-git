@@ -403,7 +403,6 @@ module.exports = function (platform) {
     }
 
     function decodePerson(string) {
-      console.log(JSON.stringify(string))
       var match = string.match(/^([^<]*) <([^>]*)> ([^ ]*) (.*)$/);
       if (!match) throw new Error("Improperly formatted person string");
       var sec = parseInt(match[3], 10);
