@@ -4,9 +4,7 @@ var fsDb = require('git-fs-db')(platform);
 var fs = platform.fs;
 
 // Create a filesystem backed bare repo
-var fs = fs("test.git");
-var db = fsDb(fs);
-var repo = jsGit({ db: db });
+var repo = jsGit(fsDb(fs("test.git")));
 
 loadCommit("HEAD");
 

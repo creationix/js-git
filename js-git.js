@@ -3,14 +3,11 @@ module.exports = function (platform) {
   return newRepo;
 
   // platform options are: db, proto, and trace
-  function newRepo(conf) {
+  function newRepo(db, workDir) {
     var trace = platform.trace;
     var sha1 = platform.sha1;
     var bops = platform.bops;
-    var db = conf.db;
-    var fs = conf.fs;
-    var index = conf.index;
-    var proto = conf.proto;
+    var urlParse = require('./lib/url-parse.js');
 
     var encoders = {
       commit: encodeCommit,
@@ -48,18 +45,17 @@ module.exports = function (platform) {
       repo.deleteTag = deleteTag;           // (tagName)
       repo.listTags = listTags;             // () -> tagNames
 
-      if (fs && index) {
-        // TODO: design API for working directories and staging areas.
+      if (workDir) {
+        // TODO: figure out API for working repos
       }
     }
 
     // Network Protocols
-    if (proto) {
-      repo.lsRemote = lsRemote;
-      if (db) {
-        repo.fetch = fetch;
-        repo.push = push;
-      }
+
+    repo.lsRemote = lsRemote;
+    if (db) {
+      repo.fetch = fetch;
+      repo.push = push;
     }
 
     return repo;
@@ -498,8 +494,20 @@ module.exports = function (platform) {
       return body;
     }
 
-    function lsRemote(callback) {
+
+    function processUrl(url) {
+
+    }
+
+    function lsRemote(url, callback) {
       if (!callback) return lsRemote.bind(this);
+      var proto;
+      try {
+        proto = processUrl(url);
+      }
+      catch (err) {
+        return callback(err);
+      }
       proto.discover(function (err, refs) {
         if (err) return callback(err);
         proto.close(function (err) {

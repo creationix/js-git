@@ -5,9 +5,7 @@ var fs = platform.fs;
 var run = require('gen-run');
 
 // Create a filesystem backed bare repo
-var fs = fs("test.git");
-var db = fsDb(fs);
-var repo = jsGit({ db: db });
+var repo = jsGit(fsDb(fs("test.git")));
 
 run(start("HEAD"));
 
