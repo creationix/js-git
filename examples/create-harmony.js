@@ -1,24 +1,25 @@
-var platform = require('git-node-platform');
-var jsGit = require('../.')(platform);
-var fsDb = require('git-fs-db')(platform);
-var fs = platform.fs;
-var run = require('gen-run');
+"use strict";
+let platform = require('git-node-platform');
+let jsGit = require('../.')(platform);
+let fsDb = require('git-fs-db')(platform);
+let fs = platform.fs;
+let run = require('gen-run');
 
 // Create a filesystem backed bare repo
-var repo = jsGit(fsDb(fs("test.git")));
+let repo = jsGit(fsDb(fs("test.git")));
 
-var mock = require('./mock.js');
+let mock = require('./mock.js');
 
 run(function *() {
   yield repo.setBranch("master");
   console.log("Git database Initialized");
 
-  var head;
+  let head;
   console.log(yield* map(mock.commits, function* (files, message) {
     return head = yield repo.saveAs("commit", {
       tree: yield repo.saveAs("tree", yield* map(files, function* (contents) {
         return {
-          mode: 0100644,
+          mode: 33188, // 0100644,
           hash: yield repo.saveAs("blob", contents)
         };
       })),
@@ -35,9 +36,9 @@ run(function *() {
 });
 
 function* map(object, onItem) {
-  var obj = {};
-  for (var key in object) {
-    var value = object[key];
+  let obj = {};
+  for (let key in object) {
+    let value = object[key];
     obj[key] = yield* onItem(value, key);
   }
   return obj;
