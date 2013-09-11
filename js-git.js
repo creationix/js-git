@@ -84,7 +84,7 @@ function newRepo(conf, platform) {
           if (err) return callback(err);
         }
         if (trace) trace("load", hash);
-        return callback(null, object);
+        return callback(null, object, hash);
       });
     });
   }
@@ -109,12 +109,12 @@ function newRepo(conf, platform) {
 
   function loadAs(type, hashish, callback) {
     if (!callback) return loadAs.bind(this, type, hashish);
-    return load(hashish, function (err, object) {
+    return load(hashish, function (err, object, hash) {
       if (err) return callback(err);
       if (object.type !== type) {
         return new Error("Expected " + type + ", but found " + object.type);
       }
-      return callback(null, object.body);
+      return callback(null, object.body, hash);
     });
   }
 
@@ -130,7 +130,7 @@ function newRepo(conf, platform) {
       return db.remove(hash, function (err) {
         if (err) return callback(err);
         if (trace) trace("remove", hash);
-        return callback();
+        return callback(null, hash);
       });
     });
   }
