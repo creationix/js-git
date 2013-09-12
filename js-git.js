@@ -694,7 +694,7 @@ module.exports = function (platform) {
     function unpack(packStream, opts, callback) {
       if (!callback) return unpack.bind(this, packStream, opts);
       // TODO: save the stream to the local repo.
-      var version, num, count = 0, deltas = 0;
+      var version, num, count = 0, deltas = 0, done;
 
       // hashes keyed by offset
       var hashes = {};
@@ -703,14 +703,23 @@ module.exports = function (platform) {
       var pending = {};
       var queue = [];
 
-      packStream.read(function (err, stats) {
-        if (err) return callback(err);
+      return packStream.read(onStats);
+
+      function onDone(err) {
+        if (done) return;
+        done = true;
+        return callback(err);
+      }
+
+      function onStats(err, stats) {
+        if (err) return onDone(err);
         version = stats.version;
         num = stats.num;
         packStream.read(onRead);
-      });
+      }
+
       function onRead(err, item) {
-        if (err) return callback(err);
+        if (err) return onDone(err);
         if (opts.onProgress) {
           var percent = Math.round(count / num * 100);
           opts.onProgress("Receiving objects: " + percent + "% (" + count + "/" + num + ")   " + (item ? "\r" : "\n"));
@@ -722,7 +731,7 @@ module.exports = function (platform) {
           return checkExisting();
         }
         if (item.size !== item.body.length) {
-          return callback(new Error("Body size mismatch"));
+          return onDone(new Error("Body size mismatch"));
         }
         var buffer = bops.join([
           bops.from(item.type + " " + item.size + "\0"),
@@ -746,7 +755,7 @@ module.exports = function (platform) {
         }
 
         db.save(hash, buffer, function (err) {
-          if (err) return callback(err);
+          if (err) return onDone(err);
           if (trace) trace("save", null, hash);
           packStream.read(onRead);
         });
@@ -763,7 +772,7 @@ module.exports = function (platform) {
           return db.has(hash, onHas);
         }
         function onHas(err, has) {
-          if (err) return callback(err);
+          if (err) return onDone(err);
           if (has) seen[hash] = true;
           return pop();
         }
@@ -788,30 +797,43 @@ module.exports = function (platform) {
 
       function check() {
         var item = queue.pop();
+        var target, delta;
         if (!item) return applyDeltas();
         if (opts.onProgress) {
           opts.onProgress(deltaProgress() + "\r");
         }
-        db.load(item.ref, function (err, target) {
-          if (err) return callback(err);
-          db.load(item.hash, function (err, delta) {
-            if (err) return callback(err);
-            target = deframe(target);
-            delta = deframe(delta);
-            var buffer = frame(target[0], applyDelta(delta[1], target[1]));
-            var hash = sha1(buffer);
-            db.save(hash, buffer, function (err) {
-              if (err) return callback(err);
-              var deps = pending[item.hash];
-              if (deps) {
-                pending[hash] = deps;
-                delete pending[item.hash];
-              }
-              seen[hash] = true;
-              return check();
-            });
-          });
-        });
+        db.load(item.ref, onTarget);
+        db.load(item.hash, onDelta);
+        return;
+
+        function onTarget(err, raw) {
+          if (err) return onDone(err);
+          target = deframe(raw);
+          if (delta) return onPair(item, target, delta);
+        }
+
+        function onDelta(err, raw) {
+          if (err) return onDone(err);
+          delta = deframe(raw);
+          if (target) return onPair(item, target, delta);
+        }
+      }
+
+      function onPair(item, target, delta) {
+        var buffer = frame(target[0], applyDelta(delta[1], target[1]));
+        var hash = sha1(buffer);
+        db.save(hash, buffer, onSave);
+
+        function onSave(err) {
+          if (err) return onDone(err);
+          var deps = pending[item.hash];
+          if (deps) {
+            pending[hash] = deps;
+            delete pending[item.hash];
+          }
+          seen[hash] = true;
+          return check();
+        }
       }
 
       function cleanup() {
@@ -821,14 +843,12 @@ module.exports = function (platform) {
         var hashes = Object.keys(toDelete);
         next();
         function next(err) {
-          if (err) return callback(err);
+          if (err) return onDone(err);
           var hash = hashes.pop();
-          if (!hash) return callback();
+          if (!hash) return onDone();
           remove(hash, next);
         }
       }
     }
-
   }
-
 };
