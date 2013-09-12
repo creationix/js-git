@@ -23,7 +23,7 @@
     "url": "https://github.com/creationix/js-git/issues"
   },
   "dependencies": {
-    "varint": "0.0.3",
-    "push-to-pull": "~0.1.0"
+    "push-to-pull": "~0.1.0",
+    "git-pack-codec": "~0.0.1""
   }
 }

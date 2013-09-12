@@ -1,7 +1,7 @@
 module.exports = function (platform) {
-  var applyDelta = require('./lib/apply-delta.js')(platform);
+  var applyDelta = require('git-pack-codec/apply-delta.js')(platform);
   var pushToPull = require('push-to-pull');
-  var parse = pushToPull(require('./lib/parse-pack.js')(platform));
+  var parse = pushToPull(require('git-pack-codec/decode.js')(platform));
   platform.agent = platform.agent || "js-git/" + require('./package.json').version;
 
   return newRepo;
