@@ -815,7 +815,7 @@ module.exports = function (platform) {
       }
 
       function cleanup() {
-        if (opts.onProgress) {
+        if (opts.onProgress && deltas) {
           opts.onProgress(deltaProgress() + "\n");
         }
         var hashes = Object.keys(toDelete);
