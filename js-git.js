@@ -40,8 +40,8 @@ function newRepo(db, workDir) {
       db = {
         load: wrap1("load", db.load),
         save: wrap2("save", db.save),
-        has: wrap1("has", db.has),
         remove: wrap1("remove", db.remove),
+        has: wrap1("has", db.has),
         read: wrap1("read", db.read),
         write: wrap2("write", db.write),
         unlink: wrap1("unlink", db.unlink),
@@ -56,6 +56,11 @@ function newRepo(db, workDir) {
     repo.saveAs = saveAs;   // (type, value) -> hash
     repo.remove = remove;   // (hashish)
     repo.unpack = unpack;   // (opts, packStream)
+
+    // Convenience Readers
+    repo.log = log;         // (hashish) -> stream<hash, commit>
+    repo.tree = tree;       // (hashish) -> stream<path, blob>
+    repo.walk = walk;       // (hashish, scan, compare) -> stream<hash, object>
 
     // Refs
     repo.resolveHashish = resolveHashish; // (hashish) -> hash
@@ -104,6 +109,35 @@ function newRepo(db, workDir) {
         return callback.apply(this, arguments);
       }
     }
+  }
+
+  function log(hashish, callback) {
+    return walk(hashish, logScan, logCompare, callback);
+  }
+
+  function logScan(object, callback) {
+    throw new Error("TODO: Implement logScan");
+  }
+
+  function logCompare(obj1, obj2, callback) {
+    throw new Error("TODO: Implement logCompare");
+  }
+
+  function tree(hashish, callback) {
+    return walk(hashish, treeScan, treeCompare, callback);
+  }
+
+  function treeScan(object, callback) {
+    throw new Error("TODO: Implement treeScan");
+  }
+
+  function treeCompare(obj1, obj2, callback) {
+    throw new Error("TODO: Implement treeCompare");
+  }
+
+  function walk(hashish, scan, compare, callback) {
+    if (!callback) return walk.bind(this, hashish, scan, compare);
+    throw new Error("TODO: Implement walk");
   }
 
   function load(hashish, callback) {
