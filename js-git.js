@@ -40,15 +40,11 @@ module.exports = function (platform) {
       // Refs
       repo.resolveHashish = resolveHashish; // (hashish) -> hash
       repo.updateHead = updateHead;         // (hash)
-      repo.getBranch = getBranch;           // () -> branchName
-      repo.setBranch = setBranch;           // (branchName)
-      repo.createBranch = createBranch;     // (branchName, hash)
-      repo.deleteBranch = deleteBranch;     // (branchName)
-      repo.listBranches = listBranches;     // () -> branchNames
-      repo.createTag = createTag;           // (tagName, hash)
-      repo.deleteTag = deleteTag;           // (tagName)
-      repo.listTags = listTags;             // () -> tagNames
-      repo.listRefs = listRefs;             // () -> refs
+      repo.getHead = getHead;               // () -> ref
+      repo.setHead = setHead;               // (ref)
+      repo.createRef = createRef;           // (ref, hash)
+      repo.deleteRef = deleteRef;           // (ref)
+      repo.listRefs = listRefs;             // (prefix) -> refs
 
       if (workDir) {
         // TODO: figure out API for working repos
@@ -160,8 +156,7 @@ module.exports = function (platform) {
       if ((/^[0-9a-f]{40}$/i).test(hashish)) {
         return callback(null, hashish.toLowerCase());
       }
-      if (hashish === "HEAD") {return getBranch(onBranch);
-      }
+      if (hashish === "HEAD") return getHead(onBranch);
       if ((/^refs\//).test(hashish)) {
         return db.read(hashish, checkBranch);
       }
@@ -169,14 +164,12 @@ module.exports = function (platform) {
 
       function onBranch(err, ref) {
         if (err) return callback(err);
-        if (trace) trace("resolve", null, hashish + " " + ref);
         return resolveHashish(ref, callback);
       }
 
       function checkBranch(err, hash) {
         if (err) return callback(err);
         if (hash) {
-          if (trace) trace("resolve", null, hashish + " " + hash);
           return resolveHashish(hash, callback);
         }
         return db.read("refs/heads/" + hashish, checkTag);
@@ -185,7 +178,6 @@ module.exports = function (platform) {
       function checkTag(err, hash) {
         if (err) return callback(err);
         if (hash) {
-          if (trace) trace("resolve", null, hashish + " " + hash);
           return resolveHashish(hash, callback);
         }
         return db.read("refs/tags/" + hashish, final);
@@ -194,7 +186,6 @@ module.exports = function (platform) {
       function final(err, hash) {
         if (err) return callback(err);
         if (hash) {
-          if (trace) trace("resolve", null, hashish + " " + hash);
           return resolveHashish(hash, callback);
         }
         return callback(new Error("Cannot find hashish: " + hashish));
@@ -204,23 +195,17 @@ module.exports = function (platform) {
     function updateHead(hash, callback) {
       if (!callback) return updateHead.bind(this, hash);
       var ref;
-      return getBranch(onBranch);
+      return getHead(onBranch);
 
       function onBranch(err, result) {
         if (err) return callback(err);
         ref = result;
-        return db.write(ref, hash + "\n", onWrite);
-      }
-
-      function onWrite(err) {
-        if (err) return callback(err);
-        if (trace) trace("update-head", null, ref + " " + hash);
-        return callback();
+        return db.write(ref, hash + "\n", callback);
       }
     }
 
-    function getBranch(callback) {
-      if (!callback) return getBranch.bind(this);
+    function getHead(callback) {
+      if (!callback) return getHead.bind(this);
       return db.read("HEAD", onRead);
 
       function onRead(err, ref) {
@@ -232,80 +217,24 @@ module.exports = function (platform) {
       }
     }
 
-    function setBranch(branchName, callback) {
-      if (!callback) return setBranch.bind(this, branchName);
+    function setHead(branchName, callback) {
+      if (!callback) return setHead.bind(this, branchName);
       var ref = "refs/heads/" + branchName;
-      return db.write("HEAD", "ref: " + ref + "\n", onWrite);
-
-      function onWrite(err) {
-        if (err) return callback(err);
-        if (trace) trace("set-branch", null, ref);
-        callback();
-      }
+      return db.write("HEAD", "ref: " + ref + "\n", callback);
     }
 
-    function createBranch(branchName, hash, callback) {
-      if (!callback) return createBranch.bind(this, branchName, hash);
-      return createThing("refs/heads/", branchName, hash, callback);
+    function createRef(ref, hash, callback) {
+      if (!callback) return createRef.bind(this, ref, hash);
+      return db.write(ref, hash + "\n", callback);
     }
 
-    function createTag(tagName, hash, callback) {
-      if (!callback) return createTag.bind(this, tagName, hash);
-      return createThing("refs/tags/", tagName, hash, callback);
+    function deleteRef(ref, callback) {
+      if (!callback) return deleteRef.bind(this, ref);
+      return db.unlink(ref, callback);
     }
 
-    function createThing(prefix, name, hash, callback) {
-      return db.write(prefix + name, hash + "\n", callback);
-    }
-
-    function deleteBranch(branchName, callback) {
-      if (!callback) return deleteBranch.bind(this, branchName);
-      return deleteThing("refs/heads/", branchName, callback);
-    }
-
-    function deleteTag(tagName, callback) {
-      if (!callback) return deleteTag.bind(this, tagName);
-      return deleteThing("refs/tags/", tagName, callback);
-    }
-
-    function deleteThing(prefix, name, callback) {
-      return db.unlink(prefix + name, callback);
-    }
-
-    function listBranches(callback) {
-      if (!callback) return listBranches.bind(this);
-      return listThings("refs/heads", onRefs);
-
-      function onRefs(err, refs) {
-        if (err) return callback(err);
-        var branches = {};
-        for (var key in refs) {
-          branches[key.substr(11)] = refs[key];
-        }
-        return callback(null, branches);
-      }
-    }
-
-    function listTags(callback) {
-      if (!callback) return listTags.bind(this);
-      return listThings("refs/tags", onRefs);
-
-      function onRefs(err, refs) {
-        if (err) return callback(err);
-        var branches = {};
-        for (var key in refs) {
-          branches[key.substr(10)] = refs[key];
-        }
-        return callback(null, branches);
-      }
-    }
-
-    function listRefs(callback) {
-      if (!callback) return listRefs.bind(this);
-      return listThings("refs", callback);
-    }
-
-    function listThings(prefix, callback) {
+    function listRefs(prefix, callback) {
+      if (!callback) return listRefs.bind(this, prefix);
       var branches = {}, list = [], target = prefix;
       return db.readdir(target, onNames);
 
@@ -456,14 +385,16 @@ module.exports = function (platform) {
 
     function encodeTree(tree) {
       var chunks = [];
-      Object.keys(tree).sort(pathCmp).forEach(function (name) {
+      Object.keys(tree).sort(pathCmp).forEach(onName);
+      return bops.join(chunks);
+
+      function onName(name) {
         var entry = tree[name];
         chunks.push(
           bops.from(entry.mode.toString(8) + " " + name + "\0"),
           bops.from(entry.hash, "hex")
         );
-      });
-      return bops.join(chunks);
+      }
     }
 
     function encodeBlob(blob) {
@@ -592,10 +523,12 @@ module.exports = function (platform) {
 
     function fetch(remote, opts, callback) {
       if (!callback) return fetch.bind(this, remote, opts);
+      var refs, branch, queue, ref, hash;
       return remote.discover(onDiscover);
 
-      function onDiscover(err, refs, serverCaps) {
+      function onDiscover(err, serverRefs, serverCaps) {
         if (err) return callback(err);
+        refs = serverRefs;
         opts.caps = processCaps(opts, serverCaps);
         return processWants(refs, opts.want, onWants);
       }
@@ -615,7 +548,29 @@ module.exports = function (platform) {
 
       function onUnpack(err) {
         if (err) return callback(err);
-        return remote.close(callback);
+        return remote.close(onClose);
+      }
+
+      function onClose(err) {
+        if (err) return callback(err);
+        queue = Object.keys(refs);
+        return next();
+      }
+
+      function next(err) {
+        if (err) return callback(err);
+        ref = queue.shift();
+        if (!ref) return setHead(branch, callback);
+        if (ref === "HEAD" || /{}$/.test(ref)) return next();
+        hash = refs[ref];
+        if (!branch && (hash === refs.HEAD)) branch = ref.substr(11);
+        db.has(hash, onHas);
+      }
+
+      function onHas(err, has) {
+        if (err) return callback(err);
+        if (!has) return next();
+        return db.write(ref, hash + "\n", next);
       }
     }
 
@@ -677,8 +632,14 @@ module.exports = function (platform) {
     }
 
     function defaultWants(refs, callback) {
-      // TODO: add in local refs for auto updates.
-      return processWants(refs, "HEAD", callback);
+      return listRefs("refs/heads", onRefs);
+
+      function onRefs(err, branches) {
+        if (err) return callback(err);
+        var wants = Object.keys(branches);
+        wants.unshift("HEAD");
+        return processWants(refs, wants, callback);
+      }
     }
 
     function wantMatch(ref, want) {
@@ -770,7 +731,7 @@ module.exports = function (platform) {
         var hash = sha1(buffer);
         hashes[item.offset] = hash;
         var ref = item.ref;
-        if (ref) {
+        if (ref !== undefined) {
           deltas++;
           if (item.type === "ofs-delta") {
             ref = hashes[item.offset - ref];
@@ -798,6 +759,7 @@ module.exports = function (platform) {
         function pop() {
           hash = list.pop();
           if (!hash) return applyDeltas();
+          if (toDelete[hash]) return pop();
           return db.has(hash, onHas);
         }
         function onHas(err, has) {
@@ -861,15 +823,10 @@ module.exports = function (platform) {
         function next(err) {
           if (err) return callback(err);
           var hash = hashes.pop();
-          if (!hash) return done();
-          db.remove(hash, next);
+          if (!hash) return callback();
+          remove(hash, next);
         }
       }
-
-      function done() {
-
-      }
-
     }
 
   }
