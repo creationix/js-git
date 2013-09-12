@@ -8,7 +8,7 @@ var repo = jsGit(fsDb(fs("test.git")));
 
 var mock = require('./mock.js');
 
-repo.setBranch("master", function (err) {
+repo.setHead("master", function (err) {
   if (err) throw err;
   console.log("Git database Initialized");
 

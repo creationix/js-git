@@ -11,7 +11,7 @@ let repo = jsGit(fsDb(fs("test.git")));
 let mock = require('./mock.js');
 
 run(function *() {
-  yield repo.setBranch("master");
+  yield repo.setHead("master");
   console.log("Git database Initialized");
 
   let head;
