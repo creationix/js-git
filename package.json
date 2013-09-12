@@ -21,5 +21,8 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/creationix/js-git/issues"
+  },
+  "dependencies": {
+    "varint": "0.0.3"
   }
 }
