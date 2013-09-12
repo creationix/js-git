@@ -24,6 +24,6 @@
   },
   "dependencies": {
     "push-to-pull": "~0.1.0",
-    "git-pack-codec": "~0.0.1""
+    "git-pack-codec": "~0.0.1"
   }
 }
