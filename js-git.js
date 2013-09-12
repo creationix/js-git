@@ -1,5 +1,5 @@
 var platform;
-var applyDelta, pushToPull, parse;
+var applyDelta, pushToPull, parse, sha1, bops;
 
 module.exports = function (imports) {
   if (platform) return newRepo;
@@ -9,15 +9,13 @@ module.exports = function (imports) {
   pushToPull = require('push-to-pull');
   parse = pushToPull(require('git-pack-codec/decode.js')(platform));
   platform.agent = platform.agent || "js-git/" + require('./package.json').version;
+  sha1 = platform.sha1;
+  bops = platform.bops;
 
   return newRepo;
 };
 
-// platform options are: db, proto, and trace
 function newRepo(db, workDir) {
-  var trace = platform.trace;
-  var sha1 = platform.sha1;
-  var bops = platform.bops;
 
   var encoders = {
     commit: encodeCommit,
@@ -59,7 +57,6 @@ function newRepo(db, workDir) {
   }
 
   // Network Protocols
-
   repo.lsRemote = lsRemote;
   if (db) {
     repo.fetch = fetch;
@@ -96,7 +93,6 @@ function newRepo(db, workDir) {
       } catch (err) {
         if (err) return callback(err);
       }
-      if (trace) trace("load", null, hash);
       return callback(null, object, hash);
     }
   }
@@ -116,7 +112,6 @@ function newRepo(db, workDir) {
 
     function onSave(err) {
       if (err) return callback(err);
-      if (trace) trace("save", null, hash);
       return callback(null, hash);
     }
   }
@@ -147,13 +142,7 @@ function newRepo(db, workDir) {
     function onHash(err, result) {
       if (err) return callback(err);
       hash = result;
-      return db.remove(hash, onRemove);
-    }
-
-    function onRemove(err) {
-      if (err) return callback(err);
-      if (trace) trace("remove", null, hash);
-      return callback(null, hash);
+      return db.remove(hash, callback);
     }
   }
 
@@ -597,16 +586,6 @@ function newRepo(db, workDir) {
     return caps;
   }
 
-  // Possible values for `filter`
-  // "HEAD" - fetch whatever the remote head is
-  // "refs/heads/master - ref
-  // ["refs/heads/master"] - list of refs
-  // "master" - branch
-  // ["master"] - list of branches
-  // "0.0.1" - tag
-  // ["0.0.1"] - list of tags
-  // function (ref, callback) { callback(null, true); } - interactive
-  // true - Fetch all remote refs.
   function processWants(refs, filter, callback) {
     if (filter === null || filter === undefined) {
       return defaultWants(refs, callback);
@@ -666,7 +645,8 @@ function newRepo(db, workDir) {
   }
 
   function wantFilter(want) {
-    return function (ref, callback) {
+    return filter;
+    function filter(ref, callback) {
       var result;
       try {
         result = wantMatch(ref, want);
@@ -675,12 +655,13 @@ function newRepo(db, workDir) {
         return callback(err);
       }
       return callback(null, result);
-    };
+    }
   }
 
   function arrayFilter(want) {
     var length = want.length;
-    return function (ref, callback) {
+    return filter;
+    function filter(ref, callback) {
       var result;
       try {
         for (var i = 0; i < length; ++i) {
@@ -691,7 +672,7 @@ function newRepo(db, workDir) {
         return callback(err);
       }
       return callback(null, result);
-    };
+    }
   }
 
   function push() {
@@ -709,6 +690,7 @@ function newRepo(db, workDir) {
     var toDelete = {};
     var pending = {};
     var queue = [];
+    var list, current;
 
     return packStream.read(onStats);
 
@@ -761,28 +743,30 @@ function newRepo(db, workDir) {
         seen[hash] = true;
       }
 
-      db.save(hash, buffer, function (err) {
-        if (err) return onDone(err);
-        if (trace) trace("save", null, hash);
-        packStream.read(onRead);
-      });
+      return db.save(hash, buffer, onSave);
+    }
+
+    function onSave(err) {
+      if (err) return callback(err);
+      packStream.read(onRead);
     }
 
     function checkExisting() {
-      var list = Object.keys(pending);
-      var hash;
-      return pop();
-      function pop() {
-        hash = list.pop();
-        if (!hash) return applyDeltas();
-        if (toDelete[hash]) return pop();
-        return db.has(hash, onHas);
-      }
-      function onHas(err, has) {
-        if (err) return onDone(err);
-        if (has) seen[hash] = true;
-        return pop();
-      }
+      list = Object.keys(pending);
+      return popPending();
+    }
+
+    function popPending() {
+      current = list.pop();
+      if (!current) return applyDeltas();
+      if (toDelete[current]) return popPending();
+      return db.has(current, onHas);
+    }
+
+    function onHas(err, has) {
+      if (err) return onDone(err);
+      if (has) seen[current] = true;
+      return popPending();
     }
 
     function applyDeltas() {
@@ -829,9 +813,9 @@ function newRepo(db, workDir) {
     function onPair(item, target, delta) {
       var buffer = frame(target[0], applyDelta(delta[1], target[1]));
       var hash = sha1(buffer);
-      db.save(hash, buffer, onSave);
+      db.save(hash, buffer, onSaveConbined);
 
-      function onSave(err) {
+      function onSaveConbined(err) {
         if (err) return onDone(err);
         var deps = pending[item.hash];
         if (deps) {
