@@ -8,7 +8,7 @@
     "url": "git://github.com/creationix/js-git.git"
   },
   "devDependencies": {
-    "git-fs-db": "~0.1.0",
+    "git-fs-db": "~0.1.1",
     "git-node-platform": "~0.1.2",
     "git-net": "~0.0.1",
     "gen-run": "~0.1.1"

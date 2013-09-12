@@ -1,5 +1,5 @@
 var platform;
-var applyDelta, pushToPull, parse, sha1, bops;
+var applyDelta, pushToPull, parse, sha1, bops, trace;
 
 module.exports = function (imports) {
   if (platform) return newRepo;
@@ -11,6 +11,7 @@ module.exports = function (imports) {
   platform.agent = platform.agent || "js-git/" + require('./package.json').version;
   sha1 = platform.sha1;
   bops = platform.bops;
+  trace = platform.trace;
 
   return newRepo;
 };
@@ -34,6 +35,20 @@ function newRepo(db, workDir) {
   var repo = {};
 
   if (db) {
+
+    if (trace) {
+      db = {
+        load: wrap1("load", db.load),
+        save: wrap2("save", db.save),
+        has: wrap1("has", db.has),
+        remove: wrap1("remove", db.remove),
+        read: wrap1("read", db.read),
+        write: wrap2("write", db.write),
+        unlink: wrap1("unlink", db.unlink),
+        readdir: wrap1("readdir", db.readdir)
+      };
+    }
+
     // Git Objects
     repo.load = load;       // (hashish) -> object
     repo.save = save;       // (object) -> hash
@@ -64,6 +79,32 @@ function newRepo(db, workDir) {
   }
 
   return repo;
+
+  function wrap1(type, fn) {
+    return one;
+    function one(arg, callback) {
+      if (!callback) return one.bind(this, arg);
+      return fn.call(this, arg, check);
+      function check(err) {
+        if (err) return callback(err);
+        trace(type, null, arg);
+        return callback.apply(this, arguments);
+      }
+    }
+  }
+
+  function wrap2(type, fn) {
+    return two;
+    function two(arg1, arg2, callback) {
+      if (!callback) return two.bind(this, arg1. arg2);
+      return fn.call(this, arg1, arg2, check);
+      function check(err) {
+        if (err) return callback(err);
+        trace(type, null, arg1);
+        return callback.apply(this, arguments);
+      }
+    }
+  }
 
   function load(hashish, callback) {
     if (!callback) return load.bind(this, hashish);
