@@ -308,7 +308,7 @@ function newRepo(db, workDir) {
     }
 
     function checkBranch(err, hash) {
-      if (err) return callback(err);
+      if (err && err.code !== "ENOENT") return callback(err);
       if (hash) {
         return resolveHashish(hash, callback);
       }
@@ -316,7 +316,7 @@ function newRepo(db, workDir) {
     }
 
     function checkTag(err, hash) {
-      if (err) return callback(err);
+      if (err && err.code !== "ENOENT") return callback(err);
       if (hash) {
         return resolveHashish(hash, callback);
       }
