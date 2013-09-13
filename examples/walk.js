@@ -7,11 +7,13 @@ var fs = platform.fs;
 var repo = jsGit(fsDb(fs(process.argv[2] || "test.git")));
 repo.logWalk("HEAD", function (err, log) {
   if (err) throw err;
+  var shallow;
   return log.read(onRead);
 
   function onRead(err, commit) {
     if (err) throw err;
-    if (!commit) return logEnd();
+    if (!commit) return logEnd(shallow);
+    if (commit.last) shallow = true;
     logCommit(commit);
     repo.treeWalk(commit.body.tree, function (err, tree) {
       if (err) throw err;
@@ -42,6 +44,7 @@ function logEntry(entry) {
   console.log(" %s %s", entry.hash, path);
 }
 
-function logEnd() {
-  console.log("\n\x1B[30;1mBeginning of History.\x1B[0m\n");
+function logEnd(shallow) {
+  var message = shallow ? "End of shallow record." : "Beginning of history";
+  console.log("\n\x1B[30;1m%s\x1B[0m\n", message);
 }

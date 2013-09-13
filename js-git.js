@@ -67,6 +67,7 @@ function newRepo(db, workDir) {
     repo.updateHead = updateHead;         // (hash)
     repo.getHead = getHead;               // () -> ref
     repo.setHead = setHead;               // (ref)
+    repo.readRef = readRef;               // (ref) -> hash
     repo.createRef = createRef;           // (ref, hash)
     repo.deleteRef = deleteRef;           // (ref)
     repo.listRefs = listRefs;             // (prefix) -> refs
@@ -116,8 +117,14 @@ function newRepo(db, workDir) {
     return resolveHashish(hashish, onResolve);
     function onResolve(err, hash) {
       if (err) return callback(err);
+      var options = {
+        reverse: true,
+      };
       var item = {hash: hash};
-      return callback(null, walk(item, logScan, logCompare, true));
+      readRef("shallow", function (err, shallow) {
+        if (shallow) options.last = shallow;
+        return callback(null, walk(item, logScan, logCompare, options));
+      });
     }
   }
 
@@ -127,14 +134,16 @@ function newRepo(db, workDir) {
     function onResolve(err, hash) {
       if (err) return callback(err);
       var item = {hash: hash, path: "/"};
-      return callback(null, walk(item, treeScan, treeCompare));
+      return callback(null, walk(item, treeScan, treeCompare, {}));
     }
   }
 
-  function walk(seed, scan, sortKey, reverse) {
+  function walk(seed, scan, sortKey, options) {
     var queue = [];
     var seen = {};
     var working = 0, error, cb, done;
+    var reverse = options.reverse;
+    var last = options.last;
 
     enqueue(seed);
     return {read: read, abort: abort};
@@ -186,7 +195,8 @@ function newRepo(db, workDir) {
       var next = queue.pop();
       if (!next) return abort(callback);
       next = next[0];
-      scan(next).forEach(enqueue);
+      if (next.hash === last) next.last = true;
+      else scan(next).forEach(enqueue);
       return callback(null, next);
     }
 
@@ -351,6 +361,14 @@ function newRepo(db, workDir) {
     if (!callback) return setHead.bind(this, branchName);
     var ref = "refs/heads/" + branchName;
     return db.write("HEAD", "ref: " + ref + "\n", callback);
+  }
+
+  function readRef(ref, callback) {
+    if (!callback) return readRef.bind(this, ref);
+    return db.read(ref, function (err, result) {
+      if (err) return callback(err);
+      return callback(null, result.trim());
+    });
   }
 
   function createRef(ref, hash, callback) {
