@@ -58,9 +58,9 @@ function newRepo(db, workDir) {
     repo.unpack = unpack;   // (opts, packStream)
 
     // Convenience Readers
-    repo.log = log;         // (hashish) -> stream<hash, commit>
-    repo.tree = tree;       // (hashish) -> stream<path, blob>
-    repo.walk = walk;       // (hashish, scan, compare) -> stream<hash, object>
+    repo.logWalk = logWalk;   // (hashish) -> stream<hash, commit>
+    repo.treeWalk = treeWalk; // (hashish) -> stream<path, blob>
+    repo.walk = walk;         // (hashish, scan, compare) -> stream<hash, object>
 
     // Refs
     repo.resolveHashish = resolveHashish; // (hashish) -> hash
@@ -111,8 +111,8 @@ function newRepo(db, workDir) {
     }
   }
 
-  function log(hashish, callback) {
-    if (!callback) return log.bind(this, hashish);
+  function logWalk(hashish, callback) {
+    if (!callback) return logWalk.bind(this, hashish);
     return resolveHashish(hashish, onResolve);
     function onResolve(err, hash) {
       if (err) return callback(err);
@@ -121,8 +121,8 @@ function newRepo(db, workDir) {
     }
   }
 
-  function tree(hashish, callback) {
-    if (!callback) return tree.bind(this, hashish);
+  function treeWalk(hashish, callback) {
+    if (!callback) return treeWalk.bind(this, hashish);
     return resolveHashish(hashish, onResolve);
     function onResolve(err, hash) {
       if (err) return callback(err);

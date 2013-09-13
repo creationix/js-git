@@ -5,15 +5,15 @@ var fs = platform.fs;
 
 // Create a filesystem backed bare repo
 var repo = jsGit(fsDb(fs("test.git")));
-repo.log("HEAD", function (err, log) {
+repo.logWalk("HEAD", function (err, log) {
   if (err) throw err;
   return log.read(onRead);
 
   function onRead(err, commit) {
     if (err) throw err;
-    if (!commit) return logEnd()
+    if (!commit) return logEnd();
     logCommit(commit);
-    repo.tree(commit.body.tree, function (err, tree) {
+    repo.treeWalk(commit.body.tree, function (err, tree) {
       if (err) throw err;
       tree.read(onEntry);
       function onEntry(err, entry) {
