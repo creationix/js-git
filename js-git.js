@@ -1015,7 +1015,9 @@ function logCompare(object) {
 function treeScan(object) {
   if (object.type === "blob") return [];
   assertType(object, "tree");
-  return object.body.map(function (entry) {
+  return object.body.filter(function (entry) {
+    return entry.mode !== 0160000;
+  }).map(function (entry) {
     var path = object.path + entry.name;
     if (entry.mode === 040000) path += "/";
     return {hash:entry.hash,path:path};
