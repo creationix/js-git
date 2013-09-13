@@ -112,32 +112,91 @@ function newRepo(db, workDir) {
   }
 
   function log(hashish, callback) {
-    return walk(hashish, logScan, logCompare, callback);
-  }
-
-  function logScan(object, callback) {
-    throw new Error("TODO: Implement logScan");
-  }
-
-  function logCompare(obj1, obj2, callback) {
-    throw new Error("TODO: Implement logCompare");
+    if (!callback) return log.bind(this, hashish);
+    return resolveHashish(hashish, onResolve);
+    function onResolve(err, hash) {
+      if (err) return callback(err);
+      var item = {hash: hash};
+      return callback(null, walk(item, logScan, logCompare, true));
+    }
   }
 
   function tree(hashish, callback) {
-    return walk(hashish, treeScan, treeCompare, callback);
+    if (!callback) return tree.bind(this, hashish);
+    return resolveHashish(hashish, onResolve);
+    function onResolve(err, hash) {
+      if (err) return callback(err);
+      var item = {hash: hash, path: "/"};
+      return callback(null, walk(item, treeScan, treeCompare));
+    }
   }
 
-  function treeScan(object, callback) {
-    throw new Error("TODO: Implement treeScan");
-  }
+  function walk(seed, scan, sortKey, reverse) {
+    var queue = [];
+    var seen = {};
+    var working = 0, error, cb, done;
 
-  function treeCompare(obj1, obj2, callback) {
-    throw new Error("TODO: Implement treeCompare");
-  }
+    enqueue(seed);
+    return {read: read, abort: abort};
 
-  function walk(hashish, scan, compare, callback) {
-    if (!callback) return walk.bind(this, hashish, scan, compare);
-    throw new Error("TODO: Implement walk");
+    function enqueue(item) {
+      if (item.hash in seen) return;
+      seen[item.hash] = true;
+      working++;
+      load(item.hash, function (err, object) {
+        if (err) {
+          error = err;
+          return check();
+        }
+        item.type = object.type;
+        item.body = object.body;
+        var sortValue = sortKey(item);
+        var index = queue.length;
+        if (reverse) {
+          while (index > 0 && queue[index - 1][1] > sortValue) index--;
+        }
+        else {
+          while (index > 0 && queue[index - 1][1] < sortValue) index--;
+        }
+        queue.splice(index, 0, [item, sortValue]);
+        return check();
+      });
+    }
+
+    function check() {
+      if (!--working && cb) {
+        var callback = cb;
+        cb = null;
+        read(callback);
+      }
+    }
+
+    function read(callback) {
+      if (cb) return callback(new Error("Only one read at a time"));
+      if (error) {
+        var err = error;
+        error = null;
+        return callback(err);
+      }
+      if (done) return callback();
+      if (working) {
+        cb = callback;
+        return;
+      }
+      var next = queue.pop();
+      if (!next) return abort(callback);
+      next = next[0];
+      scan(next).forEach(enqueue);
+      return callback(null, next);
+    }
+
+    function abort(callback) {
+      done = true;
+      queue = null;
+      seen = null;
+      return callback();
+    }
+
   }
 
   function load(hashish, callback) {
@@ -917,3 +976,35 @@ function newRepo(db, workDir) {
     }
   }
 }
+
+function assertType(object, type) {
+  if (object.type !== type) {
+    throw new Error(type + " expected, but found " + object.type);
+  }
+}
+
+function logScan(object) {
+  assertType(object, "commit");
+  return object.body.parents.map(function (hash) {
+    return { hash: hash };
+  });
+}
+
+function logCompare(object) {
+  return object.body.author.date;
+}
+
+function treeScan(object) {
+  if (object.type === "blob") return [];
+  assertType(object, "tree");
+  return object.body.map(function (entry) {
+    var path = object.path + entry.name;
+    if (entry.mode === 040000) path += "/";
+    return {hash:entry.hash,path:path};
+  });
+}
+
+function treeCompare(object) {
+  return object.path.toLowerCase();
+}
+
