@@ -834,21 +834,12 @@ function newRepo(db, workDir) {
   function unpack(packStream, opts, callback) {
     if (!callback) return unpack.bind(this, packStream, opts);
 
-    var version, num, count = 0, deltas = 0, done;
+    var version, num, numDeltas = 0, count = 0, countDeltas = 0;
+    var done, startDeltaProgress = false;
 
     // hashes keyed by offset for ofs-delta resolving
     var hashes = {};
-    // Cache for hasHash
     var has = {};
-    // work queue as a tree
-    var work = {};
-    // deltas waiting on a target to depend on.
-    var pending = {};
-    // references to deltas for sub-dependencies
-    var index = {};
-
-    // hashes of target and delta objects in progress
-    var target, delta;
 
     return packStream.read(onStats);
 
@@ -858,15 +849,6 @@ function newRepo(db, workDir) {
       return callback(err);
     }
 
-    function hasHash(hash, callback) {
-      if (hash in has) return callback(null, has[hash]);
-      db.has(hash, function (err, value) {
-        if (err) return onDone(err);
-        has[hash] = value;
-        return callback(null, value);
-      });
-    }
-
     function onStats(err, stats) {
       if (err) return onDone(err);
       version = stats.version;
@@ -874,72 +856,64 @@ function newRepo(db, workDir) {
       packStream.read(onRead);
     }
 
+    function objectProgress(more) {
+      if (!more) startDeltaProgress = true;
+      var percent = Math.round(count / num * 100);
+      return opts.onProgress("Receiving objects: " + percent + "% (" + (count++) + "/" + num + ")   " + (more ? "\r" : "\n"));
+    }
+
+    function deltaProgress(more) {
+      if (!startDeltaProgress) return;
+      var percent = Math.round(countDeltas / numDeltas * 100);
+      return opts.onProgress("Applying deltas: " + percent + "% (" + (countDeltas++) + "/" + numDeltas + ")   " + (more ? "\r" : "\n"));
+    }
+
     function onRead(err, item) {
       if (err) return onDone(err);
-      if (opts.onProgress) {
-        var percent = Math.round(count / num * 100);
-        opts.onProgress("Receiving objects: " + percent + "% (" + count + "/" + num + ")   " + (item ? "\r" : "\n"));
-        count++;
-      }
-      if (item === undefined) {
-        has = null;
-        index = null;
-        count = 0;
-        return getDelta();
-      }
+      if (opts.onProgress) objectProgress(item);
+      if (item === undefined) return resolveDeltas();
       if (item.size !== item.body.length) {
         return onDone(new Error("Body size mismatch"));
       }
-      var buffer = bops.join([
-        bops.from(item.type + " " + item.size + "\0"),
-        item.body
-      ]);
-      var hash = sha1(buffer);
-      hashes[item.offset] = hash;
-      if ("ref" in item) {
-        deltas++;
-        var ref = item.ref;
-        if (item.type === "ofs-delta") {
-          ref = hashes[item.offset - ref];
-        }
-
-        // If someone was looking for this hash, adopt the orphans
-        var deps;
-        if (hash in pending) {
-          throw "Wrench"
-          deps = pending[hash];
-          delete pending[hash];
-        }
-        // Otherwise start fresh.
-        else {
-          deps = {};
-        }
-
-        // Store a direct line to this family unit.
-        index[hash] = deps;
-
-        // Shortcut for deltas already gone before.
-        if (ref in index) {
-          index[ref][hash] = deps;
-          return db.save(hash, buffer, onSave);
-        }
-
-        // Check if the target is in the database already
-        return hasHash(ref, function (err, value) {
-          if (err) return onDone(err);
-          // Create a new group
-          var obj = index[ref] = {};
-          (value ? work : pending)[ref] = obj;
-          // And attach to it.
-          obj[hash] = deps;
-          return db.save(hash, buffer, onSave);
-        });
+      if (item.type === "ofs-delta") {
+        numDeltas++;
+        item.ref = hashes[item.offset - item.ref];
+        return resolveDelta(item);
       }
+      if (item.type === "ref-delta") {
+        numDeltas++;
+        return checkDelta(item);
+      }
+      return saveValue(item);
+    }
+
+    function resolveDelta(item) {
+      if (opts.onProgress) deltaProgress();
+      return db.load(item.ref, function (err, buffer) {
+        if (err) return onDone(err);
+        var target = deframe(buffer);
+        item.type = target[0];
+        item.body = applyDelta(item.body, target[1]);
+        return saveValue(item);
+      });
+    }
+
+    function checkDelta(item) {
+      var hasTarget = has[item.ref];
+      if (hasTarget === true) return resolveDelta(item);
+      if (hasTarget === false) return enqueueDelta(item);
+      return db.has(item.ref, function (err, value) {
+        if (err) return onDone(err);
+        has[item.ref] = value;
+        if (value) return resolveDelta(item);
+        return enqueueDelta(item);
+      });
+    }
+
+    function saveValue(item) {
+      var buffer = frame(item.type, item.body);
+      var hash = hashes[item.offset] = sha1(buffer);
       has[hash] = true;
-      if (hash in pending) {
-        work[hash] = pending[hash];
-        delete pending[hash];
-      }
       return db.save(hash, buffer, onSave);
     }
 
@@ -948,92 +922,17 @@ function newRepo(db, workDir) {
       packStream.read(onRead);
     }
 
-    function key(obj) {
-      for (var k in obj) return k;
+    function enqueueDelta(item) {
+      // I have yet to come across a repo that actually needs this path.
+      // It's hard to implement without something to test against.
+      throw "TODO: enqueueDelta";
     }
 
-    function deltaProgress() {
-      var percent = Math.round(count / deltas * 100);
-      return "Applying deltas: " + percent + "% (" + count++ + "/" + deltas + ")   ";
+    function resolveDeltas() {
+      // TODO: resolve any pending deltas once enqueueDelta is implemented.
+      return onDone();
     }
 
-    function getDelta() {
-      console.log({
-        work: Object.keys(work).length,
-        pending: Object.keys(pending).length
-      });
-      var targetHash, deltaHash, group;
-      while (true) {
-        targetHash = key(work);
-        if (!targetHash) {
-          if (opts.onProgress) {
-            opts.onProgress(deltaProgress() + "\n");
-          }
-          return onDone();
-        }
-        group = work[targetHash];
-        deltaHash = key(group);
-        if (!deltaHash) {
-          delete work[targetHash];
-          continue;
-        }
-        break;
-      }
-      if (opts.onProgress) {
-        opts.onProgress(deltaProgress() + "\r");
-      }
-      target = { hash: targetHash };
-      delta = {
-        hash: deltaHash,
-        deps: group[deltaHash]
-      };
-      delete group[deltaHash];
-      db.load(target.hash, onLoadTarget);
-      db.load(delta.hash, onLoadDelta);
-    }
-
-    function onLoadTarget(err, buffer) {
-      if (err) return onDone(err);
-      var pair = deframe(buffer);
-      target.type = pair[0];
-      target.buffer = pair[1];
-      if (delta.type) return onBoth();
-    }
-
-    function onLoadDelta(err, buffer) {
-      if (err) return onDone(err);
-      var pair = deframe(buffer);
-      delta.type = pair[0];
-      delta.buffer = pair[1];
-      if (target.type) return onBoth();
-    }
-
-    function onBoth() {
-      var buffer = applyDelta(delta.buffer, target.buffer);
-      buffer = frame(target.type, buffer);
-      var hash = sha1(buffer);
-      console.log({
-        target: target.hash,
-        delta: delta.hash,
-        combined: hash,
-        deps: Object.keys(delta.deps).length
-      });
-      // console.log("DEPS", delta.deps)
-      if (key(delta.deps)) {
-        work[hash] = delta.deps;
-        if (hash in pending) throw "TODO: merge";
-      }
-      else if (hash in pending) {
-        work[hash] = pending[hash];
-        delete pending[hash];
-      }
-      return db.save(hash, buffer, onCombine);
-    }
-
-    function onCombine(err) {
-      if (err) return onDone(err);
-      return db.remove(delta.hash, getDelta);
-    }
   }
 }
 
