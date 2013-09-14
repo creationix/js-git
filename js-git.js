@@ -133,8 +133,15 @@ function newRepo(db, workDir) {
     return resolveHashish(hashish, onResolve);
     function onResolve(err, hash) {
       if (err) return callback(err);
-      var item = {hash: hash, path: "/"};
-      return callback(null, walk(item, treeScan, treeCompare, {}));
+      load(hash, function (err, item) {
+        if (err) return callback(err);
+        if (item.type === "commit") {
+          return onResolve(null, item.body.tree);
+        }
+        item.hash = hash;
+        item.path = "/";
+        return callback(null, walk(item, treeScan, treeCompare, {}));
+      });
     }
   }
 
