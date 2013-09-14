@@ -17,6 +17,7 @@ module.exports = function (imports) {
 };
 
 function newRepo(db, workDir) {
+  if (!db) throw new TypeError("A db interface instance is required");
 
   var encoders = {
     commit: encodeCommit,
@@ -34,55 +35,49 @@ function newRepo(db, workDir) {
 
   var repo = {};
 
-  if (db) {
+  if (trace) {
+    db = {
+      load: wrap1("load", db.load),
+      save: wrap2("save", db.save),
+      remove: wrap1("remove", db.remove),
+      has: wrap1("has", db.has),
+      read: wrap1("read", db.read),
+      write: wrap2("write", db.write),
+      unlink: wrap1("unlink", db.unlink),
+      readdir: wrap1("readdir", db.readdir)
+    };
+  }
 
-    if (trace) {
-      db = {
-        load: wrap1("load", db.load),
-        save: wrap2("save", db.save),
-        remove: wrap1("remove", db.remove),
-        has: wrap1("has", db.has),
-        read: wrap1("read", db.read),
-        write: wrap2("write", db.write),
-        unlink: wrap1("unlink", db.unlink),
-        readdir: wrap1("readdir", db.readdir)
-      };
-    }
+  // Git Objects
+  repo.load = load;       // (hashish) -> object
+  repo.save = save;       // (object) -> hash
+  repo.loadAs = loadAs;   // (type, hashish) -> value
+  repo.saveAs = saveAs;   // (type, value) -> hash
+  repo.remove = remove;   // (hashish)
+  repo.unpack = unpack;   // (opts, packStream)
 
-    // Git Objects
-    repo.load = load;       // (hashish) -> object
-    repo.save = save;       // (object) -> hash
-    repo.loadAs = loadAs;   // (type, hashish) -> value
-    repo.saveAs = saveAs;   // (type, value) -> hash
-    repo.remove = remove;   // (hashish)
-    repo.unpack = unpack;   // (opts, packStream)
+  // Convenience Readers
+  repo.logWalk = logWalk;   // (hashish) => stream<commit>
+  repo.treeWalk = treeWalk; // (hashish) => stream<entry>
+  repo.walk = walk;         // (seed, scan, compare) -> stream<object>
 
-    // Convenience Readers
-    repo.logWalk = logWalk;   // (hashish) -> stream<hash, commit>
-    repo.treeWalk = treeWalk; // (hashish) -> stream<path, blob>
-    repo.walk = walk;         // (hashish, scan, compare) -> stream<hash, object>
+  // Refs
+  repo.resolveHashish = resolveHashish; // (hashish) -> hash
+  repo.updateHead = updateHead;         // (hash)
+  repo.getHead = getHead;               // () -> ref
+  repo.setHead = setHead;               // (ref)
+  repo.readRef = readRef;               // (ref) -> hash
+  repo.createRef = createRef;           // (ref, hash)
+  repo.deleteRef = deleteRef;           // (ref)
+  repo.listRefs = listRefs;             // (prefix) -> refs
 
-    // Refs
-    repo.resolveHashish = resolveHashish; // (hashish) -> hash
-    repo.updateHead = updateHead;         // (hash)
-    repo.getHead = getHead;               // () -> ref
-    repo.setHead = setHead;               // (ref)
-    repo.readRef = readRef;               // (ref) -> hash
-    repo.createRef = createRef;           // (ref, hash)
-    repo.deleteRef = deleteRef;           // (ref)
-    repo.listRefs = listRefs;             // (prefix) -> refs
-
-    if (workDir) {
-      // TODO: figure out API for working repos
-    }
+  if (workDir) {
+    // TODO: figure out API for working repos
   }
 
   // Network Protocols
-  repo.lsRemote = lsRemote;
-  if (db) {
-    repo.fetch = fetch;
-    repo.push = push;
-  }
+  repo.fetch = fetch;
+  repo.push = push;
 
   return repo;
 
@@ -657,23 +652,6 @@ function newRepo(db, workDir) {
 
   function decodeBlob(body) {
     return body;
-  }
-
-  function lsRemote(remote, callback) {
-    if (!callback) return lsRemote.bind(this, remote);
-    var refs;
-    return remote.discover(onDiscover);
-
-    function onDiscover(err, result) {
-      if (err) return callback(err);
-      refs = result;
-      return remote.close(onClose);
-    }
-
-    function onClose(err) {
-      if (err) return callback(err);
-      return callback(null, refs);
-    }
   }
 
   function fetch(remote, opts, callback) {
