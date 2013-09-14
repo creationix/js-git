@@ -961,7 +961,8 @@ function treeScan(object) {
   }).map(function (entry) {
     var path = object.path + entry.name;
     if (entry.mode === 040000) path += "/";
-    return {hash:entry.hash,path:path};
+    entry.path = path;
+    return entry;
   });
 }
 
