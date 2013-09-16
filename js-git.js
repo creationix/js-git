@@ -58,7 +58,7 @@ function newRepo(db, workDir) {
 
   // Convenience Readers
   repo.logWalk = logWalk;   // (hashish) => stream<commit>
-  repo.treeWalk = treeWalk; // (hashish) => stream<entry>
+  repo.treeWalk = treeWalk; // (hashish) => stream<object>
   repo.walk = walk;         // (seed, scan, compare) -> stream<object>
 
   // Refs
@@ -107,108 +107,131 @@ function newRepo(db, workDir) {
     }
   }
 
+// function logMap(object) {
+//   assertType(object, "commit");
+//   return object.body;
+// }
+
+// function logScan(commit) {
+//   return commit.parents.map(function (hash) {
+//     return { hash: hash };
+//   });
+// }
+
+// function logCompare(commit) {
+//   return commit.author.date;
+// }
+
+// function treeScan(object) {
+//   if (object.type === "blob") return [];
+//   assertType(object, "tree");
+//   return object.body.filter(function (entry) {
+//     return entry.mode !== 0160000;
+//   }).map(function (entry) {
+//     var path = object.path + entry.name;
+//     if (entry.mode === 040000) path += "/";
+//     entry.path = path;
+//     return entry;
+//   });
+// }
+
+// function treeCompare(object) {
+//   return object.path.toLowerCase();
+// }
+
+
+
   function logWalk(hashish, callback) {
     if (!callback) return logWalk.bind(this, hashish);
-    return resolveHashish(hashish, onResolve);
-    function onResolve(err, hash) {
+    var last, seen = {};
+    return readRef("shallow", onShallow);
+
+    function onShallow(err, shallow) {
+      last = shallow;
+      return loadAs("commit", hashish, onLoad);
+    }
+
+    function onLoad(err, commit, hash) {
       if (err) return callback(err);
-      var options = {
-        reverse: true,
-      };
-      var item = {hash: hash};
-      readRef("shallow", function (err, shallow) {
-        if (shallow) options.last = shallow;
-        return callback(null, walk(item, logScan, logCompare, options));
+      commit.hash = hash;
+      seen[hash] = true;
+      return callback(null, walk(commit, scan, loadKey, compare));
+    }
+
+    function scan(commit) {
+      if (last === commit) return [];
+      return commit.parents.filter(function (hash) {
+        return !seen[hash];
       });
+    }
+
+    function loadKey(hash, callback) {
+      return loadAs("commit", hash, function (err, commit) {
+        if (err) return callback(err);
+        commit.hash = hash;
+        if (hash === last) commit.last = true;
+        return callback(null, commit);
+      });
+    }
+
+    function compare(commit, other) {
+      return commit.author.date < other.author.date;
     }
   }
 
   function treeWalk(hashish, callback) {
     if (!callback) return treeWalk.bind(this, hashish);
-    return resolveHashish(hashish, onResolve);
-    function onResolve(err, hash) {
-      if (err) return callback(err);
-      load(hash, function (err, item) {
-        if (err) return callback(err);
-        if (item.type === "commit") {
-          return onResolve(null, item.body.tree);
-        }
-        item.hash = hash;
-        item.path = "/";
-        return callback(null, walk(item, treeScan, treeCompare, {}));
-      });
-    }
+    // return load(hashish, onLoad);
+    // function onLoad(err, item, hash) {
+    //   if (err) return callback(err);
+    //   if (item.type === "commit") return load(item.body.tree, onLoad);
+    //   item.hash = hash;
+    //   item.path = "/";
+    //   return callback(null, walk(item, treeScan, treeCompare, {}));
+    // }
   }
 
-  function walk(seed, scan, sortKey, options) {
-    var queue = [];
-    var seen = {};
-    var working = 0, error, cb, done;
-    var reverse = options.reverse;
-    var last = options.last;
-
-    enqueue(seed);
+  function walk(seed, scan, loadKey, compare) {
+    var queue = [seed];
+    var working = 0, error, cb;
     return {read: read, abort: abort};
-
-    function enqueue(item) {
-      if (item.hash in seen) return;
-      seen[item.hash] = true;
-      working++;
-      load(item.hash, function (err, object) {
-        if (err) {
-          error = err;
-          return check();
-        }
-        item.type = object.type;
-        item.body = object.body;
-        var sortValue = sortKey(item);
-        var index = queue.length;
-        if (reverse) {
-          while (index > 0 && queue[index - 1][1] > sortValue) index--;
-        }
-        else {
-          while (index > 0 && queue[index - 1][1] < sortValue) index--;
-        }
-        queue.splice(index, 0, [item, sortValue]);
-        return check();
-      });
-    }
-
-    function check() {
-      if (!--working && cb) {
-        var callback = cb;
-        cb = null;
-        read(callback);
-      }
-    }
 
     function read(callback) {
       if (cb) return callback(new Error("Only one read at a time"));
-      if (error) {
-        var err = error;
-        error = null;
+      if (working) { cb = callback; return; }
+      var item = queue.shift();
+      if (!item) return callback();
+      try { scan(item).forEach(onKey); }
+      catch (err) { return callback(err); }
+      return callback(null, item);
+    }
+
+    function abort(callback) { return callback(); }
+
+    function onError(err) {
+      if (cb) {
+        var callback = cb; cb = null;
         return callback(err);
       }
-      if (done) return callback();
-      if (working) {
-        cb = callback;
-        return;
+      error = err;
+    }
+
+    function onKey(key) {
+      working++;
+      loadKey(key, onItem);
+    }
+
+    function onItem(err, item) {
+      working--;
+      if (err) return onError(err);
+      var index = queue.length;
+      while (index && compare(item, queue[index - 1])) index--;
+      queue.splice(index, 0, item);
+      if (!working && cb) {
+        var callback = cb; cb = null;
+        return read(callback);
       }
-      var next = queue.pop();
-      if (!next) return abort(callback);
-      next = next[0];
-      if (next.hash === last) next.last = true;
-      else scan(next).forEach(enqueue);
-      return callback(null, next);
     }
-
-    function abort(callback) {
-      done = true;
-      queue = null;
-      seen = null;
-      return callback();
-    }
-
   }
 
   function load(hashish, callback) {
@@ -926,32 +949,3 @@ function assertType(object, type) {
     throw new Error(type + " expected, but found " + object.type);
   }
 }
-
-function logScan(object) {
-  assertType(object, "commit");
-  return object.body.parents.map(function (hash) {
-    return { hash: hash };
-  });
-}
-
-function logCompare(object) {
-  return object.body.author.date;
-}
-
-function treeScan(object) {
-  if (object.type === "blob") return [];
-  assertType(object, "tree");
-  return object.body.filter(function (entry) {
-    return entry.mode !== 0160000;
-  }).map(function (entry) {
-    var path = object.path + entry.name;
-    if (entry.mode === 040000) path += "/";
-    entry.path = path;
-    return entry;
-  });
-}
-
-function treeCompare(object) {
-  return object.path.toLowerCase();
-}
-
