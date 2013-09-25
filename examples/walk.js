@@ -15,7 +15,7 @@ repo.logWalk("HEAD", function (err, log) {
     if (!commit) return logEnd(shallow);
     if (commit.last) shallow = true;
     logCommit(commit);
-    repo.treeWalk(commit.body.tree, function (err, tree) {
+    repo.treeWalk(commit.tree, function (err, tree) {
       if (err) throw err;
       tree.read(onEntry);
       function onEntry(err, entry) {
@@ -31,8 +31,8 @@ repo.logWalk("HEAD", function (err, log) {
 });
 
 function logCommit(commit) {
-  var author = commit.body.author;
-  var message = commit.body.message;
+  var author = commit.author;
+  var message = commit.message;
   console.log("\n\x1B[33mcommit %s\x1B[0m", commit.hash);
   console.log("Author: %s <%s>", author.name, author.email);
   console.log("Date:   %s", author.date);
