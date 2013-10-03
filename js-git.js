@@ -332,6 +332,7 @@ function newRepo(db, workDir) {
 
     function onBranch(err, ref) {
       if (err) return callback(err);
+      if (!ref) return callback();
       return resolveHashish(ref, callback);
     }
 
@@ -378,7 +379,7 @@ function newRepo(db, workDir) {
 
     function onRead(err, ref) {
       if (err) return callback(err);
-      if (!ref) return callback(new Error("Missing HEAD"));
+      if (!ref) return callback();
       var match = ref.match(/^ref: *(.*)/);
       if (!match) return callback(new Error("Invalid HEAD"));
       return callback(null, match[1]);
