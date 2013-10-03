@@ -37,14 +37,12 @@ function newRepo(db, workDir) {
 
   if (trace) {
     db = {
-      load: wrap1("load", db.load),
-      save: wrap2("save", db.save),
-      remove: wrap1("remove", db.remove),
+      get: wrap1("get", db.get),
+      set: wrap2("set", db.set),
       has: wrap1("has", db.has),
-      read: wrap1("read", db.read),
-      write: wrap2("write", db.write),
-      unlink: wrap1("unlink", db.unlink),
-      readdir: wrap1("readdir", db.readdir)
+      del: wrap1("del", db.del),
+      keys: wrap1("keys", db.keys),
+      init: wrap0("init", db.init),
     };
   }
 
@@ -81,6 +79,19 @@ function newRepo(db, workDir) {
 
   return repo;
 
+  function wrap0(type, fn) {
+    return zero;
+    function zero(callback) {
+      if (!callback) return zero.bind(this);
+      return fn.call(this, check);
+      function check(err) {
+        if (err) return callback(err);
+        trace(type, null);
+        return callback.apply(this, arguments);
+      }
+    }
+  }
+
   function wrap1(type, fn) {
     return one;
     function one(arg, callback) {
@@ -106,40 +117,6 @@ function newRepo(db, workDir) {
       }
     }
   }
-
-// function logMap(object) {
-//   assertType(object, "commit");
-//   return object.body;
-// }
-
-// function logScan(commit) {
-//   return commit.parents.map(function (hash) {
-//     return { hash: hash };
-//   });
-// }
-
-// function logCompare(commit) {
-//   return commit.author.date;
-// }
-
-// function treeScan(object) {
-//   if (object.type === "blob") return [];
-//   assertType(object, "tree");
-//   return object.body.filter(function (entry) {
-//     return entry.mode !== 0160000;
-//   }).map(function (entry) {
-//     var path = object.path + entry.name;
-//     if (entry.mode === 040000) path += "/";
-//     entry.path = path;
-//     return entry;
-//   });
-// }
-
-// function treeCompare(object) {
-//   return object.path.toLowerCase();
-// }
-
-
 
   function logWalk(hashish, callback) {
     if (!callback) return logWalk.bind(this, hashish);
@@ -268,7 +245,7 @@ function newRepo(db, workDir) {
     function onHash(err, result) {
       if (err) return callback(err);
       hash = result;
-      return db.load(hash, onBuffer);
+      return db.get(hash, onBuffer);
     }
 
     function onBuffer(err, buffer) {
@@ -303,7 +280,7 @@ function newRepo(db, workDir) {
     catch (err) {
       return callback(err);
     }
-    return db.save(hash, buffer, onSave);
+    return db.set(hash, buffer, onSave);
 
     function onSave(err) {
       if (err) return callback(err);
@@ -337,7 +314,7 @@ function newRepo(db, workDir) {
     function onHash(err, result) {
       if (err) return callback(err);
       hash = result;
-      return db.remove(hash, callback);
+      return db.del(hash, callback);
     }
   }
 
@@ -349,7 +326,7 @@ function newRepo(db, workDir) {
     }
     if (hashish === "HEAD") return getHead(onBranch);
     if ((/^refs\//).test(hashish)) {
-      return db.read(hashish, checkBranch);
+      return db.get(hashish, checkBranch);
     }
     return checkBranch();
 
@@ -363,7 +340,7 @@ function newRepo(db, workDir) {
       if (hash) {
         return resolveHashish(hash, callback);
       }
-      return db.read("refs/heads/" + hashish, checkTag);
+      return db.get("refs/heads/" + hashish, checkTag);
     }
 
     function checkTag(err, hash) {
@@ -371,7 +348,7 @@ function newRepo(db, workDir) {
       if (hash) {
         return resolveHashish(hash, callback);
       }
-      return db.read("refs/tags/" + hashish, final);
+      return db.get("refs/tags/" + hashish, final);
     }
 
     function final(err, hash) {
@@ -391,13 +368,13 @@ function newRepo(db, workDir) {
     function onBranch(err, result) {
       if (err) return callback(err);
       ref = result;
-      return db.write(ref, hash + "\n", callback);
+      return db.set(ref, hash + "\n", callback);
     }
   }
 
   function getHead(callback) {
     if (!callback) return getHead.bind(this);
-    return db.read("HEAD", onRead);
+    return db.get("HEAD", onRead);
 
     function onRead(err, ref) {
       if (err) return callback(err);
@@ -411,31 +388,32 @@ function newRepo(db, workDir) {
   function setHead(branchName, callback) {
     if (!callback) return setHead.bind(this, branchName);
     var ref = "refs/heads/" + branchName;
-    return db.write("HEAD", "ref: " + ref + "\n", callback);
+    return db.set("HEAD", "ref: " + ref + "\n", callback);
   }
 
   function readRef(ref, callback) {
     if (!callback) return readRef.bind(this, ref);
-    return db.read(ref, function (err, result) {
+    return db.get(ref, function (err, result) {
       if (err) return callback(err);
+      if (!result) return callback();
       return callback(null, result.trim());
     });
   }
 
   function createRef(ref, hash, callback) {
     if (!callback) return createRef.bind(this, ref, hash);
-    return db.write(ref, hash + "\n", callback);
+    return db.set(ref, hash + "\n", callback);
   }
 
   function deleteRef(ref, callback) {
     if (!callback) return deleteRef.bind(this, ref);
-    return db.unlink(ref, callback);
+    return db.del(ref, callback);
   }
 
   function listRefs(prefix, callback) {
     if (!callback) return listRefs.bind(this, prefix);
     var branches = {}, list = [], target = prefix;
-    return db.readdir(target, onNames);
+    return db.keys(target, onNames);
 
     function onNames(err, names) {
       if (err) {
@@ -452,19 +430,19 @@ function newRepo(db, workDir) {
       if (err) return callback(err);
       target = list.shift();
       if (!target) return callback(null, branches);
-      return db.read(target, onRead);
+      return db.get(target, onRead);
     }
 
     function onRead(err, hash) {
       if (err) {
-        if (err.code === "EISDIR") return db.readdir(target, onNames);
+        if (err.code === "EISDIR") return db.keys(target, onNames);
         return callback(err);
       }
       if (hash) {
         branches[target] = hash.trim();
         return shift();
       }
-      return db.readdir(target, onNames);
+      return db.keys(target, onNames);
     }
   }
 
@@ -752,7 +730,7 @@ function newRepo(db, workDir) {
     function onHas(err, has) {
       if (err) return callback(err);
       if (!has) return next();
-      return db.write(ref, hash + "\n", next);
+      return db.set(ref, hash + "\n", next);
     }
   }
 
@@ -923,7 +901,7 @@ function newRepo(db, workDir) {
 
     function resolveDelta(item) {
       if (opts.onProgress) deltaProgress();
-      return db.load(item.ref, function (err, buffer) {
+      return db.get(item.ref, function (err, buffer) {
         if (err) return onDone(err);
         var target = deframe(buffer);
         item.type = target[0];
@@ -948,7 +926,7 @@ function newRepo(db, workDir) {
       var buffer = frame(item.type, item.body);
       var hash = hashes[item.offset] = sha1(buffer);
       has[hash] = true;
-      return db.save(hash, buffer, onSave);
+      return db.set(hash, buffer, onSave);
     }
 
     function onSave(err) {
