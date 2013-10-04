@@ -135,7 +135,7 @@ Another convenience wrapper, this time to save objects as a specefic type.  The 
 ```js
 var blobHash = yield repo.saveAs("blob", binaryData);
 var treeHash = yield repo.saveAs("tree", [
-  { mode: 0100644, name: "file.dat, hash: blobHash }
+  { mode: 0100644, name: "file.dat", hash: blobHash }
 ]);
 var commitHash = yield repo.saveAs("commit", {
   tree: treeHash,
