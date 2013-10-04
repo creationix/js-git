@@ -24,7 +24,17 @@ After the successful KickStarter, I decided to do a second fundraiser so that I 
 >
 >Also you will be listed in BACKERS-2.md for all history to see.
 
-TODO: List 11 people who contributed here.
+ - jden
+ - othiym23
+ - chrisjpowers
+ - JohnSz
+ - sindresorhus
+ - aeby
+ - maks
+ - julien51
+ - mofoghlu
+ - JPBarringer
+ - jeffslofish
 
 ## Basic Supporter
 
