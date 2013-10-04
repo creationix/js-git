@@ -194,5 +194,25 @@ Set the current active branch.
 
 Convenience wrapper that fetches from a remote instance and calls `repo.unpack` with the resulting packfile stream for you.
 
+## Related Packages
+
+Being that js-git is so modular, here is a list of the most relevent modules that work with js-git:
+
+ - <https://github.com/creationix/git-net> - A generic remote protocol implementation that wraps the platform interfaces and consumes urls.
+ - Example Applications
+   - <https://github.com/creationix/git-browser> - A multi-platform GUI program that clones and browses git repos.
+   - <https://github.com/creationix/jsgit> - An example of using js-git in node.  This is a CLI tool.
+     - <https://github.com/creationix/git-node> - A packaged version of js-git made for node.js
+ - Platform Helpers
+   - <https://github.com/creationix/git-http> - A git-http platform interface adapter that wraps git-tcp platform instances.
+   - <https://github.com/creationix/git-node-platform> - Just the platform interface for using js-git on node.js.
+   - <https://github.com/creationix/git-sha1> - A pure-js implementation of the sha1 part of the platform interface.
+   - <https://github.com/creationix/git-web-platform> - An implementation of js-git platform for browsers.
+   - <https://github.com/creationix/websocket-tcp-client> - An implementation of the git-tcp interface that consumes a websocket to tcp proxy server.
+   - <https://github.com/creationix/git-zlib> - A pure-js implementation of the zlib parts of the platform interface.
+ - Storage Backends
+   - <https://github.com/creationix/git-fs-db> - A database interface adapter that wraps a fs interface.
+   - <https://github.com/creationix/git-localdb> - A git-db implementation based on `localStorage`.
+   - <https://github.com/creationix/git-memdb> - A git-db implementation that stores data in ram for quick testing.
 
 [gen-run]: https://github.com/creationix/gen-run
