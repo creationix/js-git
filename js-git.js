@@ -75,7 +75,7 @@ function newRepo(db, workDir) {
 
   // Network Protocols
   repo.fetch = fetch;
-  repo.push = push;
+  repo.send = send;
 
   return repo;
 
@@ -539,8 +539,8 @@ function newRepo(db, workDir) {
       str += "\nparent " + parents[i];
     }
     str += "\nauthor " + encodePerson(commit.author) +
-           "\ncommitter " + encodePerson(commit.committer || commit.author) +
-           "\n\n" + commit.message;
+          "\ncommitter " + encodePerson(commit.committer || commit.author) +
+          "\n\n" + commit.message;
     return bops.from(str);
   }
 
@@ -840,8 +840,9 @@ function newRepo(db, workDir) {
     }
   }
 
-  function push() {
-    throw new Error("TODO: Implement repo.fetch");
+  function send(remote, opts, callback) {
+
+    throw new Error("TODO: Implement repo.send");
   }
 
   function unpack(packStream, opts, callback) {
