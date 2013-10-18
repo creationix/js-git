@@ -307,6 +307,7 @@ function newRepo(db, workDir) {
 
   function saveAs(type, body, callback) {
     if (!callback) return saveAs.bind(this, type, body);
+    if (type === "text") type = "blob";
     return save({ type: type, body: body }, callback);
   }
 
