@@ -294,6 +294,10 @@ function newRepo(db, workDir) {
 
     function onObject(err, object, hash) {
       if (err) return callback(err);
+      if (type === "text") {
+        type = "blob";
+        object.body = bops.to(object.body);
+      }
       if (object.type !== type) {
         return new Error("Expected " + type + ", but found " + object.type);
       }
