@@ -129,7 +129,7 @@ function newRepo(db, workDir) {
     }
 
     function onLoad(err, commit, hash) {
-      if (err) return callback(err);
+      if (commit === undefined) return callback(err);
       commit.hash = hash;
       seen[hash] = true;
       return callback(null, walk(commit, scan, loadKey, compare));
@@ -243,7 +243,7 @@ function newRepo(db, workDir) {
     return resolveHashish(hashish, onHash);
 
     function onHash(err, result) {
-      if (err) return callback(err);
+      if (result === undefined) return callback(err);
       hash = result;
       return db.get(hash, onBuffer);
     }
@@ -293,7 +293,7 @@ function newRepo(db, workDir) {
     return load(hashish, onObject);
 
     function onObject(err, object, hash) {
-      if (err) return callback(err);
+      if (object === undefined) return callback(err);
       if (type === "text") {
         type = "blob";
         object.body = bops.to(object.body);
