@@ -561,20 +561,28 @@ function newRepo(db, workDir) {
     return bops.from(str + "\n" + tag.message);
   }
 
-  function pathCmp(a, b) {
+  function pathCmp(oa, ob) {
+    var a = oa.name;
+    var b = ob.name;
     a += "/"; b += "/";
     return a < b ? -1 : a > b ? 1 : 0;
   }
 
   function encodeTree(tree) {
     var chunks = [];
-    Object.keys(tree).sort(pathCmp).forEach(onName);
+    if (!Array.isArray(tree)) {
+      tree = Object.keys(tree).map(function (name) {
+        var entry = tree[name];
+        entry.name = name;
+        return entry;
+      });
+    }
+    tree.sort(pathCmp).forEach(onEntry);
     return bops.join(chunks);
 
-    function onName(name) {
-      var entry = tree[name];
+    function onEntry(entry) {
       chunks.push(
-        bops.from(entry.mode.toString(8) + " " + name + "\0"),
+        bops.from(entry.mode.toString(8) + " " + entry.name + "\0"),
         bops.from(entry.hash, "hex")
       );
     }
