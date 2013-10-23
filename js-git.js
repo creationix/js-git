@@ -362,7 +362,9 @@ function newRepo(db, workDir) {
       if (hash) {
         return resolveHashish(hash, callback);
       }
-      return callback(new Error("Cannot find hashish: " + hashish));
+      err = new Error("ENOENT: Cannot find " + hashish);
+      err.code = "ENOENT";
+      return callback(err);
     }
   }
 
@@ -373,6 +375,12 @@ function newRepo(db, workDir) {
 
     function onBranch(err, result) {
       if (err) return callback(err);
+      if (result === undefined) {
+        return setHead("master", function (err) {
+          if (err) return callback(err);
+          onBranch(err, "refs/heads/master");
+        });
+      }
       ref = result;
       return db.set(ref, hash + "\n", callback);
     }
