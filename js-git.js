@@ -723,7 +723,7 @@ function newRepo(db, workDir) {
 
     function onPackStream(err, raw) {
       if (err) return callback(err);
-      if (!raw) return remote.close(callback);
+      if (!raw) return remote.close(onDone);
       var packStream = parse(raw);
       return unpack(packStream, opts, onUnpack);
     }
@@ -742,7 +742,7 @@ function newRepo(db, workDir) {
     function next(err) {
       if (err) return callback(err);
       ref = queue.shift();
-      if (!ref) return setHead(branch, callback);
+      if (!ref) return setHead(branch, onDone);
       if (ref === "HEAD" || /{}$/.test(ref)) return next();
       hash = refs[ref];
       if (!branch && (hash === refs.HEAD)) branch = ref.substr(11);
@@ -753,6 +753,11 @@ function newRepo(db, workDir) {
       if (err) return callback(err);
       if (!has) return next();
       return db.set(ref, hash + "\n", next);
+    }
+
+    function onDone(err) {
+      if (err) return callback(err);
+      return callback(null, refs);
     }
   }
 
@@ -862,7 +867,7 @@ function newRepo(db, workDir) {
   }
 
   function push() {
-    throw new Error("TODO: Implement repo.fetch");
+    throw new Error("TODO: Implement repo.push");
   }
 
   function unpack(packStream, opts, callback) {
