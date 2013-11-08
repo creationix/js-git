@@ -1,6 +1,5 @@
 var fetch = require('./lib/fetch.js');
 var push = require('./lib/push.js');
-var unpack = require('./lib/unpack.js');
 
 module.exports = newRepo;
 
@@ -21,11 +20,13 @@ function newRepo(db) {
   // Mix in the references interface
   require('./mixins/refs.js')(repo);
 
-  // Mix in the walk helpers
+  // Mix in the walker helpers
   require('./mixins/walkers.js')(repo);
 
+  // Mix in packfile import and export ability
+  require('./mixins/packops.js')(repo);
+
   // Git Objects
-  repo.unpack = unpack;   // (opts, packStream)
 
   // Network Protocols
   repo.fetch = fetch;

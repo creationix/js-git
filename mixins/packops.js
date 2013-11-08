@@ -1,13 +1,16 @@
-var deframe = require('./deframe.js');
-var frame = require('./frame.js');
-var sha1 = require('./sha1.js');
-var applyDelta = require('./apply-delta.js');
-module.exports = unpack;
+var deframe = require('../lib/deframe.js');
+var frame = require('../lib/frame.js');
+var sha1 = require('../lib/sha1.js');
+var applyDelta = require('../lib/apply-delta.js');
+
+module.exports = function (repo) {
+  repo.unpack = unpack; // (packStream, opts) -> hashes
+  repo.pack = pack;     // (hashes, opts) -> packStream
+};
 
 function unpack(packStream, opts, callback) {
   if (!callback) return unpack.bind(this, packStream, opts);
-  var repo = this;
-  var db = repo.db;
+  var repo = this, db = repo.db;
 
   var version, num, numDeltas = 0, count = 0, countDeltas = 0;
   var done, startDeltaProgress = false;
@@ -108,4 +111,9 @@ function unpack(packStream, opts, callback) {
     return onDone();
   }
 
+}
+
+function pack(hashes, opts, callback) {
+  if (!callback) return pack.bind(this, hashes, opts);
+  callback(new Error("TODO: Implement pack"));
 }
