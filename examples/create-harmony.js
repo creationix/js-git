@@ -1,6 +1,6 @@
 "use strict";
 let platform = require('git-node-platform');
-let jsGit = require('../.')(platform);
+let jsGit = require('../.');
 let fsDb = require('git-fs-db')(platform);
 let fs = platform.fs;
 let run = require('gen-run');

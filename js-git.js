@@ -1,37 +1,19 @@
-var platform;
-var applyDelta, pushToPull, parse, sha1, bops, trace;
+var parseAscii = require('./lib/parseascii.js');
+var encoders = require('./lib/encoders.js');
+var decoders = require('./lib/decoders.js');
+var frame = require('./lib/frame.js');
+var deframe = require('./lib/deframe.js');
+var sha1 = require('./lib/sha1.js');
+var agent = require('./lib/agent.js');
+var trace = require('./lib/trace.js');
+var applyDelta = require('./lib/apply-delta.js');
+var pushToPull = require('push-to-pull');
+var parse = pushToPull(require('./lib/decode-pack.js'));
 
-module.exports = function (imports) {
-  if (platform) return newRepo;
-
-  platform = imports;
-  applyDelta = require('git-pack-codec/apply-delta.js')(platform);
-  pushToPull = require('push-to-pull');
-  parse = pushToPull(require('git-pack-codec/decode.js')(platform));
-  platform.agent = platform.agent || "js-git/" + require('./package.json').version;
-  sha1 = platform.sha1;
-  bops = platform.bops;
-  trace = platform.trace;
-
-  return newRepo;
-};
+module.exports = newRepo;
 
 function newRepo(db, workDir) {
   if (!db) throw new TypeError("A db interface instance is required");
-
-  var encoders = {
-    commit: encodeCommit,
-    tag: encodeTag,
-    tree: encodeTree,
-    blob: encodeBlob
-  };
-
-  var decoders = {
-    commit: decodeCommit,
-    tag: decodeTag,
-    tree: decodeTree,
-    blob: decodeBlob
-  };
 
   var repo = {};
 
@@ -47,20 +29,20 @@ function newRepo(db, workDir) {
   }
 
   // Git Objects
-  repo.load = load;       // (hashish) -> object
+  repo.load = load;       // (hash-ish) -> object
   repo.save = save;       // (object) -> hash
-  repo.loadAs = loadAs;   // (type, hashish) -> value
+  repo.loadAs = loadAs;   // (type, hash-ish) -> value
   repo.saveAs = saveAs;   // (type, value) -> hash
-  repo.remove = remove;   // (hashish)
+  repo.remove = remove;   // (hash-ish)
   repo.unpack = unpack;   // (opts, packStream)
 
   // Convenience Readers
-  repo.logWalk = logWalk;   // (hashish) => stream<commit>
-  repo.treeWalk = treeWalk; // (hashish) => stream<object>
+  repo.logWalk = logWalk;   // (hash-ish) => stream<commit>
+  repo.treeWalk = treeWalk; // (hash-ish) => stream<object>
   repo.walk = walk;         // (seed, scan, compare) -> stream<object>
 
   // Refs
-  repo.resolveHashish = resolveHashish; // (hashish) -> hash
+  repo.resolveHashish = resolveHashish; // (hash-ish) -> hash
   repo.updateHead = updateHead;         // (hash)
   repo.getHead = getHead;               // () -> ref
   repo.setHead = setHead;               // (ref)
@@ -296,7 +278,7 @@ function newRepo(db, workDir) {
       if (object === undefined) return callback(err);
       if (type === "text") {
         type = "blob";
-        object.body = bops.to(object.body);
+        object.body = parseAscii(object.body, 0, object.body.length);
       }
       if (object.type !== type) {
         return new Error("Expected " + type + ", but found " + object.type);
@@ -460,248 +442,6 @@ function newRepo(db, workDir) {
     }
   }
 
-  function indexOf(buffer, byte, i) {
-    i |= 0;
-    var length = buffer.length;
-    for (;;i++) {
-      if (i >= length) return -1;
-      if (buffer[i] === byte) return i;
-    }
-  }
-
-  function parseAscii(buffer, start, end) {
-    var val = "";
-    while (start < end) {
-      val += String.fromCharCode(buffer[start++]);
-    }
-    return val;
-  }
-
-  function parseDec(buffer, start, end) {
-    var val = 0;
-    while (start < end) {
-      val = val * 10 + buffer[start++] - 0x30;
-    }
-    return val;
-  }
-
-  function parseOct(buffer, start, end) {
-    var val = 0;
-    while (start < end) {
-      val = (val << 3) + buffer[start++] - 0x30;
-    }
-    return val;
-  }
-
-  function deframe(buffer) {
-    var space = indexOf(buffer, 0x20);
-    if (space < 0) throw new Error("Invalid git object buffer");
-    var nil = indexOf(buffer, 0x00, space);
-    if (nil < 0) throw new Error("Invalid git object buffer");
-    var body = bops.subarray(buffer, nil + 1);
-    var size = parseDec(buffer, space + 1, nil);
-    if (size !== body.length) throw new Error("Invalid body length.");
-    return [
-      parseAscii(buffer, 0, space),
-      body
-    ];
-  }
-
-  function frame(type, body) {
-    return bops.join([
-      bops.from(type + " " + body.length + "\0"),
-      body
-    ]);
-  }
-
-  // A sequence of bytes not containing the ASCII character byte
-  // values NUL (0x00), LF (0x0a), '<' (0c3c), or '>' (0x3e).
-  // The sequence may not begin or end with any bytes with the
-  // following ASCII character byte values: SPACE (0x20),
-  // '.' (0x2e), ',' (0x2c), ':' (0x3a), ';' (0x3b), '<' (0x3c),
-  // '>' (0x3e), '"' (0x22), "'" (0x27).
-  function safe(string) {
-    return string.replace(/(?:^[\.,:;<>"']+|[\0\n<>]+|[\.,:;<>"']+$)/gm, "");
-  }
-
-  function formatDate(date) {
-    var timezone = (date.timeZoneoffset || date.getTimezoneOffset()) / 60;
-    var seconds = Math.floor(date.getTime() / 1000);
-    return seconds + " " + (timezone > 0 ? "-0" : "0") + timezone + "00";
-  }
-
-  function encodePerson(person) {
-    if (!person.name || !person.email) {
-      throw new TypeError("Name and email are required for person fields");
-    }
-    return safe(person.name) +
-      " <" + safe(person.email) + "> " +
-      formatDate(person.date || new Date());
-  }
-
-  function encodeCommit(commit) {
-    if (!commit.tree || !commit.author || !commit.message) {
-      throw new TypeError("Tree, author, and message are require for commits");
-    }
-    var parents = commit.parents || (commit.parent ? [ commit.parent ] : []);
-    if (!Array.isArray(parents)) {
-      throw new TypeError("Parents must be an array");
-    }
-    var str = "tree " + commit.tree;
-    for (var i = 0, l = parents.length; i < l; ++i) {
-      str += "\nparent " + parents[i];
-    }
-    str += "\nauthor " + encodePerson(commit.author) +
-           "\ncommitter " + encodePerson(commit.committer || commit.author) +
-           "\n\n" + commit.message;
-    return bops.from(str);
-  }
-
-  function encodeTag(tag) {
-    if (!tag.object || !tag.type || !tag.tag || !tag.tagger || !tag.message) {
-      throw new TypeError("Object, type, tag, tagger, and message required");
-    }
-    var str = "object " + tag.object +
-      "\ntype " + tag.type +
-      "\ntag " + tag.tag +
-      "\ntagger " + encodePerson(tag.tagger) +
-      "\n\n" + tag.message;
-    return bops.from(str + "\n" + tag.message);
-  }
-
-  function pathCmp(oa, ob) {
-    var a = oa.name;
-    var b = ob.name;
-    a += "/"; b += "/";
-    return a < b ? -1 : a > b ? 1 : 0;
-  }
-
-  function encodeTree(tree) {
-    var chunks = [];
-    if (!Array.isArray(tree)) {
-      tree = Object.keys(tree).map(function (name) {
-        var entry = tree[name];
-        entry.name = name;
-        return entry;
-      });
-    }
-    tree.sort(pathCmp).forEach(onEntry);
-    return bops.join(chunks);
-
-    function onEntry(entry) {
-      chunks.push(
-        bops.from(entry.mode.toString(8) + " " + entry.name + "\0"),
-        bops.from(entry.hash, "hex")
-      );
-    }
-  }
-
-  function encodeBlob(blob) {
-    if (bops.is(blob)) return blob;
-    return bops.from(blob);
-  }
-
-  function decodePerson(string) {
-    var match = string.match(/^([^<]*) <([^>]*)> ([^ ]*) (.*)$/);
-    if (!match) throw new Error("Improperly formatted person string");
-    var sec = parseInt(match[3], 10);
-    var date = new Date(sec * 1000);
-    date.timeZoneoffset = parseInt(match[4], 10) / 100 * -60;
-    return {
-      name: match[1],
-      email: match[2],
-      date: date
-    };
-  }
-
-
-  function decodeCommit(body) {
-    var i = 0;
-    var start;
-    var key;
-    var parents = [];
-    var commit = {
-      tree: "",
-      parents: parents,
-      author: "",
-      committer: "",
-      message: ""
-    };
-    while (body[i] !== 0x0a) {
-      start = i;
-      i = indexOf(body, 0x20, start);
-      if (i < 0) throw new SyntaxError("Missing space");
-      key = parseAscii(body, start, i++);
-      start = i;
-      i = indexOf(body, 0x0a, start);
-      if (i < 0) throw new SyntaxError("Missing linefeed");
-      var value = bops.to(bops.subarray(body, start, i++));
-      if (key === "parent") {
-        parents.push(value);
-      }
-      else {
-        if (key === "author" || key === "committer") {
-          value = decodePerson(value);
-        }
-        commit[key] = value;
-      }
-    }
-    i++;
-    commit.message = bops.to(bops.subarray(body, i));
-    return commit;
-  }
-
-  function decodeTag(body) {
-    var i = 0;
-    var start;
-    var key;
-    var tag = {};
-    while (body[i] !== 0x0a) {
-      start = i;
-      i = indexOf(body, 0x20, start);
-      if (i < 0) throw new SyntaxError("Missing space");
-      key = parseAscii(body, start, i++);
-      start = i;
-      i = indexOf(body, 0x0a, start);
-      if (i < 0) throw new SyntaxError("Missing linefeed");
-      var value = bops.to(bops.subarray(body, start, i++));
-      if (key === "tagger") value = decodePerson(value);
-      tag[key] = value;
-    }
-    i++;
-    tag.message = bops.to(bops.subarray(body, i));
-    return tag;
-  }
-
-  function decodeTree(body) {
-    var i = 0;
-    var length = body.length;
-    var start;
-    var mode;
-    var name;
-    var hash;
-    var tree = [];
-    while (i < length) {
-      start = i;
-      i = indexOf(body, 0x20, start);
-      if (i < 0) throw new SyntaxError("Missing space");
-      mode = parseOct(body, start, i++);
-      start = i;
-      i = indexOf(body, 0x00, start);
-      name = bops.to(bops.subarray(body, start, i++));
-      hash = bops.to(bops.subarray(body, i, i += 20), "hex");
-      tree.push({
-        mode: mode,
-        name: name,
-        hash: hash
-      });
-    }
-    return tree;
-  }
-
-  function decodeBlob(body) {
-    return body;
-  }
 
   function fetch(remote, opts, callback) {
     if (!callback) return fetch.bind(this, remote, opts);
@@ -773,7 +513,7 @@ function newRepo(db, workDir) {
         caps.push("no-progress");
       }
     }
-    if (serverCaps.agent) caps.push("agent=" + platform.agent);
+    if (serverCaps.agent) caps.push("agent=" + agent);
     return caps;
   }
 
