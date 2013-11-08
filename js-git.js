@@ -9,6 +9,9 @@ var trace = require('./lib/trace.js');
 var applyDelta = require('./lib/apply-delta.js');
 var pushToPull = require('push-to-pull');
 var parse = pushToPull(require('./lib/decode-pack.js'));
+var walk = require('./lib/walk.js');
+var treeWalk = require('./lib/tree-walk.js');
+var logWalk = require('./lib/log-walk.js');
 
 module.exports = newRepo;
 
@@ -30,7 +33,6 @@ function newRepo(db) {
   // Convenience Readers
   repo.logWalk = logWalk;   // (hash-ish) => stream<commit>
   repo.treeWalk = treeWalk; // (hash-ish) => stream<object>
-  repo.walk = walk;         // (seed, scan, compare) -> stream<object>
 
   // Refs
   repo.resolveHashish = resolveHashish; // (hash-ish) -> hash
@@ -48,124 +50,6 @@ function newRepo(db) {
 
   return repo;
 
-  function logWalk(hashish, callback) {
-    if (!callback) return logWalk.bind(this, hashish);
-    var last, seen = {};
-    return readRef("shallow", onShallow);
-
-    function onShallow(err, shallow) {
-      last = shallow;
-      return loadAs("commit", hashish, onLoad);
-    }
-
-    function onLoad(err, commit, hash) {
-      if (commit === undefined) return callback(err);
-      commit.hash = hash;
-      seen[hash] = true;
-      return callback(null, walk(commit, scan, loadKey, compare));
-    }
-
-    function scan(commit) {
-      if (last === commit) return [];
-      return commit.parents.filter(function (hash) {
-        return !seen[hash];
-      });
-    }
-
-    function loadKey(hash, callback) {
-      return loadAs("commit", hash, function (err, commit) {
-        if (err) return callback(err);
-        commit.hash = hash;
-        if (hash === last) commit.last = true;
-        return callback(null, commit);
-      });
-    }
-
-    function compare(commit, other) {
-      return commit.author.date < other.author.date;
-    }
-  }
-
-  function treeWalk(hashish, callback) {
-    if (!callback) return treeWalk.bind(this, hashish);
-    return load(hashish, onLoad);
-    function onLoad(err, item, hash) {
-      if (err) return callback(err);
-      if (item.type === "commit") return load(item.body.tree, onLoad);
-      item.hash = hash;
-      item.path = "/";
-      return callback(null, walk(item, treeScan, treeLoadKey, treeCompare));
-    }
-  }
-
-  function treeScan(object) {
-    if (object.type === "blob") return [];
-    assertType(object, "tree");
-    return object.body.filter(function (entry) {
-      return entry.mode !== 0160000;
-    }).map(function (entry) {
-      var path = object.path + entry.name;
-      if (entry.mode === 040000) path += "/";
-      entry.path = path;
-      return entry;
-    });
-  }
-
-  function treeLoadKey(entry, callback) {
-    return load(entry.hash, function (err, object) {
-      if (err) return callback(err);
-      entry.type = object.type;
-      entry.body = object.body;
-      return callback(null, entry);
-    });
-  }
-
-  function treeCompare(first, second) {
-    return first.path < second.path;
-  }
-
-  function walk(seed, scan, loadKey, compare) {
-    var queue = [seed];
-    var working = 0, error, cb;
-    return {read: read, abort: abort};
-
-    function read(callback) {
-      if (cb) return callback(new Error("Only one read at a time"));
-      if (working) { cb = callback; return; }
-      var item = queue.shift();
-      if (!item) return callback();
-      try { scan(item).forEach(onKey); }
-      catch (err) { return callback(err); }
-      return callback(null, item);
-    }
-
-    function abort(callback) { return callback(); }
-
-    function onError(err) {
-      if (cb) {
-        var callback = cb; cb = null;
-        return callback(err);
-      }
-      error = err;
-    }
-
-    function onKey(key) {
-      working++;
-      loadKey(key, onItem);
-    }
-
-    function onItem(err, item) {
-      working--;
-      if (err) return onError(err);
-      var index = queue.length;
-      while (index && compare(item, queue[index - 1])) index--;
-      queue.splice(index, 0, item);
-      if (!working && cb) {
-        var callback = cb; cb = null;
-        return read(callback);
-      }
-    }
-  }
 
   function load(hashish, callback) {
     if (!callback) return load.bind(this, hashish);
@@ -663,8 +547,3 @@ function newRepo(db) {
   }
 }
 
-function assertType(object, type) {
-  if (object.type !== type) {
-    throw new Error(type + " expected, but found " + object.type);
-  }
-}
