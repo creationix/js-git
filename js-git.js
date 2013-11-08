@@ -8,6 +8,7 @@ var trace = require('./lib/trace.js');
 var treeWalk = require('./lib/tree-walk.js');
 var logWalk = require('./lib/log-walk.js');
 var fetch = require('./lib/fetch.js');
+var push = require('./lib/push.js');
 var unpack = require('./lib/unpack.js');
 
 module.exports = newRepo;
@@ -272,9 +273,4 @@ function newRepo(db) {
     }
   }
 
-  function push() {
-    throw new Error("TODO: Implement repo.push");
-  }
-
 }
-
