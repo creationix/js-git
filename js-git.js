@@ -12,21 +12,12 @@ var parse = pushToPull(require('./lib/decode-pack.js'));
 
 module.exports = newRepo;
 
-function newRepo(db, workDir) {
+function newRepo(db) {
   if (!db) throw new TypeError("A db interface instance is required");
 
   var repo = {};
 
-  if (trace) {
-    db = {
-      get: wrap1("get", db.get),
-      set: wrap2("set", db.set),
-      has: wrap1("has", db.has),
-      del: wrap1("del", db.del),
-      keys: wrap1("keys", db.keys),
-      init: wrap0("init", db.init),
-    };
-  }
+  if (trace) db = require('./lib/tracedb.js')(db);
 
   // Git Objects
   repo.load = load;       // (hash-ish) -> object
@@ -51,54 +42,11 @@ function newRepo(db, workDir) {
   repo.deleteRef = deleteRef;           // (ref)
   repo.listRefs = listRefs;             // (prefix) -> refs
 
-  if (workDir) {
-    // TODO: figure out API for working repos
-  }
-
   // Network Protocols
   repo.fetch = fetch;
   repo.push = push;
 
   return repo;
-
-  function wrap0(type, fn) {
-    return zero;
-    function zero(callback) {
-      if (!callback) return zero.bind(this);
-      return fn.call(this, check);
-      function check(err) {
-        if (err) return callback(err);
-        trace(type, null);
-        return callback.apply(this, arguments);
-      }
-    }
-  }
-
-  function wrap1(type, fn) {
-    return one;
-    function one(arg, callback) {
-      if (!callback) return one.bind(this, arg);
-      return fn.call(this, arg, check);
-      function check(err) {
-        if (err) return callback(err);
-        trace(type, null, arg);
-        return callback.apply(this, arguments);
-      }
-    }
-  }
-
-  function wrap2(type, fn) {
-    return two;
-    function two(arg1, arg2, callback) {
-      if (!callback) return two.bind(this, arg1. arg2);
-      return fn.call(this, arg1, arg2, check);
-      function check(err) {
-        if (err) return callback(err);
-        trace(type, null, arg1);
-        return callback.apply(this, arguments);
-      }
-    }
-  }
 
   function logWalk(hashish, callback) {
     if (!callback) return logWalk.bind(this, hashish);
