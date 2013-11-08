@@ -1,8 +1,11 @@
-var agent = require('./agent.js');
 var pushToPull = require('push-to-pull');
-var parse = pushToPull(require('./decode-pack.js'));
+var parse = pushToPull(require('../lib/decode-pack.js'));
+var agent = require('../lib/agent.js');
 
-module.exports = fetch;
+module.exports = function (repo) {
+  repo.fetch = fetch;
+  repo.push = push;
+};
 
 function fetch(remote, opts, callback) {
   if (!callback) return fetch.bind(this, remote, opts);
@@ -160,7 +163,8 @@ function arrayFilter(want) {
     var result;
     try {
       for (var i = 0; i < length; ++i) {
-        if (result = wantMatch(ref, want[i])) break;
+        result = wantMatch(ref, want[i]);
+        if (result) break;
       }
     }
     catch (err) {
@@ -169,3 +173,8 @@ function arrayFilter(want) {
     return callback(null, result);
   }
 }
+
+function push() {
+  throw new Error("TODO: Implement repo.push");
+}
+

@@ -1,17 +1,15 @@
-var fetch = require('./lib/fetch.js');
-var push = require('./lib/push.js');
-
 module.exports = newRepo;
 
 function newRepo(db) {
   if (!db) throw new TypeError("A db interface instance is required");
 
+  // Create a new repo object.
   var repo = {};
 
   // Auto trace the db if tracing is turned on.
   if (require('./lib/trace.js')) db = require('./lib/tracedb.js')(db);
 
-  // Add the db interface (used by objects, refs, and unpack mixins)
+  // Add the db interface (used by objects, refs, and packops mixins)
   repo.db = db;
 
   // Mix in object store interface
@@ -26,14 +24,11 @@ function newRepo(db) {
   // Mix in packfile import and export ability
   require('./mixins/packops.js')(repo);
 
-  // Git Objects
+  // Mix in git network client ability
+  require('./mixins/client.js')(repo);
 
-  // Network Protocols
-  repo.fetch = fetch;
-  repo.push = push;
+  // Mix in git network client ability
+  require('./mixins/server.js')(repo);
 
   return repo;
-
-
-
 }
