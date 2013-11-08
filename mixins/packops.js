@@ -10,7 +10,7 @@ module.exports = function (repo) {
 
 function unpack(packStream, opts, callback) {
   if (!callback) return unpack.bind(this, packStream, opts);
-  var repo = this, db = repo.db;
+  var db = this.db;
 
   var version, num, numDeltas = 0, count = 0, countDeltas = 0;
   var done, startDeltaProgress = false;
@@ -24,7 +24,8 @@ function unpack(packStream, opts, callback) {
   function onDone(err) {
     if (done) return;
     done = true;
-    return callback(err);
+    if (err) return callback(err);
+    return callback(null, values(hashes));
   }
 
   function onStats(err, stats) {
@@ -116,4 +117,14 @@ function unpack(packStream, opts, callback) {
 function pack(hashes, opts, callback) {
   if (!callback) return pack.bind(this, hashes, opts);
   callback(new Error("TODO: Implement pack"));
+}
+
+function values(object) {
+  var keys = Object.keys(object);
+  var length = keys.length;
+  var out = new Array(length);
+  for (var i = 0; i < length; i++) {
+    out[i] = object[keys[i]];
+  }
+  return out;
 }
