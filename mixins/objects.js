@@ -4,6 +4,7 @@ var deframe = require('../lib/deframe.js');
 var encoders = require('../lib/encoders.js');
 var decoders = require('../lib/decoders.js');
 var parseAscii = require('../lib/parseascii.js');
+var isHash = require('../lib/ishash.js');
 
 // Add "objects" capabilities to a repo using db as storage.
 module.exports = function (repo) {
@@ -107,8 +108,4 @@ function saveAs(type, body, callback) {
   if (!callback) return saveAs.bind(this, type, body);
   if (type === "text") type = "blob";
   return this.save({ type: type, body: body }, callback);
-}
-
-function isHash(hash) {
-  return (/^[0-9a-f]{40}$/).test(hash);
 }
