@@ -214,5 +214,6 @@ Being that js-git is so modular, here is a list of the most relevent modules tha
    - <https://github.com/creationix/git-fs-db> - A database interface adapter that wraps a fs interface.
    - <https://github.com/creationix/git-localdb> - A git-db implementation based on `localStorage`.
    - <https://github.com/creationix/git-memdb> - A git-db implementation that stores data in ram for quick testing.
+   - <https://github.com/aaronpowell/git-indexeddb> - A git-db implementation cased on `indexedDB`.
 
 [gen-run]: https://github.com/creationix/gen-run
