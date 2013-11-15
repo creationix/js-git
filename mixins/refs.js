@@ -60,12 +60,12 @@ function updateHead(hash, callback) {
   if (!callback) return updateHead.bind(this, hash);
   var ref;
   var repo = this, db = repo.db;
-  return getHead(onBranch);
+  return this.getHead(onBranch);
 
   function onBranch(err, result) {
     if (err) return callback(err);
     if (result === undefined) {
-      return setHead("master", function (err) {
+      return repo.setHead("master", function (err) {
         if (err) return callback(err);
         onBranch(err, "refs/heads/master");
       });
