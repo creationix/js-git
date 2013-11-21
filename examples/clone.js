@@ -24,7 +24,8 @@ if (process.env.DEPTH) {
   opts.depth = parseInt(process.env.DEPTH, 10);
 }
 
-repo.fetch(remote, opts, function (err) {
+repo.fetchPack(remote, opts, function (err) {
   if (err) throw err;
   console.log("Done");
 });
+
