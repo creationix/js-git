@@ -3,12 +3,12 @@ var parse = pushToPull(require('../lib/decode-pack.js'));
 var agent = require('../lib/agent.js');
 
 module.exports = function (repo) {
-  repo.fetch = fetch;
-  repo.push = push;
+  repo.fetchPack = fetchPack;
+  repo.uploadPack = uploadPack;
 };
 
-function fetch(remote, opts, callback) {
-  if (!callback) return fetch.bind(this, remote, opts);
+function fetchPack(remote, opts, callback) {
+  if (!callback) return fetchPack.bind(this, remote, opts);
   var repo = this;
   var db = repo.db;
   var refs, branch, queue, ref, hash;
@@ -24,7 +24,7 @@ function fetch(remote, opts, callback) {
   function onWants(err, wants) {
     if (err) return callback(err);
     opts.wants = wants;
-    return remote.fetch(repo, opts, onPackStream);
+    return remote.fetchPack(repo, opts, onPackStream);
   }
 
   function onPackStream(err, raw) {
@@ -174,6 +174,7 @@ function arrayFilter(want) {
   }
 }
 
-function push() {
-  throw new Error("TODO: Implement repo.push");
+function uploadPack(remote, opts, callback) {
+  if (!callback) return uploadPack.bind(this, remote, opts);
+  throw "TODO: Implement repo.uploadPack";
 }
