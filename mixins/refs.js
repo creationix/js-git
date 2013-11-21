@@ -116,37 +116,30 @@ function deleteRef(ref, callback) {
 
 function listRefs(prefix, callback) {
   if (!callback) return listRefs.bind(this, prefix);
-  var branches = {}, list = [], target = prefix;
-  var repo = this, db = repo.db;
-  return db.keys(target, onNames);
-
-  function onNames(err, names) {
-    if (err) {
-      if (err.code === "ENOENT") return shift();
-      return callback(err);
-    }
-    for (var i = 0, l = names.length; i < l; ++i) {
-      list.push(target + "/" + names[i]);
-    }
-    return shift();
+  if (!prefix) prefix = "refs\/";
+  else if (!/^refs\//.test(prefix)) {
+    return callback(new TypeError("Invalid prefix: " + prefix));
   }
+  var db = this.db;
+  var refs = {};
+  return db.keys(prefix, onKeys);
 
-  function shift(err) {
+  function onKeys(err, keys) {
     if (err) return callback(err);
-    target = list.shift();
-    if (!target) return callback(null, branches);
-    return db.get(target, onRead);
-  }
-
-  function onRead(err, hash) {
-    if (err) {
-      if (err.code === "EISDIR") return db.keys(target, onNames);
-      return callback(err);
-    }
-    if (hash) {
-      branches[target] = hash.trim();
-      return shift();
-    }
-    return db.keys(target, onNames);
+    var left = keys.length, done = false;
+    if (!left) return callback(null, refs);
+    keys.forEach(function (key) {
+      db.get(key, function (err, value) {
+        if (done) return;
+        if (err) {
+          done = true;
+          return callback(err);
+        }
+        refs[key] = value.trim();
+        if (--left) return;
+        done = true;
+        callback(null, refs);
+      });
+    });
   }
 }

@@ -4,7 +4,7 @@ var agent = require('../lib/agent.js');
 
 module.exports = function (repo) {
   repo.fetchPack = fetchPack;
-  repo.uploadPack = uploadPack;
+  repo.sendPack = sendPack;
 };
 
 function fetchPack(remote, opts, callback) {
@@ -24,7 +24,7 @@ function fetchPack(remote, opts, callback) {
   function onWants(err, wants) {
     if (err) return callback(err);
     opts.wants = wants;
-    return remote.fetchPack(repo, opts, onPackStream);
+    return remote.fetch(repo, opts, onPackStream);
   }
 
   function onPackStream(err, raw) {
@@ -174,7 +174,7 @@ function arrayFilter(want) {
   }
 }
 
-function uploadPack(remote, opts, callback) {
-  if (!callback) return uploadPack.bind(this, remote, opts);
-  throw "TODO: Implement repo.uploadPack";
+function sendPack(remote, opts, callback) {
+  if (!callback) return sendPack.bind(this, remote, opts);
+  throw "TODO: Implement repo.sendPack";
 }
