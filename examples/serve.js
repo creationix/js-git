@@ -12,37 +12,48 @@ db.init(function (err) {
   });
 });
 
-var server = net.createServer(function (socket) {
-  var remote = wrap(socket);
-  socket.on("error", onDone);
-  remote.read(function (err, line) {
-    if (err) return onDone(err);
-    var match = line.match(/^(git-upload-pack|git-receive-pack) (.+?)\0(?:host=(.+?)\0)$/);
-    if (!match) return onDone(new Error("Invalid connection message: " + line));
-    var command = match[1];
-    var path = match[2];
-    if (path !== "/test.git") return onDone(new Error("Unknown repo: " + path));
-    if (command === "git-upload-pack") {
-      return repo.uploadPack(remote, {}, onDone);
-    }
-    if (command === "git-receive-pack") {
-      return repo.receivePack(remote, {onProgress:onProgress}, onDone);
-    }
-  });
-
-  function onProgress(progress) {
-    console.log("P", progress);
-  }
-  function onDone(err) {
-    if (err) console.error(err.stack);
-    socket.destroy();
-  }
-});
+var server = net.createServer(connectionHandler(function (req, callback) {
+  if (req.path !== "/test.git") return callback(new Error("Unknown repo: " + req.path));
+  callback(null, repo);
+}, {onProgress:console.log}));
 server.listen(9418, "127.0.0.1", function () {
   console.log("GIT server listening at", server.address());
 });
 
 ////////////////////// TCP transport for git:// uris ///////////////////////////
+
+function connectionHandler(onReq, opts) {
+  opts = opts || {};
+  return function (socket) {
+    var remote = wrap(socket), command;
+    socket.on("error", onDone);
+    remote.read(function (err, line) {
+      if (err) return onDone(err);
+      var match = line.match(/^(git-upload-pack|git-receive-pack) (.+?)\0(?:host=(.+?)\0)$/);
+      if (!match) return onDone(new Error("Invalid connection message: " + line));
+      command = match[1];
+      onReq({
+        path: match[2],
+        host: match[3]
+      }, onRepo);
+    });
+
+    function onRepo(err, repo) {
+      if (err) return onDone(err);
+      if (command === "git-upload-pack") {
+        return repo.uploadPack(remote, opts, onDone);
+      }
+      if (command === "git-receive-pack") {
+        return repo.receivePack(remote, opts, onDone);
+      }
+    }
+
+    function onDone(err) {
+      if (err) console.error(err.stack);
+      socket.destroy();
+    }
+  };
+}
 
 var pktLine = require('./pkt-line.js');
 function wrap(socket) {
