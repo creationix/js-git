@@ -75,6 +75,9 @@ function save(object, callback) {
 
   function onSave(err) {
     if (err) return callback(err);
+    if (object.type === 'tag') {
+      return db.saveTag(object.body.tag, hash, callback);
+    }
     return callback(null, hash);
   }
 }
