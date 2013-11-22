@@ -15,7 +15,7 @@ db.init(function (err) {
 var server = net.createServer(connectionHandler(function (req, callback) {
   if (req.path !== "/test.git") return callback(new Error("Unknown repo: " + req.path));
   callback(null, repo);
-}, {onProgress:console.log}));
+}));
 server.listen(9418, "127.0.0.1", function () {
   console.log("GIT server listening at", server.address());
 });

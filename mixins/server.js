@@ -10,7 +10,7 @@ function uploadPack(remote, opts, callback) {
 
 function receivePack(remote, opts, callback) {
   if (!callback) return receivePack.bind(this, remote, opts);
-  var clientCaps = null, changes = [];
+  var clientCaps = {}, changes = [];
   var repo = this;
   this.listRefs(null, function (err, refs) {
     if (err) return callback(err);
@@ -29,7 +29,7 @@ function receivePack(remote, opts, callback) {
     if (line === null) {
       return repo.unpack(remote, opts, onUnpack);
     }
-    var match = line.match(/^([0-9a-f]{40}) ([0-9a-f]{40}) (.+?)(?: (.+))?$/);
+    var match = line.match(/^([0-9a-f]{40}) ([0-9a-f]{40}) ([^ ]+)(?: (.+))?$/);
     changes.push({
       oldHash: match[1],
       newHash: match[2],
@@ -44,12 +44,12 @@ function receivePack(remote, opts, callback) {
     remote.read(onLine);
   }
 
-  function onUnpack(err, out) {
+  function onUnpack(err, hashes) {
     if (err) return callback(err);
     console.log({
       caps: clientCaps,
       changes: changes,
-      out: out
+      numHashes: hashes.length
     });
   }
 
