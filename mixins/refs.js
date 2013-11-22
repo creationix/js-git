@@ -7,7 +7,8 @@ module.exports = function (repo) {
   repo.getHead = getHead;       // () -> ref
   repo.setHead = setHead;       // (ref)
   repo.readRef = readRef;       // (ref) -> hash
-  repo.writeRef = writeRef;     // (ref, hash)
+  repo.createRef = createRef;   // (ref, hash)
+  repo.updateRef = updateRef;   // (ref, hash)
   repo.deleteRef = deleteRef;   // (ref)
   repo.listRefs = listRefs;     // (prefix) -> refs
 };
@@ -104,8 +105,15 @@ function readRef(ref, callback) {
   });
 }
 
-function writeRef(ref, hash, callback) {
-  if (!callback) return writeRef.bind(this, ref, hash);
+function createRef(ref, hash, callback) {
+  if (!callback) return createRef.bind(this, ref, hash);
+  // TODO: should we check to make sure it doesn't exist first?
+  return this.db.set(ref, hash + "\n", callback);
+}
+
+function updateRef(ref, hash, callback) {
+  if (!callback) return updateRef.bind(this, ref, hash);
+  // TODO: should we check to make sure it does exist first?
   return this.db.set(ref, hash + "\n", callback);
 }
 

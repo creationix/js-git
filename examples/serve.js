@@ -25,17 +25,16 @@ server.listen(9418, "127.0.0.1", function () {
 function connectionHandler(onReq, opts) {
   opts = opts || {};
   return function (socket) {
-    var remote = wrap(socket), command;
+    var remote = wrap(socket), command, path, host;
     socket.on("error", onDone);
     remote.read(function (err, line) {
       if (err) return onDone(err);
       var match = line.match(/^(git-upload-pack|git-receive-pack) (.+?)\0(?:host=(.+?)\0)$/);
       if (!match) return onDone(new Error("Invalid connection message: " + line));
       command = match[1];
-      onReq({
-        path: match[2],
-        host: match[3]
-      }, onRepo);
+      path = match[2];
+      host = match[3];
+      onReq({ path: path, host: host }, onRepo);
     });
 
     function onRepo(err, repo) {
@@ -48,8 +47,14 @@ function connectionHandler(onReq, opts) {
       }
     }
 
-    function onDone(err) {
+    function onDone(err, changes) {
       if (err) console.error(err.stack);
+      else console.log("DONE", {
+        command: command,
+        path: path,
+        host: host,
+        changes: changes
+      });
       socket.destroy();
     }
   };
