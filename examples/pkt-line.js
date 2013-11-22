@@ -1,4 +1,5 @@
 var bops = {
+  is: require('bops/is.js'),
   to: require('bops/to.js'),
   from: require('bops/from.js'),
   create: require('bops/create.js'),
@@ -10,7 +11,8 @@ var PACK = bops.from("PACK");
 
 module.exports = {
   deframer: deframer,
-  framer: framer
+  framer: framer,
+  frame: frame,
 };
 
 function deframer(emit) {
@@ -72,10 +74,10 @@ function deframer(emit) {
             emit(bops.subarray(data, 1));
           }
           else if (data[0] === 2) {
-            emit({progress: bops.to(bops.subarray(data, 1))});
+            emit(["progress", bops.to(bops.subarray(data, 1))]);
           }
           else if (data[0] === 3) {
-            emit({error: bops.to(bops.subarray(data, 1))});
+            emit(["error", bops.to(bops.subarray(data, 1))]);
           }
           else {
             emit(bops.to(data));
@@ -98,22 +100,41 @@ function deframer(emit) {
 
 }
 
+
 function framer(emit) {
   return function (item) {
     if (item === undefined) return emit();
-    if (item === null) {
-      emit(bops.from("0000"));
-      return;
-    }
-    if (typeof item === "string") {
-      item = bops.from(item);
-    }
-    emit(bops.join([frameHead(item.length + 4), item]));
+    emit(frame(item));
   };
 }
 
-function frameHead(length) {
-  var buffer = bops.create(4);
+function frame(item) {
+  if (item === null) return bops.from("0000");
+  if (typeof item === "string") {
+    item = bops.from(item);
+  }
+  if (bops.is(item)) {
+    return bops.join([frameHead(item.length + 4), item]);
+  }
+  if (Array.isArray(item)) {
+    var type = item[0];
+    item = item[1];
+    var head = bops.create(5);
+    if (type === "pack") head[4] = 1;
+    else if (type === "progress") head[4] = 2;
+    else if (type === "error") head[4] = 3;
+    else throw new Error("Invalid channel name: " + type);
+    if (typeof item === "string") {
+      item = bops.from(item);
+    }
+    return bops.join([frameHead(item.length + 5, head), item]);
+  }
+  throw new Error("Invalid input: " + item);
+}
+
+
+function frameHead(length, buffer) {
+  buffer = buffer || bops.create(4);
   buffer[0] = toHexChar(length >>> 12);
   buffer[1] = toHexChar((length >>> 8) & 0xf);
   buffer[2] = toHexChar((length >>> 4) & 0xf);

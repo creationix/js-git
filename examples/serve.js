@@ -132,6 +132,7 @@ function wrap(socket) {
   }
 
   function writeChunk(chunk) {
+    // console.log(">>", inspect("" + chunk, {colors:true}));
     if (chunk === undefined) {
       socket.end();
       onDrain();

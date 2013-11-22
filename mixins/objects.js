@@ -10,11 +10,14 @@ var isHash = require('../lib/ishash.js');
 module.exports = function (repo) {
 
   // Add Object store capability to the system
-  repo.load = load;     // (hash-ish) -> object
-  repo.save = save;     // (object) -> hash
-  repo.loadAs = loadAs; // (type, hash-ish) -> value
-  repo.saveAs = saveAs; // (type, value) -> hash
-  repo.remove = remove; // (hash)
+  repo.load = load;       // (hash-ish) -> object
+  repo.save = save;       // (object) -> hash
+  repo.loadRaw = loadRaw; // (hash) -> buffer
+  repo.saveRaw = saveRaw; // (hash, buffer)
+  repo.has = has;         // (hash) -> true or false
+  repo.loadAs = loadAs;   // (type, hash-ish) -> value
+  repo.saveAs = saveAs;   // (type, value) -> hash
+  repo.remove = remove;   // (hash)
 
   // This is a fallback resolve in case there is no refs system installed.
   if (!repo.resolve) repo.resolve = function (hash, callback) {
@@ -56,6 +59,18 @@ function load(hashish, callback) {
     }
     return callback(null, object, hash);
   }
+}
+
+function loadRaw(hash, callback) {
+  return this.db.get(hash, callback);
+}
+
+function saveRaw(hash, buffer, callback) {
+  return this.db.set(hash, buffer, callback);
+}
+
+function has(hash, callback) {
+  return this.db.has(hash, callback);
 }
 
 function save(object, callback) {

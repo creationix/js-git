@@ -3,8 +3,23 @@ var deframe = require('../lib/deframe.js');
 var frame = require('../lib/frame.js');
 var sha1 = require('../lib/sha1.js');
 var inflate = require('../lib/inflate.js');
+var deflate = require('../lib/deflate.js');
 var applyDelta = require('../lib/apply-delta.js');
 var pushToPull = require('push-to-pull');
+
+var typeToNum = {
+  commit: 1,
+  tree: 2,
+  blob: 3,
+  tag: 4,
+  "ofs-delta": 5,
+  "ref-delta": 6
+};
+var numToType = {};
+for (var type in typeToNum) {
+  var num = typeToNum[type];
+  numToType[num] = type;
+}
 
 module.exports = function (repo) {
   // packStream is a simple-stream containing raw packfile binary data
@@ -12,6 +27,8 @@ module.exports = function (repo) {
   // callback will be called with a list of all unpacked hashes on success.
   repo.unpack = unpack; // (packStream, opts) -> hashes
 
+  // hashes is an array of hashes to pack
+  // callback will be a simple-stream containing raw packfile binary data
   repo.pack = pack;     // (hashes, opts) -> packStream
 };
 
@@ -19,7 +36,7 @@ function unpack(packStream, opts, callback) {
   if (!callback) return unpack.bind(this, packStream, opts);
   packStream = pushToPull(decodePack)(packStream);
 
-  var db = this.db;
+  var repo = this;
 
   var version, num, numDeltas = 0, count = 0, countDeltas = 0;
   var done, startDeltaProgress = false;
@@ -80,7 +97,7 @@ function unpack(packStream, opts, callback) {
 
   function resolveDelta(item) {
     if (opts.onProgress) deltaProgress();
-    return db.get(item.ref, function (err, buffer) {
+    return repo.loadRaw(item.ref, function (err, buffer) {
       if (err) return onDone(err);
       var target = deframe(buffer);
       item.type = target[0];
@@ -93,7 +110,7 @@ function unpack(packStream, opts, callback) {
     var hasTarget = has[item.ref];
     if (hasTarget === true) return resolveDelta(item);
     if (hasTarget === false) return enqueueDelta(item);
-    return db.has(item.ref, function (err, value) {
+    return repo.has(item.ref, function (err, value) {
       if (err) return onDone(err);
       has[item.ref] = value;
       if (value) return resolveDelta(item);
@@ -114,7 +131,7 @@ function unpack(packStream, opts, callback) {
       });
       throw "TODO: pending value was found, resolve it";
     }
-    return db.set(hash, buffer, onSave);
+    return repo.saveRaw(hash, buffer, onSave);
   }
 
   function onSave(err) {
@@ -131,9 +148,66 @@ function unpack(packStream, opts, callback) {
 
 }
 
+function packFrame(type, body, callback) {
+  var length = body.length;
+  var head = [(typeToNum[type] << 4) | (length & 0xf)];
+  var i = 0;
+  length >>= 4;
+  while (length) {
+    head[i++] |= 0x80;
+    head[i] = length & 0x7f;
+    length >>= 7;
+  }
+  deflate(body, function (err, body) {
+    if (err) return callback(err);
+    callback(null, bops.join([bops.from(head), body]));
+  });
+}
+
+// TODO: Implement delta refs to reduce stream size
 function pack(hashes, opts, callback) {
   if (!callback) return pack.bind(this, hashes, opts);
-  callback(new Error("TODO: Implement pack"));
+  var repo = this;
+  var sha1sum = sha1();
+  var i = 0, first = true, done = false;
+  return callback(null, { read: read, abort: callback });
+
+  function read(callback) {
+    if (done) return callback();
+    if (first) return readFirst(callback);
+    var hash = hashes[i++];
+    if (hash === undefined) {
+      var sum = sha1sum.digest();
+      done = true;
+      return callback(null, bops.from(sum, "hex"));
+    }
+    repo.loadRaw(hash, function (err, buffer) {
+      if (err) return callback(err);
+      if (!buffer) return callback(new Error("Missing hash: " + hash));
+      // Reframe with pack format header
+      var pair = deframe(buffer);
+      packFrame(pair[0], pair[1], function (err, buffer) {
+        if (err) return callback(err);
+        sha1sum.update(buffer);
+        callback(null, buffer);
+      });
+    });
+  }
+
+  function readFirst(callback) {
+    var length = hashes.length;
+    var chunk = bops.create([
+      0x50, 0x41, 0x43, 0x4b, // PACK
+      0, 0, 0, 2,             // version 2
+      length >> 24,           // Num of objects
+      (length >> 16) & 0xff,
+      (length >> 8) & 0xff,
+      length & 0xff
+    ]);
+    first = false;
+    sha1sum.update(chunk);
+    callback(null, chunk);
+  }
 }
 
 function values(object) {
@@ -145,15 +219,6 @@ function values(object) {
   }
   return out;
 }
-
-var types = {
-  "1": "commit",
-  "2": "tree",
-  "3": "blob",
-  "4": "tag",
-  "6": "ofs-delta",
-  "7": "ref-delta"
-};
 
 function decodePack(emit) {
 
@@ -290,7 +355,7 @@ function decodePack(emit) {
   // Common helper for emitting all three object shapes
   function emitObject() {
     var item = {
-      type: types[type],
+      type: numToType[type],
       size: length,
       body: bops.join(parts),
       offset: start
