@@ -203,11 +203,14 @@ function walkRepo(repo, wants, haves, callback) {
   keys.forEach(walkCommit);
 
   function walkCommit(hash) {
+    if (done) return;
     if (hash in hashes || hash in haves) return;
     hashes[hash] = true;
     left++;
     repo.loadAs("commit", hash, function (err, commit) {
+      if (done) return;
       if (err) return onDone(err);
+      if (!commit) return onDone(new Error("Missing Commit: " + hash));
       commit.parents.forEach(walkCommit);
       walkTree(commit.tree);
       if (!--left) return onDone();
@@ -215,12 +218,16 @@ function walkRepo(repo, wants, haves, callback) {
   }
 
   function walkTree(hash) {
+    if (done) return;
     if (hash in hashes || hash in haves) return;
     hashes[hash] = true;
     left++;
     repo.loadAs("tree", hash, function (err, tree) {
+      if (done) return;
       if (err) return onDone(err);
+      if (tree === undefined) return onDone(new Error("Missing tree: " + hash));
       Object.keys(tree).forEach(function (name) {
+        if (done) return;
         var item = tree[name];
         if (item.mode === 040000) walkTree(item.hash);
         else {
@@ -231,5 +238,4 @@ function walkRepo(repo, wants, haves, callback) {
       if (!--left) return onDone();
     });
   }
-
 }
