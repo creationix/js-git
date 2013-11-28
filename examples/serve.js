@@ -67,18 +67,21 @@ function wrap(socket) {
   var rcb = null, wcb = null;
   var onChunk = pktLine.deframer(onFrame);
   var writeFrame = pktLine.framer(writeChunk);
-  socket.on("data", function (chunk) {
+  socket.on("data", onEvent);
+  socket.on("end", onEvent);
+  socket.on("drain", onDrain);
+  return { read: read, write: write };
+
+  function onEvent(chunk) {
     try {
       onChunk(chunk);
     }
     catch (err) {
+      console.error(err.stack);
       rerr = err;
       check();
     }
-  });
-  socket.on("end", onChunk);
-  socket.on("drain", onDrain);
-  return { read: read, write: write };
+  }
 
   function onFrame(frame) {
     console.log("<-", inspect(frame, {colors:true}));
@@ -183,6 +186,7 @@ function memDb() {
   };
 
   function get(key, callback) {
+    console.log("GET", key);
     return makeAsync(function () {
       if (isHash.test(key)) {
         return objects[key];
@@ -192,6 +196,7 @@ function memDb() {
   }
 
   function set(key, value, callback) {
+    console.log("SET", key);
     return makeAsync(function () {
       if (isHash.test(key)) {
         objects[key] = value;
