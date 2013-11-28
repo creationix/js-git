@@ -41,7 +41,7 @@ function load(hashish, callback) {
   }
 
   function onBuffer(err, buffer) {
-    if (err) return callback(err);
+    if (buffer === undefined) return callback(err);
     var type, object;
     try {
       if (sha1(buffer) !== hash) {
