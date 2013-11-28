@@ -1,5 +1,5 @@
 var pushToPull = require('push-to-pull');
-var parse = pushToPull(require('../lib/decode-pack.js'));
+var parse = pushToPull(require('../lib/pack-codec.js').decodePack);
 var agent = require('../lib/agent.js');
 
 module.exports = function (repo) {
