@@ -119,7 +119,7 @@ Save an object to the database.  This will give you back the hash of the cotent 
 
 ### repo.loadAs(type, hash, [callback]) -> body
 
-This convenience wrapper will call `repo.save` for you and then check if the type is what you expected.  If it is, it will return the body directly.  If it's not, it will error.
+This convenience wrapper will call `repo.load` for you and then check if the type is what you expected.  If it is, it will return the body directly.  If it's not, it will error.
 
 ```js
 var commit = yield repo.loadAs("commit", "HEAD");
