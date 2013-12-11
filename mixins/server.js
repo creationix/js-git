@@ -1,23 +1,6 @@
-// Simple helper for parallel work.
-function makeGroup(callback) {
-  var done = false;
-  var left = 0;
-  var results = {};
-  return function (name) {
-    left++;
-    return function (err, result) {
-      if (done) return;
-      if (err) {
-        done = true;
-        return callback(err);
-      }
-      results[name] = result;
-      if (--left) return;
-      done = true;
-      return callback(null, results);
-    };
-  };
-}
+var parallel = require('../lib/parallel.js');
+var map = require('../lib/map.js');
+var each = require('../lib/each.js');
 
 var bops = {
   join: require('bops/join.js')
@@ -31,40 +14,43 @@ module.exports = function (repo) {
 function uploadPack(remote, opts, callback) {
   if (!callback) return uploadPack.bind(this, remote, opts);
   var repo = this, refs, wants = {}, haves = {}, clientCaps = {};
-  var head;
   var packQueue = [];
   var queueBytes = 0;
   var queueLimit = 0;
-  repo.listRefs(null, onRefs);
+  return parallel({
+    head: repo.getHead(),
+    refs: getRefs()
+  }, onHeadRef);
 
-  function onRefs(err, result) {
-    if (err) return callback(err);
-    refs = result;
-    repo.getHead(onHead);
-  }
+  // The peeled value of a ref (that is "ref^{}") MUST be immediately after
+  // the ref itself, if presented. A conforming server MUST peel the ref if
+  // it’s an annotated tag.
+  function getRefs(callback) {
+    if (!callback) return getRefs;
+    var refs;
+    repo.listRefs(null, onRefs);
 
-  function onHead(err, result) {
-    if (err) return callback(err);
-    head = result;
+    function onRefs(err, result) {
+      if (err) return callback(err);
+      refs = result;
+      parallel(map(refs, function (hash) {
+        return repo.load(hash);
+      }), onValues);
+    }
 
-    // The peeled value of a ref (that is "ref^{}") MUST be immediately after
-    // the ref itself, if presented. A conforming server MUST peel the ref if
-    // it’s an annotated tag.
-    var gen = makeGroup(onValues);
-    for (var ref in refs) {
-      repo.load(refs[ref], gen(ref));
+    function onValues(err, values) {
+      each(values, function (value, name) {
+        if (value.type !== "tag") return;
+        refs[name + "^{}"] = value.body.object;
+      });
+      callback(null, refs);
     }
   }
 
-  function onValues(err, values) {
+  function onHeadRef(err, result) {
     if (err) return callback(err);
-    // Insert peeled refs.
-    for (var ref in values) {
-      var value = values[ref];
-      if (value.type === "tag") {
-        refs[ref+"^{}"] = value.body.object;
-      }
-    }
+    var head = result.head;
+    refs = result.refs;
 
     // The returned response is a pkt-line stream describing each ref and its
     // current value. The stream MUST be sorted by name according to the C
