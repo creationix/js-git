@@ -55,9 +55,20 @@ function create(repo, callback) {
           });
         });
       });
-    }, callback);
+    }, function (err) {
+      if (err) return callback(err);
+      repo.saveAs("tag", {
+        object: parent,
+        type: "commit",
+        tag: "v0.1.0",
+        tagger: mock.author,
+        message: "Details about the v0.1.0 release go here"
+      }, function (err, hash) {
+        if (err) return callback(err);
+        repo.createRef("refs/tags/v0.1.0", hash, callback);
+      });
+    });
   });
-
 }
 
 // Mini control-flow library

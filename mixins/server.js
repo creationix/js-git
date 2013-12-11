@@ -1,3 +1,24 @@
+// Simple helper for parallel work.
+function makeGroup(callback) {
+  var done = false;
+  var left = 0;
+  var results = {};
+  return function (name) {
+    left++;
+    return function (err, result) {
+      if (done) return;
+      if (err) {
+        done = true;
+        return callback(err);
+      }
+      results[name] = result;
+      if (--left) return;
+      done = true;
+      return callback(null, results);
+    };
+  };
+}
+
 var bops = {
   join: require('bops/join.js')
 };
@@ -10,6 +31,7 @@ module.exports = function (repo) {
 function uploadPack(remote, opts, callback) {
   if (!callback) return uploadPack.bind(this, remote, opts);
   var repo = this, refs, wants = {}, haves = {}, clientCaps = {};
+  var head;
   var packQueue = [];
   var queueBytes = 0;
   var queueLimit = 0;
@@ -21,17 +43,57 @@ function uploadPack(remote, opts, callback) {
     repo.getHead(onHead);
   }
 
-  function onHead(err, head) {
+  function onHead(err, result) {
     if (err) return callback(err);
+    head = result;
+
+    // The peeled value of a ref (that is "ref^{}") MUST be immediately after
+    // the ref itself, if presented. A conforming server MUST peel the ref if
+    // it’s an annotated tag.
+    var gen = makeGroup(onValues);
+    for (var ref in refs) {
+      repo.load(refs[ref], gen(ref));
+    }
+  }
+
+  function onValues(err, values) {
+    if (err) return callback(err);
+    // Insert peeled refs.
+    for (var ref in values) {
+      var value = values[ref];
+      if (value.type === "tag") {
+        refs[ref+"^{}"] = value.body.object;
+      }
+    }
+
+    // The returned response is a pkt-line stream describing each ref and its
+    // current value. The stream MUST be sorted by name according to the C
+    // locale ordering.
+    var keys = Object.keys(refs).sort();
+    var lines = keys.map(function (ref) {
+      return refs[ref] + " " + ref;
+    });
+
+    // If HEAD is a valid ref, HEAD MUST appear as the first advertised ref.
+    // If HEAD is not a valid ref, HEAD MUST NOT appear in the advertisement
+    // list at all, but other refs may still appear.
+    if (head) lines.unshift(refs[head] + " HEAD");
+
+    // The stream MUST include capability declarations behind a NUL on the
+    // first ref.
     // TODO: add "multi_ack" once it's implemented
     // TODO: add "multi_ack_detailed" once it's implemented
     // TODO: add "shallow" once it's implemented
     // TODO: add "include-tag" once it's implemented
     // TODO: add "thin-pack" once it's implemented
-    remote.write(refs[head] + " HEAD\0no-progress side-band side-band-64k ofs-delta", null);
-    Object.keys(refs).forEach(function (ref) {
-      remote.write(refs[ref] + " " + ref, null);
+    lines[0] += "\0no-progress side-band side-band-64k ofs-delta";
+
+    // Server SHOULD terminate each non-flush line using LF ("\n") terminator;
+    // client MUST NOT complain if there is no terminator.
+    lines.forEach(function (line) {
+      remote.write(line, null);
     });
+
     remote.write(null, null);
     remote.read(onWant);
   }
