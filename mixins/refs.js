@@ -137,13 +137,20 @@ function listRefs(prefix, callback) {
     var left = keys.length, done = false;
     if (!left) return callback(null, refs);
     keys.forEach(function (key) {
-      db.get(key, function (err, value) {
+      db.get(prefix + key, function (err, value) {
         if (done) return;
+        if (err && err.code === 'EISDIR') {
+          prefix = prefix + key + '/';
+          return db.keys(prefix, onKeys);
+
+        }
+        if (err && err.code === 'ENOENT') {
+        }
         if (err) {
           done = true;
           return callback(err);
         }
-        refs[key] = value.trim();
+        refs[prefix + key] = value.trim();
         if (--left) return;
         done = true;
         callback(null, refs);
