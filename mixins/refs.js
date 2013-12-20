@@ -133,8 +133,6 @@ function listRefs(prefix, callback) {
   return db.keys(prefix, onKeys);
 
   function onKeys(err, keys) {
-    console.log('KEYS', keys);
-    console.log("ERR", err);
     if (err) return callback(err);
     var left = keys.length, done = false;
     if (!left) return callback(null, refs);
@@ -142,16 +140,11 @@ function listRefs(prefix, callback) {
       db.get(prefix + key, function (err, value) {
         if (done) return;
         if (err && err.code === 'EISDIR') {
-          console.log("EISDIR", err, key, value, 'prefix', prefix);
           prefix = prefix + key + '/';
           return db.keys(prefix, onKeys);
 
         }
         if (err && err.code === 'ENOENT') {
-          console.log("ENNOENT", err, key, value);
-          // keys.push(prefix + '/' + key);
-          // prefix = prefix + '/' + key;
-          // return db.keys(prefix, onKeys);
         }
         if (err) {
           done = true;
