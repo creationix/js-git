@@ -79,7 +79,7 @@ Remove an object or ref from the database.
 
 Given a path prefix, give all the keys.  This is like a readdir if you treat the keys as paths.
 
-For example, given the keys `refs/heads/master`, `refs/headers/experimental`, `refs/tags/0.1.3` and the prefix `refs/heads/`, the output would be `master` and `experimental`.
+For example, given the keys `refs/heads/master`, `refs/heads/experimental`, `refs/tags/0.1.3` and the prefix `refs/heads/`, the output would be `master` and `experimental`.
 
 A null prefix returns all non hash keys.
 
