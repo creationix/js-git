@@ -7,9 +7,50 @@ This project is very modular and configurable by gluing different components tog
 
 This repo, `js-git`, is the core implementation of git and consumes various instances of interfaces.  This means that your network and persistance stack is completely pluggable.
 
-If you're looking for a more pre-packaged system, consider packages like `creationix/git-node` that implement all the abstract interfaces using node.js native APIs.  The `creationix/jsgit` package is an example of a CLI tool that consumes this.
+The old interface from milestone #1 has been deprecated and a new modular interface is in progress as part of milestone #2.
 
-The main end-user API as exported by this module for working with local repositories is:
+In the new system, you can build your js-git repo instance piecemeal or use the default config that expects a db interface instance as input.
+
+The built-in mixins are `objects`, `refs`, `walkers`, `packops`, `client`, and `server`.
+
+The default exports looks something like this:
+
+```js
+function newRepo(db) {
+  var repo = {};
+  repo.db = db;
+  require('./mixins/objects.js')(repo);
+  require('./mixins/refs.js')(repo);
+  require('./mixins/walkers.js')(repo);
+  require('./mixins/packops.js')(repo);
+  require('./mixins/client.js')(repo);
+  require('./mixins/server.js')(repo);
+  return repo;
+}
+```
+
+As you can see the mixing expect to be passed a repo instance and add methods to it.  This flexibility allows projects like [js-github][] exist that re-implement the `objects` and `refs` mixins, but still use the rest of the code as-is.
+
+## Objects interface
+
+This interface is responsible for loading and saving git objects to and from a storage backend.  In the default implementation it assumes `repo.db` implements the abstract db interface, but you can replace this with your own implementation for more flexilibity.
+
+### repo.load(hash-ish) -> {type,body}
+
+### repo.save({type,body}) -> hash
+
+### repo.loadAs(type, hash-ish) -> body
+
+### repo.saveAs(type, body) -> hash
+
+### repo.loadRaw(hash) -> buffer
+
+### repo.saveRaw(hash, buffer)
+
+### repo.has(hash) -> boolean
+
+### repo.remove(hash)
+
 
 ## Initialize the library
 
@@ -217,3 +258,4 @@ Being that js-git is so modular, here is a list of the most relevent modules tha
    - <https://github.com/aaronpowell/git-indexeddb> - A git-db implementation cased on `indexedDB`.
 
 [gen-run]: https://github.com/creationix/gen-run
+[js-github]: https://github.com/creationix/js-github

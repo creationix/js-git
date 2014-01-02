@@ -9,15 +9,24 @@ var isHash = require('../lib/ishash.js');
 // Add "objects" capabilities to a repo using db as storage.
 module.exports = function (repo) {
 
+  if (typeof repo.loadRaw !== "function") {
+    throw new TypeError("OBJECTS mixin depends on repo.loadRaw(hash) -> buffer");
+  }
+  if (typeof repo.saveRaw !== "function") {
+    throw new TypeError("OBJECTS mixin depends on repo.saveRaw(hash, buffer)");
+  }
+  if (typeof repo.has !== "function") {
+    throw new TypeError("OBJECTS mixin depends on repo.has(hash) -> boolean");
+  }
+  if (typeof repo.remove !== "function") {
+    throw new TypeError("OBJECTS mixin depends on repo.remove(hash)");
+  }
+
   // Add Object store capability to the system
-  repo.load = load;       // (hash-ish) -> object
-  repo.save = save;       // (object) -> hash
-  repo.loadRaw = loadRaw; // (hash) -> buffer
-  repo.saveRaw = saveRaw; // (hash, buffer)
-  repo.has = has;         // (hash) -> true or false
+  repo.load = load;       // (hash-ish) -> {type,value}
+  repo.save = save;       // ({type,value}) -> hash
   repo.loadAs = loadAs;   // (type, hash-ish) -> value
   repo.saveAs = saveAs;   // (type, value) -> hash
-  repo.remove = remove;   // (hash)
 
   // This is a fallback resolve in case there is no refs system installed.
   if (!repo.resolve) repo.resolve = function (hash, callback) {
@@ -31,13 +40,12 @@ function load(hashish, callback) {
   if (!callback) return load.bind(this, hashish);
   var hash;
   var repo = this;
-  var db = repo.db;
   return repo.resolve(hashish, onHash);
 
   function onHash(err, result) {
     if (result === undefined) return callback(err);
     hash = result;
-    return db.get(hash, onBuffer);
+    return repo.loadRaw(hash, onBuffer);
   }
 
   function onBuffer(err, buffer) {
@@ -61,23 +69,10 @@ function load(hashish, callback) {
   }
 }
 
-function loadRaw(hash, callback) {
-  return this.db.get(hash, callback);
-}
-
-function saveRaw(hash, buffer, callback) {
-  return this.db.set(hash, buffer, callback);
-}
-
-function has(hash, callback) {
-  return this.db.has(hash, callback);
-}
-
 function save(object, callback) {
   if (!callback) return save.bind(this, object);
   var buffer, hash;
   var repo = this;
-  var db = repo.db;
   try {
     buffer = encoders[object.type](object.body);
     buffer = frame(object.type, buffer);
@@ -86,20 +81,12 @@ function save(object, callback) {
   catch (err) {
     return callback(err);
   }
-  return db.set(hash, buffer, onSave);
+  return repo.saveRaw(hash, buffer, onSave);
 
   function onSave(err) {
     if (err) return callback(err);
     return callback(null, hash);
   }
-}
-
-function remove(hash, callback) {
-  if (!callback) return remove.bind(this, hash);
-  if (!isHash(hash)) return callback(new Error("Invalid hash: " + hash));
-  var repo = this;
-  var db = repo.db;
-  return db.del(hash, callback);
 }
 
 function loadAs(type, hashish, callback) {

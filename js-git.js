@@ -10,7 +10,13 @@ function newRepo(db) {
   if (require('./lib/trace.js')) db = require('./lib/tracedb.js')(db);
 
   // Add the db interface (used by objects, refs, and packops mixins)
-  repo.db = db;
+  repo.remove = remove;
+  function remove(hash, callback) {
+    if (!callback) return remove.bind(this, hash);
+    var repo = this;
+    var db = repo.db;
+    return db.del(hash, callback);
+  }
 
   // Mix in object store interface
   require('./mixins/objects.js')(repo);
