@@ -1,6 +1,6 @@
 {
   "name": "js-git",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "description": "Git Implemented in JavaScript",
   "main": "js-git.js",
   "repository": {
@@ -8,10 +8,6 @@
     "url": "git://github.com/creationix/js-git.git"
   },
   "devDependencies": {
-    "git-fs-db": "~0.2.0",
-    "git-net": "~0.0.4",
-    "git-node-platform": "~0.1.4",
-    "gen-run": "~0.1.1"
   },
   "keywords": [
     "git",
