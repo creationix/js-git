@@ -1,4 +1,5 @@
 /*global define*/
+/*jshint unused:strict,undef:true,trailing:true */
 define("js-git/mixins/add-cache", function () {
 
   return addCache;
@@ -12,33 +13,53 @@ define("js-git/mixins/add-cache", function () {
 
     function loadAsCached(type, hash, callback) {
       if (!callback) return loadAsCached.bind(this, type, hash);
-      cache.loadAs(type, hash, function (err, value) {
+      
+      // Next check in disk cache...
+      cache.loadAs(type, hash, onCacheLoad);
+      
+      function onCacheLoad(err, value) {
         if (err) return callback(err);
+        // ...and return if it's there.
         if (value !== undefined) {
           return callback(null, value, hash);
         }
-        loadAs.call(repo, type, hash, function (err, value) {
+        
+        // Otherwise load from real data source...
+        loadAs.call(repo, type, hash, onLoad);
+      }
+        
+      function onLoad(err, value) {
+        if (value === undefined) return callback(err);
+        
+        // Store it on disk too...
+        // Force the hash to prevent mismatches.
+        cache.saveAs(type, value, onSave, hash);
+        
+        function onSave(err) {
           if (err) return callback(err);
-          cache.saveAs(type, value, function (err) {
-            if (err) return callback(err);
-            callback(null, value, hash);
-          }, hash);
-        });
-      });
+          // Finally return the value to caller.
+          callback(null, value, hash);
+        }
+      }
     }
 
     function saveAsCached(type, value, callback) {
-      saveAs.call(repo, type, value, function (err, hash) {
+      saveAs.call(repo, type, value, onSave);
+      
+      function onSave(err, hash, value) {
         if (err) return callback(err);
+        // Store in disk, forcing hash to match.
         cache.saveAs(type, value, callback, hash);
-      });
+      }
     }
 
     function createTreeCached(entries, callback) {
-      createTree.call(repo, entries, function (err, hash, tree) {
+      createTree.call(repo, entries, onTree);
+      
+      function onTree(err, hash, tree) {
         if (err) return callback(err);
         cache.saveAs("tree", tree, callback, hash);
-      });
+      }
     }
 
   }
