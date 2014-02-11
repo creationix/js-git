@@ -1,8 +1,8 @@
+/*global indexedDB, define*/
 define("js-git/mixins/indexed-db", function () {
   "use strict";
 
   var encoders = require('js-git/lib/encoders');
-  var binary = require('js-git/lib/binary');
   var db;
 
   mixin.init = init;
@@ -68,7 +68,7 @@ define("js-git/mixins/indexed-db", function () {
     var entry = { hash: hash, type: type, body: body };
     var request = store.put(entry);
     request.onsuccess = function() {
-      // console.log("SAVE", type, hash);
+      console.warn("SAVE", type, hash);
       callback(null, hash, body);
     };
     request.onerror = function(evt) {
@@ -78,7 +78,7 @@ define("js-git/mixins/indexed-db", function () {
 
   function loadAs(type, hash, callback) {
     if (!callback) return loadAs.bind(this, type, hash);
-    // console.log("LOAD", type, hash);
+    console.warn("LOAD", type, hash);
     var trans = db.transaction(["objects"], "readwrite");
     var store = trans.objectStore("objects");
     var request = store.get(hash);

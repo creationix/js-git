@@ -13,28 +13,28 @@ define("js-git/mixins/add-cache", function () {
 
     function loadAsCached(type, hash, callback) {
       if (!callback) return loadAsCached.bind(this, type, hash);
-      
+
       // Next check in disk cache...
       cache.loadAs(type, hash, onCacheLoad);
-      
+
       function onCacheLoad(err, value) {
         if (err) return callback(err);
         // ...and return if it's there.
         if (value !== undefined) {
           return callback(null, value, hash);
         }
-        
+
         // Otherwise load from real data source...
         loadAs.call(repo, type, hash, onLoad);
       }
-        
+
       function onLoad(err, value) {
         if (value === undefined) return callback(err);
-        
+
         // Store it on disk too...
         // Force the hash to prevent mismatches.
         cache.saveAs(type, value, onSave, hash);
-        
+
         function onSave(err) {
           if (err) return callback(err);
           // Finally return the value to caller.
@@ -45,7 +45,7 @@ define("js-git/mixins/add-cache", function () {
 
     function saveAsCached(type, value, callback) {
       saveAs.call(repo, type, value, onSave);
-      
+
       function onSave(err, hash, value) {
         if (err) return callback(err);
         // Store in disk, forcing hash to match.
@@ -55,7 +55,7 @@ define("js-git/mixins/add-cache", function () {
 
     function createTreeCached(entries, callback) {
       createTree.call(repo, entries, onTree);
-      
+
       function onTree(err, hash, tree) {
         if (err) return callback(err);
         cache.saveAs("tree", tree, callback, hash);
