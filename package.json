@@ -2,7 +2,6 @@
   "name": "js-git",
   "version": "0.7.0",
   "description": "Git Implemented in JavaScript",
-  "main": "js-git.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/creationix/js-git.git"
@@ -19,8 +18,5 @@
     "url": "https://github.com/creationix/js-git/issues"
   },
   "dependencies": {
-    "push-to-pull": "~0.1.0",
-    "varint": "0.0.3",
-    "bops": "~0.1.0"
   }
 }
