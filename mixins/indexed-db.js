@@ -1,7 +1,7 @@
 "use strict";
 /*global indexedDB*/
 
-var encoders = require('js-git/lib/encoders');
+var encoders = require('../lib/encoders.js');
 var db;
 
 mixin.init = init;
