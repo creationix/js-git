@@ -9,7 +9,7 @@ var binary = require('../lib/binary.js');
 var modeToType = {
   "040000": "tree",
   "100644": "blob",  // normal file
-  "100655": "blob",  // executable file
+  "100755": "blob",  // executable file
   "120000": "blob",  // symlink
   "160000": "commit" // gitlink
 };
