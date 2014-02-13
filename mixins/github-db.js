@@ -4,7 +4,7 @@ var normalizeAs = require('../lib/encoders.js').normalizeAs;
 var modes = require('../lib/modes.js');
 var hashAs = require('../lib/encoders.js').hashAs;
 var xhr = require('../lib/xhr.js');
-var binary = require('../lib/binary.js');
+var binary = require('binary');
 
 var modeToType = {
   "040000": "tree",

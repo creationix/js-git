@@ -1,6 +1,6 @@
 "use strict";
 
-var binary = require('../lib/binary.js');
+var binary = require('binary');
 
 module.exports = function (repo) {
   var loadAs = repo.loadAs;
