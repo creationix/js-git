@@ -6,7 +6,7 @@ module.exports = function (repo) {
   var loadAs = repo.loadAs;
   repo.loadAs = loadAsCached;
   function loadAsCached(type, hash, callback) {
-    if (hash in cache) return callback(null, dupe(type, cache[hash]));
+    if (hash in cache) return callback(null, dupe(type, cache[hash]), hash);
     loadAs.call(repo, type, hash, function (err, value) {
       if (err) return callback(err);
       if (type !== "blob" || value.length < 100) {
