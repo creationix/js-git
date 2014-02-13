@@ -58,8 +58,8 @@ module.exports = function (repo, root, accessToken) {
       try { body = decoders[type].call(repo, result); }
       catch (err) { return callback(err); }
       if (hashAs(type, body) !== hash) {
-        if (fixDate(type, body, hash)) console.warn(type + " repaired", hash);
-        else console.error("Unable to repair " + type, hash);
+        if (fixDate(type, body, hash)) console.log(type + " repaired", hash);
+        else console.warn("Unable to repair " + type, hash);
       }
       return callback(null, body, hash);
     }
