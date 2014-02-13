@@ -1,6 +1,6 @@
 "use strict";
 
-var binary = require('binary');
+var binary = require('bodec');
 
 module.exports = function (repo) {
   var loadAs = repo.loadAs;
