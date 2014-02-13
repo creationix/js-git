@@ -1,9 +1,9 @@
 "use strict";
 
-var normalizeAs = require('../lib/encoders.js').normalizeAs;
-var modes = require('../lib/modes.js');
-var hashAs = require('../lib/encoders.js').hashAs;
-var xhr = require('../lib/xhr.js');
+var normalizeAs = require('../lib/encoders').normalizeAs;
+var hashAs = require('../lib/encoders').hashAs;
+var modes = require('../lib/modes');
+var xhr = require('../lib/xhr');
 var binary = require('bodec');
 
 var modeToType = {
