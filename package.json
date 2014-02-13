@@ -3,6 +3,6 @@
   "version": "0.7.0",
   "dependencies": {
     "binary": "git://github.com/creationix/binary-browser.git",
-    "sha1": "git://github.com/creationix/git-sha1.git"
+    "git-sha1": "git://github.com/creationix/git-sha1.git"
   }
 }
