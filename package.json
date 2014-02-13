@@ -1,8 +1,19 @@
 {
   "name": "js-git",
   "version": "0.7.0",
+  "description": "Git Implemented in JavaScript",
+  "keywords": ["git", "js-git"],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/creationix/js-git.git"
+  },
+  "author": "Tim Caswell <tim@creationix.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/creationix/js-git/issues"
+  },
   "dependencies": {
-    "binary": "git://github.com/creationix/binary-browser.git",
+    "bodec": "git://github.com/creationix/bodec.git",
     "git-sha1": "git://github.com/creationix/git-sha1.git"
   }
 }
