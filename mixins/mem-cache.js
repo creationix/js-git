@@ -10,6 +10,7 @@ module.exports = function (repo) {
     loadAs.call(repo, type, hash, function (err, value) {
       if (err) return callback(err);
       if (type !== "blob" || value.length < 100) {
+        if (type === "blob") value = new Uint8Array(value);
         cache[hash] = value;
       }
       return callback.apply(this, arguments);
@@ -22,6 +23,7 @@ module.exports = function (repo) {
     saveAs.call(repo, type, value, function (err, hash, value) {
       if (err) return callback(err);
       if (type !== "blob" || value.length < 100) {
+        if (type === "blob") value = new Uint8Array(value);
         cache[hash] = value;
       }
       return callback.apply(this, arguments);
@@ -30,6 +32,8 @@ module.exports = function (repo) {
 };
 
 function dupe(type, value) {
-  if (type === "blob") return value;
+  if (type === "blob") {
+    return new Uint8Array(value);
+  }
   return normalizeAs(type, value);
 }
