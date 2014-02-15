@@ -1,8 +1,10 @@
 "use strict";
 var normalizeAs = require('../lib/encoders.js').normalizeAs;
 
-var cache = {};
-module.exports = function (repo) {
+var cache = memCache.cache = {};
+module.exports = memCache;
+
+function memCache(repo) {
   var loadAs = repo.loadAs;
   repo.loadAs = loadAsCached;
   function loadAsCached(type, hash, callback) {
@@ -29,7 +31,7 @@ module.exports = function (repo) {
       return callback.apply(this, arguments);
     });
   }
-};
+}
 
 function dupe(type, value) {
   if (type === "blob") {
