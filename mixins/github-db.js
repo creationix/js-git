@@ -51,7 +51,7 @@ module.exports = function (repo, root, accessToken) {
     function onValue(err, xhr, result) {
       if (err) return callback(err);
       if (xhr.status < 200 || xhr.status >= 500) {
-        return callback(new Error("Invalid HTTP response: " + xhr.status + " " + result.message));
+        return callback(new Error("Invalid HTTP response: " + xhr.statusCode + " " + result.message));
       }
       if (xhr.status >= 300 && xhr.status < 500) return callback();
       var body;
