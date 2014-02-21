@@ -2,6 +2,7 @@
 /*global indexedDB*/
 
 var encoders = require('../lib/encoders.js');
+var modes = require('../lib/modes.js');
 var db;
 
 mixin.init = init;
@@ -97,20 +98,23 @@ function loadAs(type, hash, callback) {
 }
 
 function hasHash(type, hash, callback) {
-  var trans = db.transaction(["objects"], "readwrite");
-  var store = trans.objectStore("objects");
-  var request = store.get(hash);
-  request.onsuccess = function(evt) {
-    var entry = evt.target.result;
-    if (!entry) return callback(null, false);
-    if (type !== entry.type) {
-      return callback(new TypeError("Type mismatch"));
+  loadAs(type, hash, function (err, value) {
+    if (err) return callback(err);
+    if (value === undefined) return callback(null, false);
+    if (type !== "tree") return callback(null, true);
+    var names = Object.keys(value);
+    next();
+    function next() {
+      if (!names.length) return callback(null, true);
+      var name = names.pop();
+      var entry = value[name];
+      hasHash(modes.toType(entry.mode), entry.hash, function (err, has) {
+        if (err) return callback(err);
+        if (has) return next();
+        callback(null, false);
+      });
     }
-    callback(null, true);
-  };
-  request.onerror = function(evt) {
-    callback(new Error(evt.value));
-  };
+  });
 }
 
 function readRef(ref, callback) {
