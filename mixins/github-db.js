@@ -42,6 +42,7 @@ module.exports = function (repo, root, accessToken) {
   repo.readRef = readRef;       // (ref) -> hash
   repo.updateRef = updateRef;   // (ref, hash) -> hash
   repo.createTree = createTree; // (entries) -> hash, tree
+  repo.hasHash = hasHash;
 
   function loadAs(type, hash, callback) {
     // Github doesn't like empty trees, but we know them already.
@@ -62,6 +63,19 @@ module.exports = function (repo, root, accessToken) {
         else console.warn("Unable to repair " + type, hash);
       }
       return callback(null, body, hash);
+    }
+  }
+
+  function hasHash(type, hash, callback) {
+    apiRequest("GET", "/repos/:root/git/" + type + "s/" + hash, onValue);
+
+    function onValue(err, xhr, result) {
+      if (err) return callback(err);
+      if (xhr.status < 200 || xhr.status >= 500) {
+        return callback(new Error("Invalid HTTP response: " + xhr.statusCode + " " + result.message));
+      }
+      if (xhr.status >= 300 && xhr.status < 500) return callback(null, false);
+      callback(null, true);
     }
   }
 

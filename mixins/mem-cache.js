@@ -10,7 +10,7 @@ function memCache(repo) {
   function loadAsCached(type, hash, callback) {
     if (hash in cache) return callback(null, dupe(type, cache[hash]), hash);
     loadAs.call(repo, type, hash, function (err, value) {
-      if (err) return callback(err);
+      if (value === undefined) return callback(err);
       if (type !== "blob" || value.length < 100) {
         if (type === "blob") value = new Uint8Array(value);
         cache[hash] = value;
@@ -28,7 +28,7 @@ function memCache(repo) {
         if (type === "blob") value = new Uint8Array(value);
         cache[hash] = value;
       }
-      return callback.apply(this, arguments);
+      return callback(null, hash, value);
     });
   }
 }

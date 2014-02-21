@@ -48,6 +48,7 @@ function mixin(repo, prefix) {
   repo.loadAs = loadAs;
   repo.readRef = readRef;
   repo.updateRef = updateRef;
+  repo.hasHash = hasHash;
 }
 
 function onError(evt) {
@@ -89,6 +90,23 @@ function loadAs(type, hash, callback) {
       return callback(new TypeError("Type mismatch"));
     }
     callback(null, entry.body, hash);
+  };
+  request.onerror = function(evt) {
+    callback(new Error(evt.value));
+  };
+}
+
+function hasHash(type, hash, callback) {
+  var trans = db.transaction(["objects"], "readwrite");
+  var store = trans.objectStore("objects");
+  var request = store.get(hash);
+  request.onsuccess = function(evt) {
+    var entry = evt.target.result;
+    if (!entry) return callback(null, false);
+    if (type !== entry.type) {
+      return callback(new TypeError("Type mismatch"));
+    }
+    callback(null, true);
   };
   request.onerror = function(evt) {
     callback(new Error(evt.value));
