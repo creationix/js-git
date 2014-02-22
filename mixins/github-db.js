@@ -60,7 +60,7 @@ module.exports = function (repo, root, accessToken) {
       catch (err) { return callback(err); }
       if (hashAs(type, body) !== hash) {
         if (fixDate(type, body, hash)) console.log(type + " repaired", hash);
-        else console.warn("Unable to repair " + type, hash);
+        // else console.warn("Unable to repair " + type, hash);
       }
       return callback(null, body, hash);
     }
