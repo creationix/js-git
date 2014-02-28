@@ -13,6 +13,7 @@ function memCache(repo) {
       if (value === undefined) return callback(err);
       if (type !== "blob" || value.length < 100) {
         if (type === "blob") value = new Uint8Array(value);
+        else deepFreeze(value);
         cache[hash] = value;
       }
       return callback.apply(this, arguments);
@@ -38,4 +39,12 @@ function dupe(type, value) {
     return new Uint8Array(value);
   }
   return normalizeAs(type, value);
+}
+
+function deepFreeze(obj) {
+  Object.freeze(obj);
+  Object.keys(obj).forEach(function (key) {
+    var value = obj[key];
+    if (typeof value === "object") deepFreeze(value);
+  });
 }
