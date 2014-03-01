@@ -213,6 +213,7 @@ module.exports = function (repo, root, accessToken) {
 
 
   function readRef(ref, callback) {
+    if (ref === "HEAD") ref = "refs/heads/master";
     if (!(/^refs\//).test(ref)) {
       return callback(new TypeError("Invalid ref: " + ref));
     }
