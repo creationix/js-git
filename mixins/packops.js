@@ -16,6 +16,7 @@ module.exports = function (repo) {
   // hashes is an array of hashes to pack
   // callback will be a simple-stream containing raw packfile binary data
   repo.pack = pack;     // (hashes, opts) -> packStream
+
 };
 
 function unpack(packStream, opts, callback) {
