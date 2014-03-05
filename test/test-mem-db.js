@@ -3,7 +3,6 @@ var bodec = require('bodec');
 var sha1 = require('git-sha1');
 var codec = require('../lib/object-codec.js');
 
-
 var repo = {};
 require('../mixins/mem-db.js')(repo);
 
