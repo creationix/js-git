@@ -1,10 +1,7 @@
 "use strict";
 
-var binary = require('bodec');
 var defer = require('../lib/defer.js');
-var encoders = require('../lib/encoders.js');
-var deframe = require('../lib/deframe.js');
-var decoders = require('../lib/decoders.js');
+var codec = require('../lib/object-codec.js');
 var sha1 = require('git-sha1');
 
 module.exports = mixin;
@@ -17,15 +14,10 @@ function mixin(repo) {
   repo.saveRaw = saveRaw;
   repo.loadRaw = loadRaw;
 
-  function saveAs(type, body, callback, hashOverride) {
+  function saveAs(type, body, callback) {
     makeAsync(function () {
-      body = encoders.normalizeAs(type, body);
-      var buffer = encoders.encodeAs(type, body);
-      buffer = binary.join([
-        encoders.frame(type, buffer.length),
-        buffer
-      ]);
-      var hash = hashOverride || sha1(buffer);
+      var buffer = codec.frame({type:type,body:body});
+      var hash = sha1(buffer);
       objects[hash] = buffer;
       return [hash, body];
     }, callback);
@@ -42,10 +34,9 @@ function mixin(repo) {
     makeAsync(function () {
       var buffer = objects[hash];
       if (!buffer) return [];
-      var parts = deframe(buffer);
-      if (parts[0] !== type) throw new TypeError("Type mismatch");
-      var body = decoders[type](parts[1]);
-      return [body, hash];
+      var obj = codec.deframe(buffer, true);
+      if (obj.type !== type) throw new TypeError("Type mismatch");
+      return [obj.body, hash];
     }, callback);
   }
 
