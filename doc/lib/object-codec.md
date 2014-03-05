@@ -107,3 +107,14 @@ rawBin = encoders.tag({
   message: "Tag it!\n"
 });
 ```
+
+## codec.decoders
+
+This is just like `codec.encoders` except these functions do the opposite.
+They have the format:
+
+    decode(raw-buffer) -> body
+
+```js
+var commit = decoders.commit(rawCommitBin);
+```
