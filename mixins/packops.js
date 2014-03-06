@@ -6,6 +6,7 @@ var applyDelta = require('../lib/apply-delta.js');
 var pushToPull = require('push-to-pull');
 var decodePack = require('../lib/pack-codec.js').decodePack;
 var packFrame = require('../lib/pack-codec.js').packFrame;
+var packHeader = require('../lib/pack-codec.js').packHeader;
 
 module.exports = function (repo) {
   // packStream is a simple-stream containing raw packfile binary data
@@ -170,14 +171,7 @@ function pack(hashes, opts, callback) {
 
   function readFirst(callback) {
     var length = hashes.length;
-    var chunk = binary.fromArray([
-      0x50, 0x41, 0x43, 0x4b, // PACK
-      0, 0, 0, 2,             // version 2
-      length >> 24,           // Num of objects
-      (length >> 16) & 0xff,
-      (length >> 8) & 0xff,
-      length & 0xff
-    ]);
+    var chunk = packHeader(length);
     first = false;
     sha1sum.update(chunk);
     callback(null, chunk);

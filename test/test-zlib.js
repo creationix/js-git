@@ -12,37 +12,38 @@ for (var i = 0; i < 1024; i++) {
 }
 
 run([
-  function testRoundTrip(end) {
-    deflate(bin, function (err, deflated) {
-      if (err) return end(err);
-      inflate(deflated, function (err, inflated) {
-        if (err) return end(err);
-        if (bodec.toRaw(bin) !== bodec.toRaw(inflated)) {
-          console.log([bin, inflated]);
-          return end(new Error("Problem with roundtrip"));
-        }
-        end();
-      });
-    });
+  function testRoundTrip() {
+    var deflated = deflate(bin);
+    if (!bodec.isBinary(deflated)) {
+      throw new Error("deflate output should be native binary");
+    }
+    var inflated = inflate(deflated);
+    if (!bodec.isBinary(inflated)) {
+      throw new Error("inflate output should be native binary");
+    }
+    if (bodec.toRaw(bin) !== bodec.toRaw(inflated)) {
+      console.log([bin, inflated]);
+      throw new Error("Problem with roundtrip");
+    }
   },
-  function testStream(end) {
+  function testStream() {
+    var done = false;
     var chunks = [];
-    deflate(bin, function (err, deflated) {
-      if (err) return end(err);
-      var push = inflateStream(onEmit, onUnused);
-      for (var i = 0, l = deflated.length; i < l; i += 128) {
-        push(null, bodec.slice(deflated, i, i + 128));
-      }
-    });
+    var deflated = deflate(bin);
+    var push = inflateStream(onEmit, onUnused);
+    for (var i = 0, l = deflated.length; i < l; i += 128) {
+      push(null, bodec.slice(deflated, i, i + 128));
+    }
+    if (!done) throw new Error("Not finished");
     function onEmit(err, chunk) {
-      if (err) return end(err);
+      if (err) throw err;
       if (chunk === undefined) {
         var inflated = bodec.join(chunks);
         if (bodec.toRaw(bin) !== bodec.toRaw(inflated)) {
           console.log([bin.length, inflated.length]);
-          return end(new Error("Problem with roundtrip"));
+          throw new Error("Problem with roundtrip");
         }
-        return end();
+        done = true;
       }
       chunks.push(chunk);
     }
