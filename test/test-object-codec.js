@@ -33,14 +33,15 @@ run([
     }
   },
   function testEncodeCommit() {
-    var date = new Date(1391790884000);
-    date.timezoneOffset = 7 * 60;
     commit = {
       tree: treeHash,
       author: {
         name: "Tim Caswell",
         email: "tim@creationix.com",
-        date: date
+        date: {
+          seconds: 1391790884,
+          offset: 7 * 60
+        }
       },
       message: "Test Commit\n"
     };
@@ -51,8 +52,6 @@ run([
     }
   },
   function testEncodeTag() {
-    var date = new Date(1391790910000);
-    date.timezoneOffset = 7 * 60;
     tag = {
       object: commitHash,
       type: "commit",
@@ -60,7 +59,10 @@ run([
       tagger: {
         name: "Tim Caswell",
         email: "tim@creationix.com",
-        date: date,
+        date: {
+          seconds: 1391790910,
+          offset: 7 * 60
+        }
       },
       message: "Tag it!\n"
     };
@@ -80,7 +82,9 @@ run([
   function testDecodeCommit() {
     var obj = codec.deframe(commitBin, true);
     if (obj.type !== "commit") throw new Error("Invalid type");
-    if (!(obj.body.tree === commit.tree && obj.body.message === commit.message)) {
+    if (!(obj.body.tree === commit.tree &&
+          obj.body.message === commit.message &&
+          obj.body.author.date.seconds === commit.author.date.seconds)) {
       throw new Error("Problem decoding");
     }
   },

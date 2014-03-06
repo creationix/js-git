@@ -69,23 +69,24 @@ When decoding, the output is always normalized to an array of `parents`.
 
 The `author` field is required and contains {name,email} and optionally `date`
 
-If you want to set a specefic timezone, set the `timezoneOffset` property on the
-date object used in the `date` field.
-
 Commits can also have a `committer` with the same structure as `author`.
+
+The `date` property of `author` and `committer` is in the format {seconds,offset}
+Where seconds is a unix timestamp in seconds and offset is the number of minutes
+offset for the timezone. (Your local offset can be found with `(new Date).getTimezoneOffset()`)
 
 The `message` fiels is mandatory and a simple string.
 
 ```js
-var date = new Date(1391790910000);
-date.timezoneOffset = 7 * 60;
-
 rawBin = encoders.commit({
   tree: treeHash,
   author: {
     name: "Tim Caswell",
     email: "tim@creationix.com",
-    date: date
+    date: {
+      seconds: 1391790910,
+      offset: 7 * 60
+    }
   },
   parent: parentCommitHash,
   message: "This is a test commit\n"
@@ -102,7 +103,10 @@ rawBin = encoders.tag({
   tagger: {
     name: "Tim Caswell",
     email: "tim@creationix.com",
-    date: date,
+    date: {
+      seconds: 1391790910,
+      offset: 7 * 60
+    }
   },
   message: "Tag it!\n"
 });
