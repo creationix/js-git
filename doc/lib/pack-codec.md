@@ -79,3 +79,20 @@ But `ref-delta` includes the full hash of it's base object.
 
 This is the reverse.  In fact, if you fed this the output from `decodePack`,
 it's output should match exactly the original stream.
+
+The objects don't need as much data as the parser outputs.  In specefic, the meta
+object only need contain:
+
+```js
+{ num: num-of-objects }
+```
+
+And the items only need contain:
+
+```js
+{
+  type: type,
+  body: raw-buffer,
+  [ref: number-or-hash]
+}
+```
