@@ -42,6 +42,7 @@ function unpackStream(stream) {
   }
   if (!finished) throw new Error("unpack stream didn't finish");
   if (out.length !== meta.num) throw new Error("Item num mismatch");
+  console.log(out);
   return out;
 }
 
