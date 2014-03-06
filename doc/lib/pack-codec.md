@@ -43,7 +43,7 @@ The first output is the meta object:
 ```js
 {
   version: 2
-  num: 15,
+  num: num-of-objects,
 }
 ```
 
