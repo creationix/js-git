@@ -19,7 +19,7 @@ function unpackStream(stream) {
   for (var i = 0, l = stream.length; i < l; i += 128) {
     var slice = bodec.slice(stream, i, i + 128);
     try {
-      console.log("SLICE", slice);
+      // console.log("SLICE", slice);
       write(slice);
     }
     catch (err) {
@@ -29,7 +29,7 @@ function unpackStream(stream) {
   write();
 
   function onItem(item) {
-    console.log("UNPACK", item);
+    // console.log("UNPACK", item);
     if (item === undefined) {
       finished = true;
     }
@@ -88,9 +88,16 @@ run([
     newPack = bodec.join(outs);
   },
   function verifyEncodePack() {
-    var original = unpackStream(pack);
-    // console.log(original)
-    var final = unpackStream(newPack);
-    console.log(original, final);
+    try {
+      unpackStream(newPack);
+      if (bodec.toHex(pack) !== bodec.toHex(newPack)) {
+        throw new Error("Final pack doesn't match original.");
+      }
+    }
+    catch (err) {
+      console.log(bodec.toHex(pack));
+      console.log(bodec.toHex(newPack));
+      throw err;
+    }
   }
 ]);
