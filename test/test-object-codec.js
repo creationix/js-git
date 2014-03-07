@@ -154,7 +154,7 @@ run([
     if (tag.tagger.name !== obj.body.tagger.name ||
         tag.tagger.email !== obj.body.tagger.email ||
         tag.message !== obj.body.message) {
-      console.log([obj.body.author, obj.body.message]);
+      console.log([obj.body.tagger, obj.body.message]);
       throw new Error("Problem decoding utf8 parts in tag");
     }
   },

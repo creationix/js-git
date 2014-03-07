@@ -1,12 +1,9 @@
 var binary = require('bodec');
-var deframe = require('../lib/deframe.js');
-var frame = require('../lib/frame.js');
 var sha1 = require('git-sha1');
 var applyDelta = require('../lib/apply-delta.js');
-var pushToPull = require('push-to-pull');
+var codec = require('../lib/object-codec.js');
 var decodePack = require('../lib/pack-codec.js').decodePack;
-var packFrame = require('../lib/pack-codec.js').packFrame;
-var packHeader = require('../lib/pack-codec.js').packHeader;
+var encodePack = require('../lib/pack-codec.js').encodePack;
 
 module.exports = function (repo) {
   // packStream is a simple-stream containing raw packfile binary data
@@ -23,7 +20,7 @@ module.exports = function (repo) {
 function unpack(packStream, opts, callback) {
   if (!callback) return unpack.bind(this, packStream, opts);
 
-  packStream = pushToPull(decodePack)(packStream);
+  packStream = applyParser(packStream, decodePack);
 
   var repo = this;
 
@@ -89,9 +86,9 @@ function unpack(packStream, opts, callback) {
     return repo.loadRaw(item.ref, function (err, buffer) {
       if (err) return onDone(err);
       if (!buffer) return onDone(new Error("Missing base image at " + item.ref));
-      var target = deframe(buffer);
-      item.type = target[0];
-      item.body = applyDelta(item.body, target[1]);
+      var target = codec.deframe(buffer);
+      item.type = target.type;
+      item.body = applyDelta(item.body, target.body);
       return saveValue(item);
     });
   }
@@ -109,7 +106,7 @@ function unpack(packStream, opts, callback) {
   }
 
   function saveValue(item) {
-    var buffer = frame(item.type, item.body);
+    var buffer = codec.frame(item);
     var hash = sha1(buffer);
     hashes[item.offset] = hash;
     has[hash] = true;
@@ -143,38 +140,27 @@ function unpack(packStream, opts, callback) {
 function pack(hashes, opts, callback) {
   if (!callback) return pack.bind(this, hashes, opts);
   var repo = this;
-  var sha1sum = sha1();
   var i = 0, first = true, done = false;
-  return callback(null, { read: read, abort: callback });
+  return callback(null, applyParser({ read: read, abort: callback }, encodePack));
 
   function read(callback) {
     if (done) return callback();
     if (first) return readFirst(callback);
     var hash = hashes[i++];
     if (hash === undefined) {
-      var sum = sha1sum.digest();
-      done = true;
-      return callback(null, binary.fromHex(sum));
+      return callback();
     }
     repo.loadRaw(hash, function (err, buffer) {
       if (err) return callback(err);
       if (!buffer) return callback(new Error("Missing hash: " + hash));
       // Reframe with pack format header
-      var pair = deframe(buffer);
-      packFrame(pair[0], pair[1], function (err, buffer) {
-        if (err) return callback(err);
-        sha1sum.update(buffer);
-        callback(null, buffer);
-      });
+      callback(null, codec.deframe(buffer));
     });
   }
 
   function readFirst(callback) {
-    var length = hashes.length;
-    var chunk = packHeader(length);
     first = false;
-    sha1sum.update(chunk);
-    callback(null, chunk);
+    callback(null, {num: hashes.length});
   }
 }
 
@@ -186,4 +172,36 @@ function values(object) {
     out[i] = object[keys[i]];
   }
   return out;
+}
+
+
+function applyParser(stream, parser) {
+  var write = parser(onData);
+  var cb = null;
+  var queue = [];
+  return { read: read, abort: stream.abort };
+
+  function read(callback) {
+    if (queue.length) return callback(null, queue.shift());
+    if (cb) return callback(new Error("Only one read at a time."));
+    cb = callback;
+    stream.read(onRead);
+  }
+
+  function onRead(err, item) {
+    var callback = cb;
+    cb = null;
+    if (err) return callback(err);
+    try {
+      write(item);
+    }
+    catch (err) {
+      return callback(err);
+    }
+    return read(callback);
+  }
+
+  function onData(item) {
+    queue.push(item);
+  }
 }
