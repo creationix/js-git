@@ -1,7 +1,5 @@
 var run = require('./run.js');
 var bodec = require('bodec');
-var sha1 = require('git-sha1');
-var codec = require('../lib/object-codec.js');
 
 var repo = {};
 require('../mixins/mem-db.js')(repo);
@@ -22,21 +20,26 @@ run([
       end();
     });
     function onProgress(progress) {
-      console.log(progress);
+      // console.log(progress);
     }
   },
   function testPack(end) {
     var stream;
+    var parts = [];
     repo.pack(hashes, {}, function (err, result) {
       if (err) return end(err);
       stream = result;
       stream.read(onRead);
     });
-    function onRead(err, item) {
+    function onRead(err, chunk) {
       if (err) return end(err);
-      console.log(item);
-      if (item) stream.read(onRead);
-      else end();
+      // console.log(chunk);
+      if (chunk) {
+        parts.push(chunk);
+        return stream.read(onRead);
+      }
+
+      end();
     }
 
   }
