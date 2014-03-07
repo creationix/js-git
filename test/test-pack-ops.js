@@ -1,5 +1,4 @@
 var run = require('./run.js');
-var bodec = require('bodec');
 
 var repo = {};
 require('../mixins/mem-db.js')(repo);
@@ -17,6 +16,9 @@ run([
     }, function (err, result) {
       if (err) return end(err);
       hashes = result;
+      if (hashes.length !== 16) {
+        return end(new Error("Wrong number of objects unpacked"));
+      }
       end();
     });
     function onProgress(progress) {
@@ -38,10 +40,8 @@ run([
         parts.push(chunk);
         return stream.read(onRead);
       }
-
       end();
     }
-
   }
 ]);
 
@@ -52,5 +52,4 @@ function singleStream(item) {
     done = true;
     callback(null, item);
   }};
-
 }
