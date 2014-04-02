@@ -52,5 +52,18 @@ run([
       console.log(config2);
       throw new Error("Encode failed");
     }
+  },
+  function testEncode2() {
+    var encoded = codec.encode({
+      foo: {
+        bar: {
+          baz: true
+        }
+      }
+    });
+    if (encoded !== '[foo "bar"]\tbaz = true\n') {
+      console.log(encoded);
+      throw new Error("Invalid encoding of single deep config");
+    }
   }
 ]);
