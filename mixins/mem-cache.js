@@ -1,5 +1,7 @@
 "use strict";
-var normalizeAs = require('../lib/encoders.js').normalizeAs;
+
+var encoders = require('../lib/object-codec').encoders;
+var decoders = require('../lib/object-codec').decoders;
 
 var cache = memCache.cache = {};
 module.exports = memCache;
@@ -12,9 +14,7 @@ function memCache(repo) {
     loadAs.call(repo, type, hash, function (err, value) {
       if (value === undefined) return callback(err);
       if (type !== "blob" || value.length < 100) {
-        if (type === "blob") value = new Uint8Array(value);
-        else deepFreeze(value);
-        cache[hash] = value;
+        cache[hash] = dupe(type, value);
       }
       return callback.apply(this, arguments);
     });
@@ -23,10 +23,10 @@ function memCache(repo) {
   var saveAs = repo.saveAs;
   repo.saveAs = saveAsCached;
   function saveAsCached(type, value, callback) {
+    value = dupe(type, value);
     saveAs.call(repo, type, value, function (err, hash, value) {
       if (err) return callback(err);
       if (type !== "blob" || value.length < 100) {
-        if (type === "blob") value = new Uint8Array(value);
         cache[hash] = value;
       }
       return callback(null, hash, value);
@@ -36,9 +36,10 @@ function memCache(repo) {
 
 function dupe(type, value) {
   if (type === "blob") {
+    if (type.length >= 100) return value;
     return new Uint8Array(value);
   }
-  return normalizeAs(type, value);
+  return decoders[type](encoders[type](value));
 }
 
 function deepFreeze(obj) {

@@ -1,7 +1,8 @@
 "use strict";
 /*global indexedDB*/
 
-var encoders = require('../lib/encoders.js');
+var codec = require('../lib/object-codec.js');
+var sha1 = require('git-sha1');
 var modes = require('../lib/modes.js');
 var db;
 
@@ -59,8 +60,8 @@ function onError(evt) {
 function saveAs(type, body, callback, forcedHash) {
   var hash;
   try {
-    body = encoders.normalizeAs(type, body);
-    hash = forcedHash || encoders.hashAs(type, body);
+    var buffer = codec.frame({type:type,body:body});
+    hash = forcedHash || sha1(buffer);
   }
   catch (err) { return callback(err); }
   var trans = db.transaction(["objects"], "readwrite");
@@ -84,9 +85,6 @@ function loadAs(type, hash, callback) {
   request.onsuccess = function(evt) {
     var entry = evt.target.result;
     if (!entry) return callback();
-    if (type !== "blob") {
-      entry.body = encoders.normalizeAs(type, entry.body);
-    }
     if (type !== entry.type) {
       return callback(new TypeError("Type mismatch"));
     }

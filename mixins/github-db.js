@@ -1,10 +1,10 @@
 "use strict";
 
-var normalizeAs = require('../lib/encoders').normalizeAs;
-var hashAs = require('../lib/encoders').hashAs;
 var modes = require('../lib/modes');
 var xhr = require('../lib/xhr');
 var binary = require('bodec');
+var sha1 = require('git-sha1');
+var frame = require('../lib/object-codec').frame;
 
 var modeToType = {
   "040000": "tree",
@@ -28,9 +28,15 @@ var decoders = {
   blob: decodeBlob,
 };
 
-var emptyBlob = hashAs("blob", "");
-var emptyTree = hashAs("tree", []);
-
+// Precompute hashes for empty blob and empty tree since github won't
+var emptyBlob = sha1(frame({
+  type: "blob",
+  body: binary.create(0)
+}));
+var emptyTree = sha1(frame({
+  type: "tree",
+  body: binary.create(0)
+}));
 
 // Implement the js-git object interface using github APIs
 module.exports = function (repo, root, accessToken) {
@@ -82,7 +88,6 @@ module.exports = function (repo, root, accessToken) {
   function saveAs(type, body, callback) {
     var request;
     try {
-      body = normalizeAs(type, body);
       request = encoders[type](body);
     }
     catch (err) {
@@ -436,4 +441,9 @@ function singleCall(callback) {
     done = true;
     return callback.apply(this, arguments);
   };
+}
+
+function hashAs(type, body) {
+  var buffer = frame({type: type, body: body});
+  return sha1(buffer);
 }
