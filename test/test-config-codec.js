@@ -61,7 +61,7 @@ run([
         }
       }
     });
-    if (encoded !== '[foo "bar"]\tbaz = true\n') {
+    if (encoded !== '[foo "bar"]\n\tbaz = true\n') {
       console.log(encoded);
       throw new Error("Invalid encoding of single deep config");
     }
