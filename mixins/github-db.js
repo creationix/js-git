@@ -332,7 +332,7 @@ function encodePerson(person) {
   return {
     name: person.name,
     email: person.email,
-    date: (person.date || new Date()).toISOString()
+    date: (new Date(person.date.seconds * 1000)).toISOString()
   };
 }
 
@@ -425,13 +425,16 @@ function parseDate(string) {
   // TODO: test this once GitHub adds timezone information
   var match = string.match(/(-?)([0-9]{2}):([0-9]{2})$/);
   var date = new Date(string);
-  date.timezoneOffset = 0;
+  var timezoneOffset = 0;
   if (match) {
-    date.timezoneOffset = (match[1] === "-" ? 1 : -1) * (
+    timezoneOffset = (match[1] === "-" ? 1 : -1) * (
       parseInt(match[2], 10) * 60 + parseInt(match[3], 10)
     );
   }
-  return date;
+  return {
+    seconds: date.valueOf() / 1000,
+    offset: timezoneOffset
+  };
 }
 
 function singleCall(callback) {
