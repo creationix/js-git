@@ -19,6 +19,24 @@ run([
       throw new Error("Invalid blob hash");
     }
   },
+  function testEncodeBlobInvalidType() {
+    var correctExceptionThrown = false;
+    blob = {
+      thisis: 'Not array, binary, or text'
+    };
+    try {
+      blobBin = codec.frame({type: "blob", body: blob});
+    }
+    catch (exception) {
+      if (/invalid body/i.test(exception.message)) {
+        correctExceptionThrown = true;
+      }
+    }
+
+    if (!correctExceptionThrown) {
+      throw new Error("Expected the correct exception when the blog was an invalid type");
+    }
+  },
   function testEncodeTree() {
     tree = {
       "greeting.txt": {
