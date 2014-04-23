@@ -66,14 +66,14 @@ require('../mixins/formats')(repo);
 
 There are two control-flow styles that you can use to consume js-git APIs.  All
 the examples here use `yield` style and assume the code is contained within a
-generator function that's yielding to a tool like `gen-run`.
+generator function that's yielding to a tool like [gen-run](https://github.com/creationix/gen-run).
 
 This style requires ES6 generators.  This feature is currently in stable Firefox,
 in stable Chrome behind a user-configurable flag, in node.js 0.11.x or greater
 with a command-line flag.
 
 Also you can use generators on any ES5 platform if you use a source transform
-like Facebook's regenerator tool.
+like Facebook's [regenerator](http://facebook.github.io/regenerator/) tool.
 
 ```js
 var run = require('gen-run');
