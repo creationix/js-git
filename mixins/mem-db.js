@@ -47,9 +47,7 @@ function mixin(repo) {
 }
 
 function makeAsync(fn, callback) {
-  if (!callback) return function (callback) {
-    return makeAsync(fn, callback);
-  };
+  if (!callback) return makeAsync.bind(null, fn);
   defer(function () {
     var out;
     try { out = fn(); }
