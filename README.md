@@ -229,7 +229,8 @@ var changes = [
   {
     path: "www/index.html" // Leaving out mode means to delete the entry.
   },
-  { path: "www/app.js", // Create a new file in the existing directory.
+  {
+    path: "www/app.js", // Create a new file in the existing directory.
     mode: modes.file,
     content: "// this is a js file\n"
   }
@@ -238,5 +239,5 @@ var changes = [
 // We need to use array form and specify the base tree hash as `base`.
 changes.base = treeHash;
 
-treeHash = tield repo.createTree(changes);
+treeHash = yield repo.createTree(changes);
 ```
