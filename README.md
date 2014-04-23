@@ -90,13 +90,21 @@ run(function*() {
 ```
 
 If you can't use this new feature or just plain prefer node-style callbacks, all
-js-git APIs also support that.
+js-git APIs also support that.  The way this works is actually quite simple.
+If you don't pass in the callback, the function will return a partially applied
+version of your call expecting just the callback.
 
 ```js
 someAction(withArgs, function (err, value) {
   if (err) return handleMyError(err);
   // do something with value
 });
+
+// The function would be implemented to support both style like this.
+function someAction(arg, callback) {
+  if (!callback) return someAction.bind(this, arg);
+  // We now have callback and arg
+}
 ```
 
 ## Basic Object Creation
@@ -217,4 +225,18 @@ edit existing trees by adding new files, changing existing files, or deleting
 existing entries.
 
 ```js
+var changes = [
+  {
+    path: "www/index.html" // Leaving out mode means to delete the entry.
+  },
+  { path: "www/app.js", // Create a new file in the existing directory.
+    mode: modes.file,
+    content: "// this is a js file\n"
+  }
+];
+
+// We need to use array form and specify the base tree hash as `base`.
+changes.base = treeHash;
+
+treeHash = tield repo.createTree(changes);
 ```
