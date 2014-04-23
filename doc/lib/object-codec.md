@@ -44,11 +44,14 @@ var encoders = require('js-git/lib/object-codec').encoders;
 var modes = require('js-git/lib/modes');
 ```
 
-Blobs can be strings or binary buffers or arrays of bytes.
+Blobs must be native binary values (Buffer in node, Uint8Array in browser).
+It's recommended to either use the `bodec` library to create binary values from
+strings directly or configure your system with the `formats` mixin that allows
+for unicode strings when working with blobs.
 
 ```js
-rawBin = encoders.blob("Hello World");
-rawBin = encoders.blob([1,2,3,4,5,6]);
+rawBin = encoders.blob(new Uint8Array([1,2,3,4,5,6]));
+rawBin = encoders.blob(bodec.fromUnicode("Hello World"));
 ```
 
 Trees are objects with filename as key and object with {mode,hash} as value.
@@ -64,12 +67,12 @@ rawBin = encoders.tree({ "greeting.txt": {
 Commits are objects with required fields {tree,author,message}
 Also if there is a single parent, you specify it with `parent`.
 
-For merge commits, you can use an array of hashes in  `parents`.
-When decoding, the output is always normalized to an array of `parents`.
+Since a commit can have zero or more parent commits, you specify the parent
+hashes via the `parents` property as an array of hashes.
 
-The `author` field is required and contains {name,email} and optionally `date`
+The `author` field is required and contains {name,email,date}.
 
-Commits can also have a `committer` with the same structure as `author`.
+Commits also require a `committer` field with the same structure as `author`.
 
 The `date` property of `author` and `committer` is in the format {seconds,offset}
 Where seconds is a unix timestamp in seconds and offset is the number of minutes
@@ -88,7 +91,7 @@ rawBin = encoders.commit({
       offset: 7 * 60
     }
   },
-  parent: parentCommitHash,
+  parents: [ parentCommitHash ],
   message: "This is a test commit\n"
 });
 ```
