@@ -7,11 +7,12 @@ and tablets.  It also enables using git at a database to replace SQL and no-SQL
 data stores in many applications.
 
 This project was initially funded by two crowd-sourced fundraisers.  See details
-in `BACKERS.md` and `BACKERS-2.md`.  Thanks to all of you who made this possible!
+in [BACKERS.md](BACKERS.md) and [BACKERS-2.md](BACKERS.md).  Thanks to all of
+you who made this possible!
 
 ## Usage
 
-Detailed API docs are contained in the [doc subfolder]() of this repository.
+Detailed API docs are contained in the [doc](doc) subfolder of this repository.
 
 In general the way you use js-git is you create a JS object and then mixin the
 functionality you need.  Here is an example of creating an in-memory database,
