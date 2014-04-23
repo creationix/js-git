@@ -249,7 +249,7 @@ The real fun begins when you create composite filesystems using git submodules.
 The code that handles this is not packaged as a repo mixin since it spans several
 independent repos.  Instead look to the [git-tree](https://github.com/creationix/git-tree)
 repo for the code.  It's interface is still slightly unstable and undocumented
-but is used in production by tedit and my node hosting service that compliments tedit.
+but is used in production by tedit and my node hosting service that complements tedit.
 
 Basically this module allows you to perform high-level filesystem style commands
 on a virtual filesystem that consists of many js-git repos.  Until there are
