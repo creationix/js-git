@@ -1,33 +1,31 @@
 var modes = require('../lib/modes.js');
 
 module.exports = function (repo) {
-  repo.logWalk = logWalk;   // (hash-ish) => stream<commit>
+  repo.logWalk = logWalk;   // (ref) => stream<commit>
   repo.treeWalk = treeWalk; // (treeHash) => stream<object>
 };
 module.exports.walk = walk;
 
-function logWalk(hashish, callback) {
-  if (!callback) return logWalk.bind(this, hashish);
+function logWalk(ref, callback) {
+  if (!callback) return logWalk.bind(this, ref);
   var last, seen = {};
   var repo = this;
+  if (!repo.readRef) return onShallow();
   return repo.readRef("shallow", onShallow);
 
   function onShallow(err, shallow) {
     last = shallow;
-    resolveHashish(repo, hashish, onHash);
-
+    resolveRef(repo, ref, onHash);
   }
 
   function onHash(err, hash) {
     if (err) return callback(err);
-    return repo.loadAs("commit", hash, onLoad);
-  }
-
-  function onLoad(err, commit, hash) {
-    if (commit === undefined) return callback(err);
-    commit.hash = hash;
-    seen[hash] = true;
-    return callback(null, walk(commit, scan, loadKey, compare));
+    return repo.loadAs("commit", hash, function (err, commit) {
+      if (commit === undefined) return callback(err);
+      commit.hash = hash;
+      seen[hash] = true;
+      return callback(null, walk(commit, scan, loadKey, compare));
+    });
   }
 
   function scan(commit) {
@@ -57,7 +55,7 @@ function treeWalk(hash, callback) {
   var repo = this;
   return repo.loadAs("tree", hash, onTree);
 
-  function onTree(err, body, hash) {
+  function onTree(err, body) {
     if (!body) return callback(err || new Error("Missing tree " + hash));
     var tree = {
       mode: modes.tree,
@@ -99,7 +97,7 @@ function treeCompare(first, second) {
   return first.path < second.path;
 }
 
-function resolveHashish(repo, hashish, callback) {
+function resolveRef(repo, hashish, callback) {
   if (/^[0-9a-f]{40}$/.test(hashish)) {
     return callback(null, hashish);
   }
@@ -115,6 +113,7 @@ function walk(seed, scan, loadKey, compare) {
   return {read: read, abort: abort};
 
   function read(callback) {
+    if (!callback) return read;
     if (cb) return callback(new Error("Only one read at a time"));
     if (working) { cb = callback; return; }
     var item = queue.shift();
