@@ -6,7 +6,15 @@ module.exports = function (repo) {
   repo.createTree = createTree;
 
   function createTree(entries, callback) {
+    if (!callback) return createTree.bind(null, entries);
     callback = singleCall(callback);
+    if (!Array.isArray(entries)) {
+      entries = Object.keys(entries).map(function (path) {
+        var entry = entries[path];
+        entry.path = path;
+        return entry;
+      });
+    }
 
     // Tree paths that we need loaded
     var toLoad = {};
