@@ -75,6 +75,8 @@ with a command-line flag.
 Also you can use generators on any ES5 platform if you use a source transform
 like Facebook's [regenerator](http://facebook.github.io/regenerator/) tool.
 
+You read more about how generators work at [Generators vs Fibers](http://howtonode.org/generators-vs-fibers).
+
 ```js
 var run = require('gen-run');
 
