@@ -15,43 +15,45 @@ function mixin(repo) {
   repo.loadRaw = loadRaw;
 
   function saveAs(type, body, callback) {
-    makeAsync(function () {
+    return makeAsync(function () {
       var buffer = codec.frame({type:type,body:body});
       var hash = sha1(buffer);
       objects[hash] = buffer;
-      return [hash, body];
+      return hash;
     }, callback);
   }
 
   function saveRaw(hash, buffer, callback) {
-    makeAsync(function () {
+    return makeAsync(function () {
       objects[hash] = buffer;
-      return [];
     }, callback);
   }
 
   function loadAs(type, hash, callback) {
-    makeAsync(function () {
+    return makeAsync(function () {
       var buffer = objects[hash];
       if (!buffer) return [];
       var obj = codec.deframe(buffer, true);
       if (obj.type !== type) throw new TypeError("Type mismatch");
-      return [obj.body, hash];
+      return obj.body;
     }, callback);
   }
 
   function loadRaw(hash, callback) {
-    makeAsync(function () {
-      return [objects[hash]];
+    return makeAsync(function () {
+      return objects[hash];
     }, callback);
   }
 }
 
 function makeAsync(fn, callback) {
+  if (!callback) return function (callback) {
+    return makeAsync(fn, callback);
+  };
   defer(function () {
     var out;
     try { out = fn(); }
     catch (err) { return callback(err); }
-    callback.call(null, null, out[0], out[1]);
+    callback(null, out);
   });
 }
