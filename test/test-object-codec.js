@@ -12,7 +12,7 @@ var blobBin, treeBin, commitBin, tagBin;
 
 run([
   function testEncodeBlob() {
-    blob = "Hello World\n";
+    blob = bodec.fromUnicode("Hello World\n");
     blobBin = codec.frame({type: "blob", body: blob});
     blobHash = sha1(blobBin);
     if (blobHash !== '557db03de997c86a4a028e1ebd3a1ceb225be238') {
@@ -20,22 +20,13 @@ run([
     }
   },
   function testEncodeBlobInvalidType() {
-    var correctExceptionThrown = false;
-    blob = {
-      thisis: 'Not array, binary, or text'
-    };
     try {
-      blobBin = codec.frame({type: "blob", body: blob});
+      codec.frame({type: "blob", body: "Not a binary value"});
     }
-    catch (exception) {
-      if (/invalid body/i.test(exception.message)) {
-        correctExceptionThrown = true;
-      }
+    catch (err) {
+      return;
     }
-
-    if (!correctExceptionThrown) {
-      throw new Error("Expected the correct exception when the blog was an invalid type");
-    }
+    throw new Error("Expected an error when passin in a non-binary blob");
   },
   function testEncodeTree() {
     tree = {
@@ -51,17 +42,20 @@ run([
     }
   },
   function testEncodeCommit() {
+    var person = {
+      name: "Tim Caswell",
+      email: "tim@creationix.com",
+      date: {
+        seconds: 1391790884,
+        offset: 7 * 60
+      }
+    };
     commit = {
       tree: treeHash,
-      author: {
-        name: "Tim Caswell",
-        email: "tim@creationix.com",
-        date: {
-          seconds: 1391790884,
-          offset: 7 * 60
-        }
-      },
-      message: "Test Commit\n"
+      author: person,
+      committer: person,
+      message: "Test Commit\n",
+      parents: []
     };
     commitBin = codec.frame({type: "commit", body: commit});
     commitHash = sha1(commitBin);
@@ -116,7 +110,7 @@ run([
   function testDecodeBlob() {
     var obj = codec.deframe(blobBin, true);
     if (obj.type !== "blob") throw new Error("Invalid type");
-    if (bodec.toUnicode(obj.body) !== blob) {
+    if (bodec.toUnicode(obj.body) !== bodec.toUnicode(blob)) {
       throw new Error("Problem decoding");
     }
   },
@@ -139,13 +133,20 @@ run([
     }
   },
   function testUnicodeCommit() {
+    var person = {
+      name: "Laȝamon",
+      email: "laȝamon@chronicles-of-england.org",
+      date: {
+        seconds: 1391790910,
+        offset: 7 * 60
+      }
+    };
     var commit = {
       tree: treeHash,
-      author: {
-        name: "Laȝamon",
-        email: "laȝamon@chronicles-of-england.org"
-      },
-      message: "An preost wes on leoden, Laȝamon was ihoten\nHe wes Leovenaðes sone -- liðe him be Drihten\n"
+      author: person,
+      committer: person,
+      message: "An preost wes on leoden, Laȝamon was ihoten\nHe wes Leovenaðes sone -- liðe him be Drihten\n",
+      parents: []
     };
     var bin = codec.frame({type:"commit", body:commit});
     var obj = codec.deframe(bin, true);
@@ -163,7 +164,11 @@ run([
       tag: "Laȝamon",
       tagger: {
         name: "Laȝamon",
-        email: "laȝamon@chronicles-of-england.org"
+        email: "laȝamon@chronicles-of-england.org",
+        date: {
+          seconds: 1391790910,
+          offset: 7 * 60
+        }
       },
       message: "He wonede at Ernleȝe at æðelen are chirechen,\nUppen Sevarne staþe, sel þar him þuhte,\nOnfest Radestone, þer he bock radde.\n"
     };
