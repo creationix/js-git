@@ -33,6 +33,10 @@ var repo = {};
 // - loadRaw(hash) => binary
 require('../mixins/mem-db')(repo);
 
+// This adds a high-level API for creating multiple git objects by path.
+// - createTree(entries) => hash
+require('../mixins/create-tree')(repo);
+
 // This provides extra methods for dealing with packfile streams.
 // It depends on
 // - unpack(packStream, opts) => hashes
@@ -92,6 +96,34 @@ run(function*() {
 
 ```
 
+We can read objects back one at a time using `loadAs`.
+
+```js
+  // Reading the file "greeting.txt" from a commit.
+
+  // We first read the commit.
+  var commit = yield repo.loadAs("commit", commitHash);
+  // We then read the tree using `commit.tree`.
+  var tree = yield repo.loadAs("tree", commit.tree);
+  // We then read the file using the entry hash in the tree.
+  var file = yield repo.loadAs("blob", tree["greeting.txt"];
+  // file is now a binary buffer.
+```
+
+When using the `formats` mixin there are two new types for loadAs, they are
+`text` and `array`.
+
+```js
+  // When you're sure the file contains unicode text, you can load it as text directly.
+  var fileAsText = yield repo.loadAs("text", blobHash);
+
+  // Also if you prefer array format, you can load a directory as an array.
+  var entries = yield repo.loadAs("array", treeHash);
+  entries.forEach(function (entry) {
+    // entry contains {name, mode, hash}
+  });
+```
+
 Now that we have a repo with some minimal data in it, we can query it.  Since we
 included the `walkers` mixin, we can walk the history as a linear stream or walk
 the file tree as a depth-first linear stream.
@@ -117,3 +149,31 @@ the file tree as a depth-first linear stream.
   }
 });
 ```
+
+If you feel that creating a blob, then creating a tree, then creating the parent
+tree, etc is a lot of work to save just one file, I agree.  While writing the
+tedit app, I discovered a nice high-level abstraction that you can mixin to make
+this much easier.  This is the `create-tree` mixin referenced in the above
+config.
+
+```js
+// We wish to create a tree that contains `www/index.html` and `README.me` files.
+// This will create these two blobs, create a tree for `www` and then create a
+// tree for the root containing `README.md` and the newly created `www` tree.
+var treeHash = yield repo.createTree({
+  "www/index.html": {
+    mode: modes.file,
+    content: "<h1>Hello</h1>\n<p>This is an HTML page?</p>\n"
+  },
+  "README.md": {
+    mode: modes.file,
+    content: "# Sample repo\n\nThis is a sample\n"
+  }
+});
+```
+
+This is great for creating several files at once, but it can also be used to
+edit existing trees by adding new files, changing existing files, or deleting
+existing entries.
+
+```js
