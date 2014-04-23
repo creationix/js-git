@@ -12,6 +12,9 @@
   "bugs": {
     "url": "https://github.com/creationix/js-git/issues"
   },
+  "scripts": {
+    "test": "ls test/test-* | xargs -n1 node"
+  },
   "dependencies": {
     "bodec": "git://github.com/creationix/bodec.git",
     "git-sha1": "git://github.com/creationix/git-sha1.git",
