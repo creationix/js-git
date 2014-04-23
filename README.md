@@ -19,6 +19,8 @@ functionality you need.  Here is an example of creating an in-memory database,
 creating some objects, and then walking that tree using the high-level walker
 APIs.
 
+## Creating a repo object.
+
 ```js
 // This provides symbolic names for the octal modes used by git trees.
 var modes = require('js-git/lib/modes');
@@ -60,6 +62,43 @@ require('../mixins/read-combiner')(repo);
 require('../mixins/formats')(repo);
 ```
 
+## Generators vs Callbacks
+
+There are two control-flow styles that you can use to consume js-git APIs.  All
+the examples here use `yield` style and assume the code is contained within a
+generator function that's yielding to a tool like `gen-run`.
+
+This style requires ES6 generators.  This feature is currently in stable Firefox,
+in stable Chrome behind a user-configurable flag, in node.js 0.11.x or greater
+with a command-line flag.
+
+Also you can use generators on any ES5 platform if you use a source transform
+like Facebook's regenerator tool.
+
+```js
+var run = require('gen-run');
+
+run(function*() {
+ // Blocking logic goes here.  You can use yield
+ var result = yield someAction(withArgs);
+ // The generator pauses at yield and resumes when the data is available.
+ // The rest of your process is not blocked, just this generator body.
+ // If there was an error, it will throw into this generator.
+});
+```
+
+If you can't use this new feature or just plain prefer node-style callbacks, all
+js-git APIs also support that.
+
+```js
+someAction(withArgs, function (err, value) {
+  if (err) return handleMyError(err);
+  // do something with value
+});
+```
+
+## Basic Object Creation
+
 Now we have an in-memory git repo useful for testing the network operations or
 just getting to know the available APIs.
 
@@ -67,12 +106,6 @@ In this example, we'll create a blob, create a tree containing that blob, create
 a commit containing that tree.  This shows how to create git objects manually.
 
 ```js
-// I'm using gen-run and ES6 generators to clean up the syntax, but normal
-// node callback style also works.  All js-git APIs support both.
-var run = require('gen-run');
-
-run(function*() {
-
   // First we create a blob from a string.  The `formats` mixin allows us to
   // use a string directly instead of having to pass in a binary buffer.
   var blobHash = yield repo.saveAs("blob", "Hello World\n");
@@ -96,59 +129,64 @@ run(function*() {
 
 ```
 
+## Basic Object Loading
+
 We can read objects back one at a time using `loadAs`.
 
 ```js
-  // Reading the file "greeting.txt" from a commit.
+// Reading the file "greeting.txt" from a commit.
 
-  // We first read the commit.
-  var commit = yield repo.loadAs("commit", commitHash);
-  // We then read the tree using `commit.tree`.
-  var tree = yield repo.loadAs("tree", commit.tree);
-  // We then read the file using the entry hash in the tree.
-  var file = yield repo.loadAs("blob", tree["greeting.txt"];
-  // file is now a binary buffer.
+// We first read the commit.
+var commit = yield repo.loadAs("commit", commitHash);
+// We then read the tree using `commit.tree`.
+var tree = yield repo.loadAs("tree", commit.tree);
+// We then read the file using the entry hash in the tree.
+var file = yield repo.loadAs("blob", tree["greeting.txt"];
+// file is now a binary buffer.
 ```
 
-When using the `formats` mixin there are two new types for loadAs, they are
-`text` and `array`.
+When using the `formats` mixin there are two new types for `loadAs`, they are
+`"text"` and `"array"`.
 
 ```js
-  // When you're sure the file contains unicode text, you can load it as text directly.
-  var fileAsText = yield repo.loadAs("text", blobHash);
+// When you're sure the file contains unicode text, you can load it as text directly.
+var fileAsText = yield repo.loadAs("text", blobHash);
 
-  // Also if you prefer array format, you can load a directory as an array.
-  var entries = yield repo.loadAs("array", treeHash);
-  entries.forEach(function (entry) {
-    // entry contains {name, mode, hash}
-  });
+// Also if you prefer array format, you can load a directory as an array.
+var entries = yield repo.loadAs("array", treeHash);
+entries.forEach(function (entry) {
+  // entry contains {name, mode, hash}
+});
 ```
+
+## Using Walkers
 
 Now that we have a repo with some minimal data in it, we can query it.  Since we
 included the `walkers` mixin, we can walk the history as a linear stream or walk
 the file tree as a depth-first linear stream.
 
 ```js
-  // Create a log stream starting at the commit we just made.
-  // You could also use symbolic refs like `refs/heads/master` for repos that
-  // support them.
-  var logStream = yield repo.logWalk(commitHash);
+// Create a log stream starting at the commit we just made.
+// You could also use symbolic refs like `refs/heads/master` for repos that
+// support them.
+var logStream = yield repo.logWalk(commitHash);
 
-  // Looping through the stream is easy by repeatedly calling waiting on `read`.
-  var commit, object;
-  while (commit = yield logStream.read(), commit !== undefined) {
+// Looping through the stream is easy by repeatedly calling waiting on `read`.
+var commit, object;
+while (commit = yield logStream.read(), commit !== undefined) {
 
-    console.log(commit);
+  console.log(commit);
 
-    // We can also loop through all the files of each commit version.
-    var treeStream = yield repo.treeWalk(commit.tree);
-    while (object = yield treeStream.read(), object !== undefined) {
-      console.log(object);
-    }
-
+  // We can also loop through all the files of each commit version.
+  var treeStream = yield repo.treeWalk(commit.tree);
+  while (object = yield treeStream.read(), object !== undefined) {
+    console.log(object);
   }
-});
+
+}
 ```
+
+## Filesystem Style Interface
 
 If you feel that creating a blob, then creating a tree, then creating the parent
 tree, etc is a lot of work to save just one file, I agree.  While writing the
@@ -177,3 +215,4 @@ edit existing trees by adding new files, changing existing files, or deleting
 existing entries.
 
 ```js
+```
