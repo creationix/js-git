@@ -241,3 +241,29 @@ changes.base = treeHash;
 
 treeHash = yield repo.createTree(changes);
 ```
+
+## Creating Composite Filesystems
+
+The real fun begins when you create composite filesystems using git submodules.
+
+The code that handles this is not packaged as a repo mixin since it spans several
+independent repos.  Instead look to the [git-tree](https://github.com/creationix/git-tree)
+repo for the code.  It's interface is still slightly unstable and undocumented
+but is used in production by tedit and my node hosting service that compliments tedit.
+
+Basically this module allows you to perform high-level filesystem style commands
+on a virtual filesystem that consists of many js-git repos.  Until there are
+proper docs, you can see how tedit uses it at <https://github.com/creationix/tedit-app/blob/master/src/data/fs.js#L11-L21>.
+
+## Mounting Github Repos
+
+I've been asking Github to enable CORS headers to their HTTPS git servers, but
+they've refused to do it.  This means that a browser can never clone from github
+because the browser will disallow XHR requests to the domain.
+
+They do, however, offer a REST interface to the raw [git data](https://developer.github.com/v3/git/).
+
+Using this I wrote a mixin for js-git that uses github *as* the backend store.
+
+Code at <https://github.com/creationix/js-github>. Usage in tedit can be seen at
+<https://github.com/creationix/tedit-app/blob/master/src/data/fs.js#L31>.
