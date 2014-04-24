@@ -10,6 +10,7 @@ function memCache(repo) {
   var loadAs = repo.loadAs;
   repo.loadAs = loadAsCached;
   function loadAsCached(type, hash, callback) {
+    if (!callback) return loadAsCached.bind(this, type, hash);
     if (hash in cache) return callback(null, dupe(type, cache[hash]), hash);
     loadAs.call(repo, type, hash, function (err, value) {
       if (value === undefined) return callback(err);
@@ -23,6 +24,7 @@ function memCache(repo) {
   var saveAs = repo.saveAs;
   repo.saveAs = saveAsCached;
   function saveAsCached(type, value, callback) {
+    if (!callback) return saveAsCached.bind(this, type, value);
     value = dupe(type, value);
     saveAs.call(repo, type, value, function (err, hash, value) {
       if (err) return callback(err);
