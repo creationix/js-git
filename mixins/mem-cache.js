@@ -26,7 +26,7 @@ function memCache(repo) {
   function saveAsCached(type, value, callback) {
     if (!callback) return saveAsCached.bind(this, type, value);
     value = dupe(type, value);
-    saveAs.call(repo, type, value, function (err, hash, value) {
+    saveAs.call(repo, type, value, function (err, hash) {
       if (err) return callback(err);
       if (type !== "blob" || value.length < 100) {
         cache[hash] = value;
@@ -35,11 +35,11 @@ function memCache(repo) {
     });
   }
 }
-
+var Binary = typeof Buffer === "function" ? Buffer : Uint8Array;
 function dupe(type, value) {
   if (type === "blob") {
     if (type.length >= 100) return value;
-    return new Uint8Array(value);
+    return new Binary(value);
   }
   return decoders[type](encoders[type](value));
 }
