@@ -9,11 +9,13 @@ var sha1 = require('git-sha1');
 var pathJoin = require('pathjoin');
 
 // The fs object has the following interface:
-// readFile(path) => binary
-// readChunk(path, start, end) => binary
-// writeFile(path, binary) =>
-// readDir(path) => array<paths>
-module.exports = function (repo, fs, rootPath) {
+// - readFile(path) => binary
+// - readChunk(path, start, end) => binary
+// - writeFile(path, binary) =>
+// - readDir(path) => array<paths>
+// The repo is expected to have a rootPath property that points to
+// the .git folder within the filesystem.
+module.exports = function (repo, fs) {
 
   var cachedIndexes = {};
 
@@ -26,13 +28,13 @@ module.exports = function (repo, fs, rootPath) {
 
   function updateRef(ref, hash, callback) {
     if (!callback) return updateRef.bind(repo, ref, hash);
-    var path = pathJoin(rootPath, ref);
+    var path = pathJoin(repo.rootPath, ref);
     fs.writeFile(path, bodec.fromRaw(hash + "\n"), callback);
   }
 
   function readRef(ref, callback) {
     if (!callback) return readRef.bind(repo, ref);
-    var path = pathJoin(rootPath, ref);
+    var path = pathJoin(repo.rootPath, ref);
     fs.readFile(path, function (err, binary) {
       if (err) return callback(err);
       if (binary === undefined) {
@@ -46,7 +48,7 @@ module.exports = function (repo, fs, rootPath) {
   }
 
   function readPackedRef(ref, callback) {
-    var path = pathJoin(rootPath, "packed-refs");
+    var path = pathJoin(repo.rootPath, "packed-refs");
     fs.readFile(path, function (err, binary) {
       if (binary === undefined) return callback(err);
       var hash;
@@ -126,8 +128,7 @@ module.exports = function (repo, fs, rootPath) {
   }
 
   function loadRawPacked(hash, callback) {
-    console.log("loadRawPacked", hash);
-    var packDir = pathJoin(rootPath, "objects/pack");
+    var packDir = pathJoin(repo.rootPath, "objects/pack");
     var packHashes = [];
     fs.readDir(packDir, function (err, entries) {
       if (!entries) return callback(err);
@@ -159,7 +160,6 @@ module.exports = function (repo, fs, rootPath) {
 
       function onIndex() {
         var cached = cachedIndexes[packHash];
-        console.log("index", cached);
         var packFile = pathJoin(packDir, "pack-" + packHash + ".pack" );
         var index = cached.byHash[hash];
         if (!index) return start();
@@ -204,7 +204,7 @@ module.exports = function (repo, fs, rootPath) {
   }
 
   function hashToPath(hash) {
-    return pathJoin(rootPath, "objects", hash.substring(0, 2), hash.substring(2));
+    return pathJoin(repo.rootPath, "objects", hash.substring(0, 2), hash.substring(2));
   }
 
 };
