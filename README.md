@@ -45,11 +45,6 @@ require('../mixins/create-tree')(repo);
 // - pack(hashes, opts) => packStream
 require('../mixins/pack-ops')(repo);
 
-// This teaches the repo the client half of git network protocols:
-// - fetchPack(remote, opts) =>
-// - sendPack(remote, opts) =>
-require('../mixins/client')(repo);
-
 // This adds in walker algorithms for quickly walking history or a tree.
 // - logWalk(ref|hash) => stream<commit>
 // - treeWalk(hash) => stream<object>
