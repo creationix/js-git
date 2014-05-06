@@ -12,6 +12,7 @@ var pathJoin = require('pathjoin');
 // - readFile(path) => binary
 // - readChunk(path, start, end) => binary
 // - writeFile(path, binary) =>
+//   Must also make every directory up to parent of path.
 // - readDir(path) => array<paths>
 // The repo is expected to have a rootPath property that points to
 // the .git folder within the filesystem.
