@@ -10,9 +10,13 @@ var pathJoin = require('pathjoin');
 
 // The fs object has the following interface:
 // - readFile(path) => binary
+//   Must also call callback() with no arguments if the file does not exist.
 // - readChunk(path, start, end) => binary
+//   Must also call callback() with no arguments if the file does not exist.
 // - writeFile(path, binary) =>
+//   Must also make every directory up to parent of path.
 // - readDir(path) => array<paths>
+//   Must also call callback() with no arguments if the file does not exist.
 // The repo is expected to have a rootPath property that points to
 // the .git folder within the filesystem.
 module.exports = function (repo, fs) {
