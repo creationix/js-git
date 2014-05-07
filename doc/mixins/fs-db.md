@@ -11,8 +11,8 @@ are variants for using Github or IndexDB for storage.
 The `js-git/mixins/fs-db` implementation provides these methods as well, but
 depends on a file system interface providing `readFile`, `readChunk`,
 `writeFile`, and `readDir`.
-These file system methods are implemented by `git-fs-db/mixins/bare-db` and
-`git-chrome-db/mixins/bare-db`
+These file system methods are implemented by the `git-fs-db` and
+`git-chrome-db` packages.
 
 For the purpose of this document, `=>` implies that the function does not block
 and accepts a Node.js-style callback.
@@ -48,4 +48,3 @@ exist.
 Reads the names of the entries in the directory at the given path.
 The names are not fully qualified paths, just the name of the entry within the
 given directory.
-
