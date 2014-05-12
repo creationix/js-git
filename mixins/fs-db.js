@@ -98,7 +98,13 @@ module.exports = function (repo, fs) {
       path = hashToPath(hash);
     }
     catch (err) { return callback(err); }
-    fs.writeFile(path, buffer, callback);
+    // Try to read the object first.
+    loadRaw(hash, function (err, data) {
+      // If it already exists, we're done
+      if (data) return callback();
+      // Otherwise write a new file
+      fs.writeFile(path, buffer, callback);
+    });
   }
 
   function loadAs(type, hash, callback) {
