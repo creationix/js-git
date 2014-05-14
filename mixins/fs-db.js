@@ -179,7 +179,11 @@ module.exports = function (repo, fs) {
 
       function loadChunk(packFile, start, callback) {
         var index = offsets.indexOf(start);
-        var end = index >= 0 ? offsets[index + 1] : -20;
+        if (index < 0) {
+          var error = new Error("Can't find chunk starting at " + start);
+          return callback(error);
+        }
+        var end = index + 1 < offsets.length ? offsets[index + 1] : -20;
         fs.readChunk(packFile, start, end, function (err, chunk) {
           if (!chunk) return callback(err);
           var raw;

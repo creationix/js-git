@@ -35,6 +35,9 @@ Reads a byte range of the file at the given path.
 The byte range is a half open interval, including the byte at the initial index,
 and excluding the byte at the terminal index, such that the end minus the start
 is the length of the resulting binary data.
+The end offset may be negative, in which case it should count back from the end
+of the size of the file at the path, such that the size plus the negative end is
+the positive end.
 If the file does not exist, readChunk provides `undefined` instead.
 
 ## writeFile(path, binary) => undefined
