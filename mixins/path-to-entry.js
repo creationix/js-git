@@ -13,6 +13,7 @@ function pathToEntry(rootTree, path, callback) {
   var parts = path.split("/").filter(Boolean);
   var index = 0;
   var cached;
+  loop();
   function loop() {
     while (index < parts.length) {
       if (mode === modes.tree) {
@@ -27,7 +28,7 @@ function pathToEntry(rootTree, path, callback) {
       }
       return callback();
     }
-    callback({
+    callback(null, {
       mode: mode,
       hash: hash
     });
