@@ -146,7 +146,7 @@ var commit = yield repo.loadAs("commit", commitHash);
 // We then read the tree using `commit.tree`.
 var tree = yield repo.loadAs("tree", commit.tree);
 // We then read the file using the entry hash in the tree.
-var file = yield repo.loadAs("blob", tree["greeting.txt"];
+var file = yield repo.loadAs("blob", tree["greeting.txt"]);
 // file is now a binary buffer.
 ```
 
