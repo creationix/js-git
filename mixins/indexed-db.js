@@ -21,6 +21,10 @@ function init(callback) {
   request.onupgradeneeded = function(evt) {
     var db = evt.target.result;
 
+    if (evt.dataLoss) {
+      return callback(new Error(evt.dataLoss + ": " + evt.dataLossMessage));
+    }
+
     // A versionchange transaction is started automatically.
     evt.target.transaction.onerror = onError;
 
