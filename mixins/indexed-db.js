@@ -21,7 +21,7 @@ function init(callback) {
   request.onupgradeneeded = function(evt) {
     var db = evt.target.result;
 
-    if (evt.dataLoss) {
+    if (evt.dataLoss && evt.dataLoss !== "none") {
       return callback(new Error(evt.dataLoss + ": " + evt.dataLossMessage));
     }
 
