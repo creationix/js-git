@@ -13,6 +13,8 @@ mixin.init = init;
 
 mixin.loadAs = loadAs;
 mixin.saveAs = saveAs;
+mixin.loadRaw = loadRaw;
+mixin.saveRaw = saveRaw;
 module.exports = mixin;
 
 function mixin(repo, prefix) {
