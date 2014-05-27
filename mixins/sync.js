@@ -35,42 +35,58 @@ function sync(remote, options, callback) {
     if (hashes.local) throw "TODO: Implement local";
     console.log(hashes);
     var depth = options.localDepth || Infinity;
-    downloadCommit(local, remote, hashes.remote, function (err, commit) {
+    downloadCommit(local, remote, hashes.remote, depth, function (err) {
       if (err) return callback(err);
-      console.log("commit", commit);
+      console.log("DOWNLOADED")
     });
   });
 }
 
-function downloadCommits(local, remote, hash, depth, callback) {
+function downloadCommit(local, remote, hash, depth, callback) {
+  if (!callback) return downloadCommit.bind(null, local, remote, hash, depth);
 
-}
+  var commit;
 
-function downloadCommit(local, remote, hash, callback) {
   local.loadDirectAs("commit", hash, onCheck);
 
-  function onCheck(err, commit) {
-    if (err || commit) return callback(err, commit);
+  function onCheck(err, result) {
+    if (err) return callback(err);
+
+    if (result) {
+      commit = result;
+      return onSaved(null, hash);
+    }
     remote.loadAs("commit", hash, onCommit);
   }
 
-  function onCommit(err, commit) {
-    if (!commit) return callback(err || new Error("Missing remote commit " + hash));
+  function onCommit(err, result) {
+    if (!result) return callback(err || new Error("Missing remote commit " + hash));
 
+    commit = result;
     downloadTree(local, remote, commit.tree, onTree);
 
     function onTree(err) {
       if (err) return callback(err);
       local.saveAs("commit", commit, onSaved);
     }
+  }
 
-    function onSaved(err, newHash) {
-      if (err) return callback(err);
-      if (newHash !== hash) {
-        return callback(new Error("Hash mismatch for commit"));
-      }
-      callback(null, commit);
+  function onSaved(err, newHash) {
+    if (err) return callback(err);
+    if (newHash !== hash) {
+      console.error(commit);
+      console.error({
+        expected: hash,
+        actual: newHash
+      });
+      return callback(new Error("Hash mismatch for commit"));
     }
+
+    depth--;
+    if (!depth || !commit.parents.length) return callback();
+    carallel(commit.parents.map(function (parent) {
+      return downloadCommit(local, remote, parent, depth);
+    }), callback);
   }
 }
 
@@ -105,10 +121,7 @@ function downloadTree(local, remote, hash, callback) {
       }
       callback();
     }
-
   }
-
-
 }
 
 function downloadBlob(local, remote, hash, callback) {
@@ -127,7 +140,11 @@ function downloadBlob(local, remote, hash, callback) {
   function onSaved(err, newHash) {
     if (err) return callback(err);
     if (newHash !== hash) {
-      return callback(new Error("Hash mismatch for commit"));
+      console.error({
+        expected: hash,
+        actual: newHash
+      });
+      return callback(new Error("Hash mismatch for blob"));
     }
     callback();
   }
