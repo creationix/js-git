@@ -1,6 +1,6 @@
 # Sponsored Development
 
-As a company, you can sponsor development of specefic features to the js-git ecosystem.
+As a company, you can sponsor development of specific features to the js-git ecosystem.
 
 ## In Progress Sponsored Features
 
