@@ -6,4 +6,7 @@ As a company, you can sponsor development of specefic features to the js-git eco
 
  - JS-Git Encrypted Filesystem - Anonymous
  - Tedit - Web Runtime - Anonymous
+
+## Completed Sponsored Features
+
  - Tedit - Live Export to VFS - Anonymous
