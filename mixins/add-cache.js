@@ -42,7 +42,7 @@ function addCache(repo, cache) {
   function saveAsCached(type, value, callback) {
     saveAs.call(repo, type, value, onSave);
 
-    function onSave(err, hash, value) {
+    function onSave(err, hash) {
       if (err) return callback(err);
       // Store in disk, forcing hash to match.
       cache.saveAs(type, value, callback, hash);
