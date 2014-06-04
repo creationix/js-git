@@ -1,160 +1,134 @@
 "use strict";
 
-var carallel = require('carallel');
 var modes = require('../lib/modes');
 
 module.exports = function (repo) {
   repo.sync = sync;
 };
 
-function sync(remote, options, callback) {
+// Download remote ref with depth
+// Make sure to use Infinity for depth on github mounts or anything that
+// doesn't allow shallow clones.
+function sync(remote, ref, depth, callback) {
   /*jshint: validthis: true*/
-  if (!callback) return sync.bind(this, remote, options);
+  if (!callback) return sync.bind(this, remote, ref, depth);
   var local = this;
-  if (typeof local.readRef !== "function") {
-    throw new TypeError("local repo is missing readRef method");
-  }
-  if (typeof local.loadDirectAs !== "function") {
-    throw new TypeError("local repo is missing loadDirectAs method");
-  }
-  if (typeof remote.readRef !== "function") {
-    throw new TypeError("remote repo is missing readRef method");
-  }
-  console.log({
-    local: local,
-    remote: remote,
-    options: options
-  });
-  var localRef = options.localRef || "refs/heads/master";
-  var remoteRef = options.remoteRef || localRef;
-  carallel({
-    local: local.readRef(localRef),
-    remote: remote.readRef(remoteRef)
-  }, function (err, hashes) {
+  depth = depth || Infinity;
+
+  var hasCache = {};
+
+  remote.readRef(ref, function (err, hash) {
     if (err) return callback(err);
-    if (hashes.local) throw "TODO: Implement local";
-    console.log(hashes);
-    var depth = options.localDepth || Infinity;
-    downloadCommit(local, remote, hashes.remote, depth, function (err) {
+    importCommit(hash, depth, function (err) {
       if (err) return callback(err);
-      console.log("DOWNLOADED")
+      callback(null, hash);
     });
   });
-}
 
-function downloadCommit(local, remote, hash, depth, callback) {
-  if (!callback) return downloadCommit.bind(null, local, remote, hash, depth);
-
-  var commit;
-
-  local.loadDirectAs("commit", hash, onCheck);
-
-  function onCheck(err, result) {
-    if (err) return callback(err);
-
-    if (result) {
-      commit = result;
-      return onSaved(null, hash);
-    }
-    remote.loadAs("commit", hash, onCommit);
-  }
-
-  function onCommit(err, result) {
-    if (!result) return callback(err || new Error("Missing remote commit " + hash));
-
-    commit = result;
-    downloadTree(local, remote, commit.tree, onTree);
-
-    function onTree(err) {
+  // Caching has check.
+  function check(hash, callback) {
+    if (hasCache[hash]) return callback(null, true);
+    local.hasHash(hash, function (err, has) {
       if (err) return callback(err);
-      local.saveAs("commit", commit, onSaved);
-    }
-  }
-
-  function onSaved(err, newHash) {
-    if (err) return callback(err);
-    if (newHash !== hash) {
-      console.error(commit);
-      console.error({
-        expected: hash,
-        actual: newHash
-      });
-      return callback(new Error("Hash mismatch for commit"));
-    }
-
-    depth--;
-    if (!depth || !commit.parents.length) return callback();
-    carallel(commit.parents.map(function (parent) {
-      return downloadCommit(local, remote, parent, depth);
-    }), callback);
-  }
-}
-
-function downloadTree(local, remote, hash, callback) {
-  if (!callback) return downloadTree.bind(null, local, remote, hash);
-
-  local.loadDirectAs("tree", hash, onCheck);
-
-  function onCheck(err, tree) {
-    if (err || tree) return callback(err);
-    remote.loadAs("tree", hash, onTree);
-  }
-
-  function onTree(err, tree) {
-    if (!tree) return callback(err || new Error("Missing remote tree " + hash));
-    carallel(Object.keys(tree).map(function (name) {
-      return downloadEntry(local, remote, tree[name]);
-    }).filter(Boolean), function (err) {
-      if (err) return callback(err);
-      local.saveAs("tree", tree, onSaved);
+      hasCache[hash] = has;
+      callback(null, has);
     });
+  }
 
-    function onSaved(err, newHash) {
+  function importCommit(hash, depth, callback) {
+    check(hash, onCheck);
+
+    function onCheck(err, has) {
+      if (err || has) return callback(err);
+      remote.loadAs("commit", hash, onLoad);
+    }
+
+    function onLoad(err, commit) {
+      if (!commit) return callback(err || new Error("Missing commit " + hash));
+      var i = 0;
+      importTree(commit.tree, onImport);
+
+      function onImport(err) {
+        if (err) return callback(err);
+        if (i >= commit.parents.length || depth <= 1) {
+          return local.saveAs("commit", commit, onSave);
+        }
+        importCommit(commit.parents[i++], depth - 1, onImport);
+      }
+    }
+
+    function onSave(err, newHash) {
       if (err) return callback(err);
       if (newHash !== hash) {
-        console.error(tree);
-        console.error({
-          expected: hash,
-          actual: newHash
-        });
-        return callback(new Error("Hash mismatch for tree"));
+        return new Error("Commit hash mismatch " + hash + " != " + newHash);
       }
+      hasCache[hash] = true;
       callback();
     }
   }
-}
 
-function downloadBlob(local, remote, hash, callback) {
-  if (!callback) return downloadBlob.bind(null, local, remote, hash);
+  function importTree(hash, callback) {
+    check(hash, onCheck);
 
-  local.loadDirectAs("blob", hash, function (err, blob) {
-    if (err || blob) return callback(err);
-    remote.loadAs("blob", hash, onBlob);
-  });
-
-  function onBlob(err, blob) {
-    if (!blob) return callback(err || new Error("Missing remote blob " + hash));
-    local.saveAs("blob", blob, onSaved);
-  }
-
-  function onSaved(err, newHash) {
-    if (err) return callback(err);
-    if (newHash !== hash) {
-      console.error({
-        expected: hash,
-        actual: newHash
-      });
-      return callback(new Error("Hash mismatch for blob"));
+    function onCheck(err, has) {
+      if (err || has) return callback(err);
+      remote.loadAs("tree", hash, onLoad);
     }
-    callback();
+
+    function onLoad(err, tree) {
+      if (!tree) return callback(err || new Error("Missing tree " + hash));
+      var i = 0;
+      var names = Object.keys(tree);
+      onImport();
+
+      function onImport(err) {
+        if (err) return callback(err);
+        if (i >= names.length) {
+          return local.saveAs("tree", tree, onSave);
+        }
+        var name = names[i++];
+        var entry = tree[name];
+        if (modes.isBlob(entry.mode)) {
+          return importBlob(entry.hash, onImport);
+        }
+        if (entry.mode === modes.tree) {
+          return importTree(entry.hash, onImport);
+        }
+        // Skip others.
+        onImport();
+      }
+    }
+
+    function onSave(err, newHash) {
+      if (err) return callback(err);
+      if (newHash !== hash) {
+        return new Error("Tree hash mismatch " + hash + " != " + newHash);
+      }
+      hasCache[hash] = true;
+      callback();
+    }
   }
-}
 
-function downloadEntry(local, remote, entry) {
-  if (entry.mode === modes.tree) return downloadTree(local, remote, entry.hash);
-  if (modes.isBlob(entry.mode)) return downloadBlob(local, remote, entry.hash);
-}
+  function importBlob(hash, callback) {
+    check(hash, onCheck);
 
-function findCommon(local, localHash, remote, remoteHash, callback) {
+    function onCheck(err, has) {
+      if (err || has) return callback(err);
+      remote.loadAs("blob", hash, onLoad);
+    }
 
+    function onLoad(err, blob) {
+      if (!blob) return callback(err || new Error("Missing blob " + hash));
+      local.saveAs("blob", blob, onSave);
+    }
+
+    function onSave(err, newHash) {
+      if (err) return callback(err);
+      if (newHash !== hash) {
+        return new Error("Blob hash mismatch " + hash + " != " + newHash);
+      }
+      hasCache[hash] = true;
+      callback();
+    }
+  }
 }
