@@ -2,18 +2,29 @@
 
 var modes = require('../lib/modes');
 
-module.exports = function (repo) {
-  repo.sync = sync;
+module.exports = function (local, remote) {
+  local.fetch = fetch;
+  local.send = send;
+  local.readRemoteRef = remote.readRef.bind(remote);
+  local.updateRemoteRef = remote.updateRef.bind(remote);
+
+  function fetch(ref, depth, callback) {
+    if (!callback) return fetch.bind(local, ref, depth);
+    sync(local, remote, ref, depth, callback);
+  }
+
+  function send(ref, callback) {
+    if (!callback) return send.bind(local, ref);
+    sync(remote, local, ref, Infinity, callback);
+  }
 };
 
 // Download remote ref with depth
 // Make sure to use Infinity for depth on github mounts or anything that
 // doesn't allow shallow clones.
-function sync(remote, ref, depth, callback) {
-  /*jshint: validthis: true*/
-  if (!callback) return sync.bind(this, remote, ref, depth);
-  var local = this;
-  depth = depth || Infinity;
+function sync(local, remote, ref, depth, callback) {
+
+  depth = depth || 1;
 
   var hasCache = {};
 
@@ -26,9 +37,9 @@ function sync(remote, ref, depth, callback) {
   });
 
   // Caching has check.
-  function check(hash, callback) {
+  function check(type, hash, callback) {
     if (hasCache[hash]) return callback(null, true);
-    local.hasHash(hash, function (err, has) {
+    local.hasHash(type, hash, function (err, has) {
       if (err) return callback(err);
       hasCache[hash] = has;
       callback(null, has);
@@ -36,7 +47,7 @@ function sync(remote, ref, depth, callback) {
   }
 
   function importCommit(hash, depth, callback) {
-    check(hash, onCheck);
+    check("commit", hash, onCheck);
 
     function onCheck(err, has) {
       if (err || has) return callback(err);
@@ -68,7 +79,7 @@ function sync(remote, ref, depth, callback) {
   }
 
   function importTree(hash, callback) {
-    check(hash, onCheck);
+    check("tree", hash, onCheck);
 
     function onCheck(err, has) {
       if (err || has) return callback(err);
@@ -110,7 +121,7 @@ function sync(remote, ref, depth, callback) {
   }
 
   function importBlob(hash, callback) {
-    check(hash, onCheck);
+    check("blob", hash, onCheck);
 
     function onCheck(err, has) {
       if (err || has) return callback(err);

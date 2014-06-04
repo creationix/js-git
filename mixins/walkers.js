@@ -37,7 +37,7 @@ function logWalk(ref, callback) {
 
   function loadKey(hash, callback) {
     return repo.loadAs("commit", hash, function (err, commit) {
-      if (err) return callback(err);
+      if (!commit) return callback(err || new Error("Missing commit " + hash));
       commit.hash = hash;
       if (hash === last) commit.last = true;
       return callback(null, commit);
