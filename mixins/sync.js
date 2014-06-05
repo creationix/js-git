@@ -23,13 +23,13 @@ module.exports = function (local, remote) {
 // Make sure to use Infinity for depth on github mounts or anything that
 // doesn't allow shallow clones.
 function sync(local, remote, ref, depth, callback) {
-
-  depth = depth || 1;
+  if (typeof ref !== "string") throw new TypeError("ref must be string");
+  if (typeof depth !== "number") throw new TypeError("depth must be number");
 
   var hasCache = {};
 
   remote.readRef(ref, function (err, hash) {
-    if (err) return callback(err);
+    if (!hash) return callback(err);
     importCommit(hash, depth, function (err) {
       if (err) return callback(err);
       callback(null, hash);
@@ -38,6 +38,8 @@ function sync(local, remote, ref, depth, callback) {
 
   // Caching has check.
   function check(type, hash, callback) {
+    if (typeof type !== "string") throw new TypeError("type must be string");
+    if (typeof hash !== "string") throw new TypeError("hash must be string");
     if (hasCache[hash]) return callback(null, true);
     local.hasHash(type, hash, function (err, has) {
       if (err) return callback(err);
@@ -71,7 +73,7 @@ function sync(local, remote, ref, depth, callback) {
     function onSave(err, newHash) {
       if (err) return callback(err);
       if (newHash !== hash) {
-        return new Error("Commit hash mismatch " + hash + " != " + newHash);
+        return callback(new Error("Commit hash mismatch " + hash + " != " + newHash));
       }
       hasCache[hash] = true;
       callback();
@@ -113,7 +115,7 @@ function sync(local, remote, ref, depth, callback) {
     function onSave(err, newHash) {
       if (err) return callback(err);
       if (newHash !== hash) {
-        return new Error("Tree hash mismatch " + hash + " != " + newHash);
+        return callback(new Error("Tree hash mismatch " + hash + " != " + newHash));
       }
       hasCache[hash] = true;
       callback();
@@ -136,7 +138,7 @@ function sync(local, remote, ref, depth, callback) {
     function onSave(err, newHash) {
       if (err) return callback(err);
       if (newHash !== hash) {
-        return new Error("Blob hash mismatch " + hash + " != " + newHash);
+        return callback(new Error("Blob hash mismatch " + hash + " != " + newHash));
       }
       hasCache[hash] = true;
       callback();
