@@ -29,6 +29,7 @@ module.exports = function (repo, fs) {
   repo.saveRaw = saveRaw;
   repo.readRef = readRef;
   repo.updateRef = updateRef;
+  repo.hasHash = hasHash;
 
   function updateRef(ref, hash, callback) {
     if (!callback) return updateRef.bind(repo, ref, hash);
@@ -119,6 +120,14 @@ module.exports = function (repo, fs) {
       }
       catch (err) { return callback(err); }
       callback(null, body);
+    });
+  }
+
+  function hasHash(type, hash, callback) {
+    if (!callback) return hasHash.bind(repo, type, hash);
+    loadRaw(hash, function (err, body) {
+      if (err) return callback(err);
+      callback(null, !!body);
     });
   }
 
