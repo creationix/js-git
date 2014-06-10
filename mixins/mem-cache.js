@@ -2,6 +2,7 @@
 
 var encoders = require('../lib/object-codec').encoders;
 var decoders = require('../lib/object-codec').decoders;
+var Binary = require('bodec').Binary;
 
 var cache = memCache.cache = {};
 module.exports = memCache;
@@ -35,7 +36,6 @@ function memCache(repo) {
     });
   }
 }
-var Binary = typeof Buffer === "function" ? Buffer : Uint8Array;
 function dupe(type, value) {
   if (type === "blob") {
     if (type.length >= 100) return value;
