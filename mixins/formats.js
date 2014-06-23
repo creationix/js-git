@@ -9,6 +9,7 @@ module.exports = function (repo) {
   repo.saveAs = newSaveAs;
 
   function newLoadAs(type, hash, callback) {
+    if (!callback) return newLoadAs.bind(repo, type, hash);
     var realType = type === "text" ? "blob":
                    type === "array" ? "tree" : type;
     return loadAs.call(repo, realType, hash, onLoad);
@@ -22,6 +23,7 @@ module.exports = function (repo) {
   }
 
   function newSaveAs(type, body, callback) {
+    if (!callback) return newSaveAs.bind(repo, type, body);
     type = type === "text" ? "blob":
            type === "array" ? "tree" : type;
     if (type === "blob") {
