@@ -6,7 +6,7 @@ module.exports = function (repo) {
 };
 
 function pathToEntry(rootTree, path, callback) {
-  if (!callback) return pathToEntry.bind(this, path);
+  if (!callback) return pathToEntry.bind(this, rootTree, path);
   var repo = this;
   var mode = modes.tree;
   var hash = rootTree;
