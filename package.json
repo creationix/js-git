@@ -19,6 +19,7 @@
     "bodec": "git://github.com/creationix/bodec.git",
     "pathjoin": "git://github.com/creationix/pathjoin.git",
     "git-sha1": "git://github.com/creationix/git-sha1.git",
-    "pako": "git://github.com/nodeca/pako.git"
+    "pako": "git://github.com/nodeca/pako.git",
+    "culvert": "git://github.com/creationix/culvert.git"
   }
 }

@@ -1,26 +1,28 @@
-var binary = require('bodec');
+"use strict";
+
 var sha1 = require('git-sha1');
 var applyDelta = require('../lib/apply-delta.js');
 var codec = require('../lib/object-codec.js');
 var decodePack = require('../lib/pack-codec.js').decodePack;
 var encodePack = require('../lib/pack-codec.js').encodePack;
+var makeChannel = require('culvert');
 
 module.exports = function (repo) {
-  // packStream is a simple-stream containing raw packfile binary data
+  // packChannel is a writable culvert channel {put,drain} containing raw packfile binary data
   // opts can contain "onProgress" or "onError" hook functions.
   // callback will be called with a list of all unpacked hashes on success.
-  repo.unpack = unpack; // (packStream, opts) -> hashes
+  repo.unpack = unpack; // (packChannel, opts) => hashes
 
   // hashes is an array of hashes to pack
-  // callback will be a simple-stream containing raw packfile binary data
-  repo.pack = pack;     // (hashes, opts) -> packStream
-
+  // packChannel will be a readable culvert channel {take} containing raw packfile binary data
+  repo.pack = pack;     // (hashes, opts) => packChannel
 };
 
-function unpack(packStream, opts, callback) {
-  if (!callback) return unpack.bind(this, packStream, opts);
+function unpack(packChannel, opts, callback) {
+  /*jshint validthis:true*/
+  if (!callback) return unpack.bind(this, packChannel, opts);
 
-  packStream = applyParser(packStream, decodePack);
+  packChannel = applyParser(packChannel, decodePack, callback);
 
   var repo = this;
 
@@ -34,7 +36,7 @@ function unpack(packStream, opts, callback) {
   // key is hash we're waiting for, value is array of items that are waiting.
   var pending = {};
 
-  return packStream.read(onStats);
+  return packChannel.take(onStats);
 
   function onDone(err) {
     if (done) return;
@@ -47,7 +49,7 @@ function unpack(packStream, opts, callback) {
     if (err) return onDone(err);
     version = stats.version;
     num = stats.num;
-    packStream.read(onRead);
+    packChannel.take(onRead);
   }
 
   function objectProgress(more) {
@@ -124,20 +126,21 @@ function unpack(packStream, opts, callback) {
 
   function onSave(err) {
     if (err) return callback(err);
-    packStream.read(onRead);
+    packChannel.take(onRead);
   }
 
   function enqueueDelta(item) {
     var list = pending[item.ref];
     if (!list) pending[item.ref] = [item];
     else list.push(item);
-    packStream.read(onRead);
+    packChannel.take(onRead);
   }
 
 }
 
 // TODO: Implement delta refs to reduce stream size
 function pack(hashes, opts, callback) {
+  /*jshint validthis:true*/
   if (!callback) return pack.bind(this, hashes, opts);
   var repo = this;
   var i = 0, first = true, done = false;
@@ -175,33 +178,24 @@ function values(object) {
 }
 
 
-function applyParser(stream, parser) {
-  var write = parser(onData);
-  var cb = null;
-  var queue = [];
-  return { read: read, abort: stream.abort };
+function applyParser(stream, parser, onError) {
+  var extra = makeChannel();
+  extra.put = parser(extra.put);
+  stream.take(onData);
 
-  function read(callback) {
-    if (queue.length) return callback(null, queue.shift());
-    if (cb) return callback(new Error("Only one read at a time."));
-    cb = callback;
-    stream.read(onRead);
+  function onData(err, item) {
+    if (err) return onError(err);
+    var more;
+    try { more = extra.put(item); }
+    catch (err) { return onError(err); }
+    if (more) stream.take(onData);
+    else extra.drain(onDrain);
   }
 
-  function onRead(err, item) {
-    var callback = cb;
-    cb = null;
-    if (err) return callback(err);
-    try {
-      write(item);
-    }
-    catch (err) {
-      return callback(err);
-    }
-    return read(callback);
+  function onDrain(err) {
+    if (err) return onError(err);
+    stream.take(onData);
   }
 
-  function onData(item) {
-    queue.push(item);
-  }
+  return { take: extra.take };
 }
