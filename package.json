@@ -1,6 +1,6 @@
 {
   "name": "js-git",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Git Implemented in JavaScript",
   "keywords": ["git", "js-git"],
   "repository": {
@@ -20,6 +20,6 @@
     "pathjoin": "git://github.com/creationix/pathjoin.git",
     "git-sha1": "git://github.com/creationix/git-sha1.git",
     "pako": "git://github.com/nodeca/pako.git",
-    "culvert": "git://github.com/creationix/culvert.git"
+    "culvert": "~0.1.1"
   }
 }
