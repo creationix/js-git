@@ -41,7 +41,7 @@ module.exports = function (request) {
         bodyParts.push(chunk);
       });
       headers["Content-Type"] = "application/x-" + serviceName + "-request";
-      clientChannel.take(onWrite);
+      socket.take(onWrite);
 
       var verified = 0;
       var parseResponse = pktLine.deframer(function (line) {
@@ -80,8 +80,9 @@ module.exports = function (request) {
       }
 
       function onWrite(item) {
+        if (item === undefined) return socket.put();
         bodyWrite(item);
-        clientChannel.take(onWrite);
+        socket.take(onWrite);
         if (item !== "done\n" || !bodyParts.length) return;
         var body = bodec.join(bodyParts);
         bodyParts.length = 0;
