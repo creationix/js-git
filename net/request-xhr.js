@@ -23,6 +23,7 @@ function request(method, url, headers, body, callback) {
     var resHeaders = {};
     xhr.getAllResponseHeaders().trim().split("\r\n").forEach(function (line) {
       var index = line.indexOf(":");
+      console.log("LINE", line);
       resHeaders[line.substring(0, index).toLowerCase()] = line.substring(index + 1).trim();
     });
 
