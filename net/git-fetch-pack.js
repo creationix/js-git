@@ -117,9 +117,9 @@ function fetchPack(transport, onError) {
     progressChannel = makeChannel();
     errorChannel = makeChannel();
     api.put({
-      pack: packChannel.take,
-      progress: progressChannel.take,
-      error: errorChannel.take,
+      pack: { take: packChannel.take },
+      progress: { take: progressChannel.take },
+      error: { take: errorChannel.take },
     });
     socket.take(onMore);
   }
