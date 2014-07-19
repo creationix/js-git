@@ -8,11 +8,33 @@ module.exports = mixin;
 
 function mixin(repo) {
   var objects = {};
+  var refs = {};
 
   repo.saveAs = saveAs;
   repo.loadAs = loadAs;
   repo.saveRaw = saveRaw;
   repo.loadRaw = loadRaw;
+  repo.readRef = readRef;
+  repo.updateRef = updateRef;
+  repo.hasHash = hasHash;
+
+  function readRef(ref, callback) {
+    return makeAsync(function () {
+      return refs[ref];
+    }, callback);
+  }
+
+  function updateRef(ref, hash, callback) {
+    return makeAsync(function () {
+      refs[ref] = hash;
+    }, callback);
+  }
+
+  function hasHash(hash, callback) {
+    return makeAsync(function () {
+      return hash in objects;
+    }, callback);
+  }
 
   function saveAs(type, body, callback) {
     return makeAsync(function () {
