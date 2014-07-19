@@ -111,7 +111,7 @@ function fetchPack(transport, onError) {
 
   function onNak(line) {
     if (line !== "NAK") {
-      throw new Error("Expected NAK");
+      throw new Error("Expected NAK, but got " + JSON.stringify(line));
     }
     packChannel = makeChannel();
     progressChannel = makeChannel();

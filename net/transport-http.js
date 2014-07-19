@@ -95,7 +95,7 @@ module.exports = function (request) {
         if (res.headers["content-type"] !== "application/x-" + serviceName + "-result") {
           throw new Error("Not a smart http git server");
         }
-        socket.put(res.body);
+        parseResponse(res.body);
       }
     };
   };
