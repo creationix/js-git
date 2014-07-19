@@ -5,6 +5,7 @@ var codec = require('../lib/object-codec.js');
 var sha1 = require('git-sha1');
 
 module.exports = mixin;
+var isHash = /^[0-9a-f]{40}$/;
 
 function mixin(repo) {
   var objects = {};
@@ -14,9 +15,10 @@ function mixin(repo) {
   repo.loadAs = loadAs;
   repo.saveRaw = saveRaw;
   repo.loadRaw = loadRaw;
+  repo.hasHash = hasHash;
   repo.readRef = readRef;
   repo.updateRef = updateRef;
-  repo.hasHash = hasHash;
+  repo.listRefs = listRefs;
 
   function readRef(ref, callback) {
     return makeAsync(function () {
@@ -24,14 +26,27 @@ function mixin(repo) {
     }, callback);
   }
 
+  function listRefs(prefix, callback) {
+    return makeAsync(function () {
+      var regex = prefix && new RegExp("^" + prefix + "[/$]");
+      var out = {};
+      Object.keys(refs).forEach(function (name) {
+        if (regex && !regex.test(name)) return;
+        out[name] = refs[name];
+      });
+      return out;
+    }, callback);
+  }
+
   function updateRef(ref, hash, callback) {
     return makeAsync(function () {
-      refs[ref] = hash;
+      return (refs[ref] = hash);
     }, callback);
   }
 
   function hasHash(hash, callback) {
     return makeAsync(function () {
+      if (!isHash.test(hash)) hash = refs[hash];
       return hash in objects;
     }, callback);
   }
@@ -53,6 +68,7 @@ function mixin(repo) {
 
   function loadAs(type, hash, callback) {
     return makeAsync(function () {
+      if (!isHash.test(hash)) hash = refs[hash];
       var buffer = objects[hash];
       if (!buffer) return [];
       var obj = codec.deframe(buffer, true);

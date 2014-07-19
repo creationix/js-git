@@ -52,6 +52,7 @@ function fetchPack(transport, onError) {
     else if (!caps) {
       caps = {};
       Object.defineProperty(refs, "caps", {value: caps});
+      Object.defineProperty(refs, "shallows", {value:[]});
       var index = line.indexOf("\0");
       line.substring(index + 1).split(" ").forEach(function (cap) {
         var i = cap.indexOf("=");
@@ -110,6 +111,12 @@ function fetchPack(transport, onError) {
   }
 
   function onNak(line) {
+    if (line === null) return socket.take(onNak);
+    var match = line.match(/^shallow ([0-9a-f]{40})$/);
+    if (match) {
+      refs.shallows.push(match[1]);
+      return socket.take(onNak);
+    }
     if (line !== "NAK") {
       throw new Error("Expected NAK, but got " + JSON.stringify(line));
     }
