@@ -26,7 +26,13 @@ function pathToEntry(rootTree, path, callback) {
         index++;
         continue;
       }
-      return callback();
+      return callback(null, {
+        last: {
+          mode: mode,
+          hash: hash,
+          path: parts.slice(0, index).join("/")
+        }
+      });
     }
     callback(null, {
       mode: mode,
