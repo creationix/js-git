@@ -20,6 +20,6 @@
     "pathjoin": "git://github.com/creationix/pathjoin.git",
     "git-sha1": "git://github.com/creationix/git-sha1.git",
     "pako": "git://github.com/nodeca/pako.git",
-    "culvert": "~0.1.1"
+    "culvert": "~0.1.2"
   }
 }
