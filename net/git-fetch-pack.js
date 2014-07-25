@@ -2,6 +2,7 @@
 
 var makeChannel = require('culvert');
 var wrapHandler = require('../lib/wrap-handler');
+var bodec = require('bodec');
 
 module.exports = fetchPack;
 
@@ -19,6 +20,8 @@ function fetchPack(transport, onError) {
   var caps = null;
   var capsSent = false;
   var refs = {};
+  var haves = {};
+  var havesCount = 0;
 
   // Create a duplex channel for talking with the agent.
   var libraryChannel = makeChannel();
@@ -78,12 +81,19 @@ function fetchPack(transport, onError) {
   var errorChannel;
 
   function onWant(line) {
+    if (line === undefined) return socket.put();
     if (line === null) {
       socket.put(null);
       return api.take(onWant);
     }
     if (line.deepen) {
       socket.put("deepen " + line.deepen + "\n");
+      return api.take(onWant);
+    }
+    if (line.have) {
+      haves[line.have] = true;
+      havesCount++;
+      socket.put("have " + line.have + "\n");
       return api.take(onWant);
     }
     if (line.want) {
@@ -111,24 +121,32 @@ function fetchPack(transport, onError) {
   }
 
   function onNak(line) {
+    if (line === undefined) return api.put();
     if (line === null) return socket.take(onNak);
+    if (bodec.isBinary(line) || line.progress || line.error) {
+      packChannel = makeChannel();
+      progressChannel = makeChannel();
+      errorChannel = makeChannel();
+      api.put({
+        pack: { take: packChannel.take },
+        progress: { take: progressChannel.take },
+        error: { take: errorChannel.take },
+      });
+      return onMore(null, line);
+    }
     var match = line.match(/^shallow ([0-9a-f]{40})$/);
     if (match) {
       refs.shallows.push(match[1]);
       return socket.take(onNak);
     }
-    if (line !== "NAK") {
-      throw new Error("Expected NAK, but got " + JSON.stringify(line));
+    match = line.match(/^ACK ([0-9a-f]{40})$/);
+    if (match) {
+      return socket.take(onNak);
     }
-    packChannel = makeChannel();
-    progressChannel = makeChannel();
-    errorChannel = makeChannel();
-    api.put({
-      pack: { take: packChannel.take },
-      progress: { take: progressChannel.take },
-      error: { take: errorChannel.take },
-    });
-    socket.take(onMore);
+    if (line === "NAK") {
+      return socket.take(onNak);
+    }
+    throw new Error("Expected NAK, but got " + JSON.stringify(line));
   }
 
   function onMore(line) {

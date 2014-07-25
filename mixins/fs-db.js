@@ -30,6 +30,21 @@ module.exports = function (repo, fs) {
   repo.readRef = readRef;
   repo.updateRef = updateRef;
   repo.hasHash = hasHash;
+  repo.init = init;
+  repo.setShallow = setShallow;
+
+  function init(ref, callback) {
+    if (!callback) return init.bind(null, ref);
+    ref = ref || "refs/heads/master";
+    var path = pathJoin(repo.rootPath, "HEAD");
+    fs.writeFile(path, "ref: " + ref, callback);
+  }
+
+  function setShallow(ref, callback) {
+    if (!callback) return setShallow.bind(null, ref);
+    var path = pathJoin(repo.rootPath, "shallow");
+    fs.writeFile(path, ref, callback);
+  }
 
   function updateRef(ref, hash, callback) {
     if (!callback) return updateRef.bind(repo, ref, hash);
