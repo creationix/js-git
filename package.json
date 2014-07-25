@@ -1,8 +1,11 @@
 {
   "name": "js-git",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "Git Implemented in JavaScript",
-  "keywords": ["git", "js-git"],
+  "keywords": [
+    "git",
+    "js-git"
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/creationix/js-git.git"
@@ -16,10 +19,10 @@
     "test": "ls test/test-* | xargs -n1 node"
   },
   "dependencies": {
-    "bodec": "git://github.com/creationix/bodec.git",
-    "pathjoin": "git://github.com/creationix/pathjoin.git",
-    "git-sha1": "git://github.com/creationix/git-sha1.git",
-    "pako": "git://github.com/nodeca/pako.git",
-    "culvert": "~0.1.2"
+    "bodec": "^0.1.0",
+    "culvert": "^0.1.2",
+    "git-sha1": "^0.1.2",
+    "pako": "^0.2.5",
+    "pathjoin": "git://github.com/creationix/pathjoin.git"
   }
 }
