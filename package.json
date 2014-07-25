@@ -1,6 +1,6 @@
 {
   "name": "js-git",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Git Implemented in JavaScript",
   "keywords": ["git", "js-git"],
   "repository": {
