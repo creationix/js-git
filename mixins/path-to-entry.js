@@ -26,11 +26,13 @@ function pathToEntry(rootTree, path, callback) {
         index++;
         continue;
       }
+      if (modes.isFile(mode)) return callback();
       return callback(null, {
         last: {
           mode: mode,
           hash: hash,
-          path: parts.slice(0, index).join("/")
+          path: parts.slice(0, index).join("/"),
+          rest: parts.slice(index).join("/"),
         }
       });
     }
