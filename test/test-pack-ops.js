@@ -31,14 +31,14 @@ run([
     repo.pack(hashes, {}, function (err, result) {
       if (err) return end(err);
       stream = result;
-      stream.read(onRead);
+      stream.take(onRead);
     });
     function onRead(err, chunk) {
       if (err) return end(err);
       // console.log(chunk);
       if (chunk) {
         parts.push(chunk);
-        return stream.read(onRead);
+        return stream.take(onRead);
       }
       end();
     }
@@ -47,7 +47,7 @@ run([
 
 function singleStream(item) {
   var done = false;
-  return { read: function (callback) {
+  return { take: function (callback) {
     if (done) return callback();
     done = true;
     callback(null, item);

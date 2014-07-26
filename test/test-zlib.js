@@ -30,25 +30,15 @@ run([
     var done = false;
     var chunks = [];
     var deflated = deflate(bin);
-    var push = inflateStream(onEmit, onUnused);
-    for (var i = 0, l = deflated.length; i < l; i += 128) {
-      push(null, bodec.slice(deflated, i, i + 128));
+    var inf = inflateStream();
+
+    for (var i = 0, l = deflated.length; i < l; ++i) {
+      inf.write(deflated[i]);
     }
-    if (!done) throw new Error("Not finished");
-    function onEmit(err, chunk) {
-      if (err) throw err;
-      if (chunk === undefined) {
-        var inflated = bodec.join(chunks);
-        if (bodec.toRaw(bin) !== bodec.toRaw(inflated)) {
-          console.log([bin.length, inflated.length]);
-          throw new Error("Problem with roundtrip");
-        }
-        done = true;
-      }
-      chunks.push(chunk);
-    }
-    function onUnused(unused) {
-      if (unused[0].length) console.log("unused", unused);
+    var inflated = inf.flush();
+    if (bodec.toRaw(bin) !== bodec.toRaw(inflated)) {
+      console.log([bin.length, inflated.length]);
+      throw new Error("Problem with roundtrip");
     }
   }
 ]);

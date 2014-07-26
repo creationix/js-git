@@ -144,9 +144,9 @@ function pack(hashes, opts, callback) {
   if (!callback) return pack.bind(this, hashes, opts);
   var repo = this;
   var i = 0, first = true, done = false;
-  return callback(null, applyParser({ read: read, abort: callback }, encodePack));
+  return callback(null, applyParser({ take: take }, encodePack));
 
-  function read(callback) {
+  function take(callback) {
     if (done) return callback();
     if (first) return readFirst(callback);
     var hash = hashes[i++];
