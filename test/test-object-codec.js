@@ -41,6 +41,25 @@ run([
       throw new Error("Invalid tree hash");
     }
   },
+  function testTreeSort() {
+    var tree = {
+      "README.md": {"mode":modes.blob,"hash":"42bd87a816800cb87646e95b71273983a71a26dc"},
+      "a.js":      {"mode":modes.blob,"hash":"e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"},
+      "a-js":      {"mode":modes.blob,"hash":"e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"},
+      "b":         {"mode":modes.blob,"hash":"e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"},
+      "b-js":      {"mode":modes.blob,"hash":"e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"},
+      "c":         {"mode":modes.blob,"hash":"e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"},
+      "c.js":      {"mode":modes.blob,"hash":"e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"},
+      "a":         {"mode":modes.tree,"hash":"496d6428b9cf92981dc9495211e6e1120fb6f2ba"},
+      "b.js":      {"mode":modes.tree,"hash":"496d6428b9cf92981dc9495211e6e1120fb6f2ba"},
+      "c-js":      {"mode":modes.tree,"hash":"496d6428b9cf92981dc9495211e6e1120fb6f2ba"},
+    };
+    var treeBin = codec.frame({type: "tree", body: tree});
+    var treeHash = sha1(treeBin);
+    if (treeHash !== "f78893bf52bc695f343372d4210c8c0803c7c4db") {
+      throw new Error("Invalid tree hash");
+    }
+  },
   function testEncodeCommit() {
     var person = {
       name: "Tim Caswell",
