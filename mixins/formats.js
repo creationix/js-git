@@ -1,6 +1,7 @@
 "use strict";
 
 var bodec = require('bodec');
+var treeMap = require('../lib/object-codec').treeMap;
 
 module.exports = function (repo) {
   var loadAs = repo.loadAs;
@@ -46,11 +47,7 @@ module.exports = function (repo) {
 };
 
 function toArray(tree) {
-  return Object.keys(tree).map(function (name) {
-    var entry = tree[name];
-    entry.name = name;
-    return entry;
-  });
+  return Object.keys(tree).map(treeMap);
 }
 
 function normalizeTree(body) {
