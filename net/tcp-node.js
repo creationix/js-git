@@ -42,6 +42,7 @@ function connect(host, port, onError) {
     client.on("end", onEnd);
     client.on("readable", pump);
     client.on("drain", onDrain);
+    client.on("error", onError);
   }
 
   function pump() {

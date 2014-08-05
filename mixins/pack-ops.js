@@ -99,7 +99,7 @@ function unpack(packChannel, opts, callback) {
     var hasTarget = has[item.ref];
     if (hasTarget === true) return resolveDelta(item);
     if (hasTarget === false) return enqueueDelta(item);
-    return repo.has(item.ref, function (err, value) {
+    return repo.hasHash(item.ref, function (err, value) {
       if (err) return onDone(err);
       has[item.ref] = value;
       if (value) return resolveDelta(item);

@@ -138,11 +138,11 @@ module.exports = function (repo, fs) {
     });
   }
 
-  function hasHash(type, hash, callback) {
-    if (!callback) return hasHash.bind(repo, type, hash);
+  function hasHash(hash, callback) {
+    if (!callback) return hasHash.bind(repo, hash);
     loadRaw(hash, function (err, body) {
       if (err) return callback(err);
-      callback(null, !!body);
+      return callback(null, !!body);
     });
   }
 
