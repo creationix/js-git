@@ -57,20 +57,25 @@ function fetchPack(transport, onError) {
       Object.defineProperty(refs, "caps", {value: caps});
       Object.defineProperty(refs, "shallows", {value:[]});
       var index = line.indexOf("\0");
-      line.substring(index + 1).split(" ").forEach(function (cap) {
-        var i = cap.indexOf("=");
-        if (i >= 0) {
-          caps[cap.substring(0, i)] = cap.substring(i + 1);
-        }
-        else {
-          caps[cap] = true;
-        }
-      });
-      line = line.substring(0, index);
+      if (index >= 0) {
+        line.substring(index + 1).split(" ").forEach(function (cap) {
+          var i = cap.indexOf("=");
+          if (i >= 0) {
+            caps[cap.substring(0, i)] = cap.substring(i + 1);
+          }
+          else {
+            caps[cap] = true;
+          }
+        });
+        line = line.substring(0, index);
+      }
     }
     var match = line.match(/(^[0-9a-f]{40}) (.*)$/);
     if (!match) {
-      throw new Error("Invalid line: " + line);
+      if (typeof line === "string" && /^ERR/i.test(line)) {
+        throw new Error(line);
+      }
+      throw new Error("Invalid line: " + JSON.stringify(line));
     }
     refs[match[2]] = match[1];
     socket.take(onRef);
