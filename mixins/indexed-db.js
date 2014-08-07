@@ -62,6 +62,7 @@ function onError(evt) {
 }
 
 function saveAs(type, body, callback, forcedHash) {
+  if (!callback) return saveAs.bind(this, type, body);
   var hash;
   try {
     var buffer = codec.frame({type:type,body:body});
@@ -82,44 +83,40 @@ function saveAs(type, body, callback, forcedHash) {
 }
 
 function loadAs(type, hash, callback) {
-  // console.warn("LOAD", type, hash);
+  if (!callback) return loadAs.bind(this, type, hash);
+  loadRaw(hash, function (err, entry) {
+    if (!entry) return callback(err);
+    if (type !== entry.type) {
+      return callback(new TypeError("Type mismatch"));
+    }
+    callback(null, entry.body, hash);
+  });
+}
+
+function loadRaw(hash, callback) {
   var trans = db.transaction(["objects"], "readwrite");
   var store = trans.objectStore("objects");
   var request = store.get(hash);
   request.onsuccess = function(evt) {
     var entry = evt.target.result;
     if (!entry) return callback();
-    if (type !== entry.type) {
-      return callback(new TypeError("Type mismatch"));
-    }
-    callback(null, entry.body, hash);
+    return callback(null, entry);
   };
   request.onerror = function(evt) {
     callback(new Error(evt.value));
   };
 }
 
-function hasHash(type, hash, callback) {
-  loadAs(type, hash, function (err, value) {
+function hasHash(hash, callback) {
+  if (!callback) return hasHash.bind(this, hash);
+  loadRaw(hash, function (err, body) {
     if (err) return callback(err);
-    if (value === undefined) return callback(null, false);
-    if (type !== "tree") return callback(null, true);
-    var names = Object.keys(value);
-    next();
-    function next() {
-      if (!names.length) return callback(null, true);
-      var name = names.pop();
-      var entry = value[name];
-      hasHash(modes.toType(entry.mode), entry.hash, function (err, has) {
-        if (err) return callback(err);
-        if (has) return next();
-        callback(null, false);
-      });
-    }
+    return callback(null, !!body);
   });
 }
 
 function readRef(ref, callback) {
+  if (!callback) return readRef.bind(this, ref);
   var key = this.refPrefix + "/" + ref;
   var trans = db.transaction(["refs"], "readwrite");
   var store = trans.objectStore("refs");
@@ -135,6 +132,7 @@ function readRef(ref, callback) {
 }
 
 function updateRef(ref, hash, callback) {
+  if (!callback) return updateRef.bind(this, ref, hash);
   var key = this.refPrefix + "/" + ref;
   var trans = db.transaction(["refs"], "readwrite");
   var store = trans.objectStore("refs");
