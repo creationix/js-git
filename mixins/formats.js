@@ -47,7 +47,7 @@ module.exports = function (repo) {
 };
 
 function toArray(tree) {
-  return Object.keys(tree).map(treeMap);
+  return Object.keys(tree).map(treeMap, tree);
 }
 
 function normalizeTree(body) {
