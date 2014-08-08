@@ -41,7 +41,7 @@ function sync(local, remote, ref, depth, callback) {
     if (typeof type !== "string") throw new TypeError("type must be string");
     if (typeof hash !== "string") throw new TypeError("hash must be string");
     if (hasCache[hash]) return callback(null, true);
-    local.hasHash(type, hash, function (err, has) {
+    local.hasHash(hash, function (err, has) {
       if (err) return callback(err);
       hasCache[hash] = has;
       callback(null, has);
