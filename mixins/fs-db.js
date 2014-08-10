@@ -49,7 +49,11 @@ module.exports = function (repo, fs) {
   function updateRef(ref, hash, callback) {
     if (!callback) return updateRef.bind(repo, ref, hash);
     var path = pathJoin(repo.rootPath, ref);
-    fs.writeFile(path, bodec.fromRaw(hash + "\n"), callback);
+    var lock = path + ".lock";
+    fs.writeFile(lock, bodec.fromRaw(hash + "\n"), function(err) {
+      if(err) return callback(err);
+      fs.rename(lock, path, callback);
+    });
   }
 
   function readRef(ref, callback) {
@@ -119,7 +123,11 @@ module.exports = function (repo, fs) {
       // If it already exists, we're done
       if (data) return callback();
       // Otherwise write a new file
-      fs.writeFile(path, buffer, callback);
+      var tmp = path.replace(/[0-9a-f]+$/, 'tmp_obj_' + Math.random().toString(36).substr(2))
+      fs.writeFile(tmp, buffer, function(err) {
+        if(err) return callback(err);
+        fs.rename(tmp, path, callback);
+      });
     });
   }
 
