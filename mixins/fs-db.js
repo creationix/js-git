@@ -6,7 +6,7 @@ var codec = require('../lib/object-codec');
 var parsePackEntry = require('../lib/pack-codec').parseEntry;
 var applyDelta = require('../lib/apply-delta');
 var sha1 = require('git-sha1');
-var pathJoin = require('pathjoin');
+var pathJoin = require('path').join;
 
 // The fs object has the following interface:
 // - readFile(path) => binary
