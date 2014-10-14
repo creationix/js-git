@@ -1,4 +1,5 @@
 # JS-Git
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/creationix/js-git?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This project is a collection of modules that helps in implementing git powered
 applications in JavaScript.  The original purpose for this is to enable better
