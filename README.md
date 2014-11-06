@@ -4,7 +4,7 @@
 This project is a collection of modules that helps in implementing git powered
 applications in JavaScript.  The original purpose for this is to enable better
 developer tools for authoring code in restricted environments like ChromeBooks
-and tablets.  It also enables using git at a database to replace SQL and no-SQL
+and tablets.  It also enables using git as a database to replace SQL and no-SQL
 data stores in many applications.
 
 This project was initially funded by two crowd-sourced fundraisers.  See details
