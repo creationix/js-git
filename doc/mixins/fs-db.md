@@ -5,7 +5,7 @@ JSGit repositories need `loadAs`, `saveAs`, `loadRaw`, `saveRaw`, `readRef`, and
 `updateRef` methods.
 Depending on the backing storage, there are various ways to implement these
 methods.
-The implementation for in-mempory storage is `js-git/mixins/mem-db`, and there
+The implementation for in-memory storage is `js-git/mixins/mem-db`, and there
 are variants for using Github or IndexDB for storage.
 
 The `js-git/mixins/fs-db` implementation provides these methods as well, but
