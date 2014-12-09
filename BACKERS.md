@@ -294,7 +294,7 @@ Originally JS-Git started at a [kickstarter project][].  This was to enable me t
  - LSD25
  - Nima Gardideh (nemo)
  - Patrick Collins (pat@burned.com)
- - Michael J. Ryan (tracker1)
+ - Michael J. Ryan ([@tracker1](https://github.com/tracker1))
  - technoweenie
  - David Hayes
  - Meyer SciTech Solutions, LLC
