@@ -122,7 +122,7 @@ function normalizePerson(person) {
   if (!person || typeof person !== "object") {
     throw new TypeError("Person must be an object");
   }
-  if (typeof person.name !== "string" || typeof person.email === "string") {
+  if (typeof person.name !== "string" || typeof person.email !== "string") {
     throw new TypeError("Name and email are required for person fields");
   }
   return {
