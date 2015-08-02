@@ -8,7 +8,7 @@ and tablets.  It also enables using git as a database to replace SQL and no-SQL
 data stores in many applications.
 
 This project was initially funded by two crowd-sourced fundraisers.  See details
-in [BACKERS.md](BACKERS.md) and [BACKERS-2.md](BACKERS.md).  Thanks to all of
+in [BACKERS.md](BACKERS.md) and [BACKERS-2.md](BACKERS-2.md).  Thanks to all of
 you who made this possible!
 
 ## Usage
