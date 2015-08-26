@@ -78,7 +78,7 @@ The `date` property of `author` and `committer` is in the format {seconds,offset
 Where seconds is a unix timestamp in seconds and offset is the number of minutes
 offset for the timezone. (Your local offset can be found with `(new Date).getTimezoneOffset()`)
 
-The `message` fiels is mandatory and a simple string.
+The `message` field is mandatory and a simple string.
 
 ```js
 rawBin = encoders.commit({
