@@ -222,7 +222,7 @@ module.exports = function (repo, fs) {
           try {
             var entry = parsePackEntry(chunk);
             if (entry.type === "ref-delta") {
-              return loadRaw.call(repo, hash, onBase);
+              return loadRaw.call(repo, entry.ref, onBase);
             }
             else if (entry.type === "ofs-delta") {
               return loadChunk(packFile, start - entry.ref, onBase);
