@@ -27,11 +27,11 @@ repo.unpack(stream, opts, function (err, hashes) {
 
 repo.pack(hashes, opts, function (err, stream) {
   if (err) throw err;
-  stream.read(onRead);
-  function onRead(err, item) {
+  stream.take(onRead);
+  function onRead(err, chunk) {
     if (err) throw err;
-    console.log(item);
-    if (item) stream.read(onRead);
+    console.log(chunk);
+    if (item) stream.take(onRead);
   }
 });
 ```
