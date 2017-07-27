@@ -12,7 +12,7 @@ And then adds:
  - `unpack(stream, opts) => hashes`
  - `pack(hashes, opts) => stream`
 
-The streams are simple-stream format.  This means they have a `.read(callback)`
+The streams are simple-stream format.  This means they have a `.take(callback)`
 method for pulling items out of the stream.
 
 Example:
