@@ -112,7 +112,9 @@ function sendPack(transport, onError) {
     function onPack(_, line) {
         if (line.flush) {
             socket.put(line);
-            socket.take(api.put);
+            socket.take(function(_, h) {
+                api.put(h);
+            });
         } else {
             socket.put({noframe: line});
         }
