@@ -80,10 +80,18 @@ module.exports = function (request) {
       }
 
       function onWrite(item) {
-        if (item === undefined) return socket.put();
-        bodyWrite(item);
-        socket.take(onWrite);
-        if (item !== "done\n" || !bodyParts.length) return;
+          if (item === undefined) return socket.put();
+          if (item === null || !item.flush) {
+              if (item !== null && item.noframe !== undefined) {
+                  bodyParts.push(item.noframe);
+              } else {
+                  bodyWrite(item);
+              }
+          }
+          socket.take(onWrite);
+          if (item === null || (!item.flush)) {
+              if ((item !== "done\n" || !bodyParts.length) ) return;
+          }
         var body = bodec.join(bodyParts);
         bodyParts.length = 0;
         request("POST", gitUrl + "/" + serviceName, headers, body, onResult);

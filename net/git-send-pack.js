@@ -12,10 +12,7 @@ function sendPack(transport, onError) {
 
   // Wrap our handler functions to route errors properly.
   onRef = wrapHandler(onRef, onError);
-  onWant = wrapHandler(onWant, onError);
-  onNak = wrapHandler(onNak, onError);
-  onMore = wrapHandler(onMore, onError);
-  onReady = wrapHandler(onReady, onError);
+  onPush = wrapHandler(onPush, onError);
 
   var caps = null;
   var capsSent = false;
@@ -49,13 +46,12 @@ function sendPack(transport, onError) {
     }
     if (line === null) {
       api.put(refs);
-      api.take(onWant);
+      api.take(onPush);
       return;
     }
     else if (!caps) {
       caps = {};
       Object.defineProperty(refs, "caps", {value: caps});
-      Object.defineProperty(refs, "shallows", {value:[]});
       var index = line.indexOf("\0");
       if (index >= 0) {
         line.substring(index + 1).split(" ").forEach(function (cap) {
@@ -89,88 +85,43 @@ function sendPack(transport, onError) {
     if (line === undefined) return socket.put();
     if (line === null) {
       socket.put(null);
-      return api.take(onPush);
+      return api.take(onPack);
     }
     if (line.oldhash) {
-      var extra = "";
-      if (!capsSent) {
-        capsSent = true;
-        if (caps["ofs-delta"]) extra += " ofs-delta";
-        if (caps["thin-pack"]) extra += " thin-pack";
-        // if (caps["multi_ack_detailed"]) extra += " multi_ack_detailed";
-        // else if (caps["multi_ack"]) extra +=" multi_ack";
-        if (caps["side-band-64k"]) extra += " side-band-64k";
-        else if (caps["side-band"]) extra += " side-band";
-        // if (caps["agent"]) extra += " agent=" + agent;
-        if (caps.agent) extra += " agent=" + caps.agent;
+        var extra = "";
+        if (!capsSent) {
+            capsSent = true;
+            var caplist = [];
+            if (caps["ofs-delta"]) caplist.push("ofs-delta");
+            if (caps["thin-pack"]) caplist.push("thin-pack");
+            // if (caps["multi_ack_detailed"]) extra += " multi_ack_detailed";
+            // else if (caps["multi_ack"]) extra +=" multi_ack";
+            if (caps["side-band-64k"]) caplist.push("side-band-64k");
+            else if (caps["side-band"]) caplist.push("side-band");
+            // if (caps["agent"]) extra += " agent=" + agent;
+            if (caps.agent) extra += caplist.push("agent=" + caps.agent);
+            extra = "\0" + caplist.join(" ");
       }
-      extra += "\n";
+        extra += "\n";
       socket.put(line.oldhash + " " + line.newhash + " " + line.ref + extra);
-      return api.take(onWant);
+      return api.take(onPush);
     }
-
-    throw new Error("Invalid push command");
+      throw new Error("Invalid push command");
   }
 
-  function onNak(line) {
-    if (line === undefined) return api.put();
-    if (line === null) return socket.take(onNak);
-    if (bodec.isBinary(line) || line.progress || line.error) {
-      packChannel = makeChannel();
-      progressChannel = makeChannel();
-      errorChannel = makeChannel();
-      api.put({
-        pack: { take: packChannel.take },
-        progress: { take: progressChannel.take },
-        error: { take: errorChannel.take },
-      });
-      return onMore(null, line);
-    }
-    var match = line.match(/^shallow ([0-9a-f]{40})$/);
-    if (match) {
-      refs.shallows.push(match[1]);
-      return socket.take(onNak);
-    }
-    match = line.match(/^ACK ([0-9a-f]{40})$/);
-    if (match) {
-      return socket.take(onNak);
-    }
-    if (line === "NAK") {
-      return socket.take(onNak);
-    }
-    throw new Error("Expected NAK, but got " + JSON.stringify(line));
-  }
-
-  function onMore(line) {
-
-    if (line === undefined) {
-      packChannel.put();
-      progressChannel.put();
-      errorChannel.put();
-      return api.put();
-    }
-    if (line === null) {
-      api.put(line);
-    }
-    else {
-      if (line.progress) {
-        progressChannel.put(line.progress);
-      }
-      else if (line.error) {
-        errorChannel.put(line.error);
-      }
-      else {
-        if (!packChannel.put(line)) {
-          return packChannel.drain(onReady);
+    function onPack(_, line) {
+        if (line.flush) {
+            socket.put(line);
+            socket.take(api.put);
+        } else {
+            socket.put({noframe: line});
         }
-      }
+      return api.take(onPack);
     }
-    socket.take(onMore);
-  }
 
-  function onReady() {
-    socket.take(onMore);
-  }
+    function onResponse(h) {
+        callback(h);
+    }
 
 }
 
