@@ -48,18 +48,18 @@ function sendPack(transport, onError) {
       api.put(refs);
       api.take(onPush);
       return;
-    }
-    else if (!caps) {
+    } else if (!caps) {
       caps = {};
-      Object.defineProperty(refs, "caps", {value: caps});
+      Object.defineProperty(refs, "caps", {
+        value: caps
+      });
       var index = line.indexOf("\0");
       if (index >= 0) {
         line.substring(index + 1).split(" ").forEach(function (cap) {
           var i = cap.indexOf("=");
           if (i >= 0) {
             caps[cap.substring(0, i)] = cap.substring(i + 1);
-          }
-          else {
+          } else {
             caps[cap] = true;
           }
         });
@@ -88,46 +88,49 @@ function sendPack(transport, onError) {
       return api.take(onPack);
     }
     if (line.oldhash) {
-        var extra = "";
-        if (!capsSent) {
-            capsSent = true;
-            var caplist = [];
-            if (caps["ofs-delta"]) caplist.push("ofs-delta");
-            if (caps["thin-pack"]) caplist.push("thin-pack");
-            // if (caps["multi_ack_detailed"]) extra += " multi_ack_detailed";
-            // else if (caps["multi_ack"]) extra +=" multi_ack";
-            if (caps["side-band-64k"]) caplist.push("side-band-64k");
-            else if (caps["side-band"]) caplist.push("side-band");
-            // if (caps["agent"]) extra += " agent=" + agent;
-            if (caps.agent) extra += caplist.push("agent=" + caps.agent);
-            extra = "\0" + caplist.join(" ");
+      var extra = "";
+      if (!capsSent) {
+        capsSent = true;
+        var caplist = [];
+        if (caps["ofs-delta"]) caplist.push("ofs-delta");
+        if (caps["thin-pack"]) caplist.push("thin-pack");
+        // if (caps["multi_ack_detailed"]) extra += " multi_ack_detailed";
+        // else if (caps["multi_ack"]) extra +=" multi_ack";
+        if (caps["side-band-64k"]) caplist.push("side-band-64k");
+        else if (caps["side-band"]) caplist.push("side-band");
+        // if (caps["agent"]) extra += " agent=" + agent;
+        if (caps.agent) extra += caplist.push("agent=" + caps.agent);
+        extra = " " + caplist.join(" ");
       }
-        extra += "\n";
+      extra += "\n";
       socket.put(line.oldhash + " " + line.newhash + " " + line.ref + extra);
       return api.take(onPush);
     }
-      throw new Error("Invalid push command");
+    throw new Error("Invalid push command");
   }
 
-    function onPack(_, line) {
-        if (line.flush) {
-            socket.put(line);
-            socket.take(function(_, h) {
-                api.put(h);
-            });
-        } else {
-            socket.put({noframe: line});
-        }
-      return api.take(onPack);
+  function onPack(_, line) {
+    if (line.flush) {
+      socket.put(line);
+      socket.take(function (_, h) {
+        api.put(h);
+      });
+    } else {
+      socket.put({
+        noframe: line
+      });
     }
+    return api.take(onPack);
+  }
 
-    function onResponse(h) {
-        callback(h);
-    }
+  function onResponse(h) {
+    callback(h);
+  }
 
 }
 
 var defer = require('js-git/lib/defer');
+
 function throwIt(err) {
   defer(function () {
     throw err;
