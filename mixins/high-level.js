@@ -127,41 +127,40 @@ function highLevel(repo, uName, uPass, hostName) {
       repo.loadAs('commit', refHash, function(err, commit) {
         if (commit === undefined) { return callback(); }
 
-        var files = [];
+        var repoStructure = {};
         repo.treeWalk(commit.tree, function(err, item) {
-          /*
-            {
-              '/': {
-                mode: xxx,
-                hash: xzz,
-                'folder 1': {
-                  mode: xxx,
-                  hash: xzz,
-                  text.txt: {
-                    mode: xxx,
-                    hash: xzz,
-                    content: 'asasgfasgagga'
-                  }
-                }
-              }
-            }
-          */
           function collectFiles(err, object) {
             if (object !== undefined) {
+              var temp = repoStructure;
               var loadType = object.mode === 16384 ? 'tree' : 'text';
-              console.log(object);
               var pathArray = object.path.split('/').filter(function(element) {
-                return element.length !== 0;
+                return element.length > 0;
               });
 
-              console.log(pathArray);
+              pathArray = ['/'].concat(pathArray);
+
               repo.loadAs(loadType, object.hash, function(err, content) {
-                //console.log(content);
-                //files.push(content);
+                pathArray.forEach(function(element) {
+                  if (temp.hasOwnProperty(element)) {
+                    temp = temp[element]
+                    return true;
+                  }
+
+                  temp[element] = {
+                    hash: object.hash,
+                    mode: object.mode,
+                    path: object.path
+                  };
+
+                  if (loadType === 'text') {
+                    temp[element].content = content;
+                  }
+                });
+
                 item.read(collectFiles);
               });
             } else {
-              return callback(files);
+              return callback(repoStructure);
             }
           }
 
