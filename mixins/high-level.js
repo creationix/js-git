@@ -17,26 +17,27 @@ function highLevel(repo, uName, uPass, hostName) {
 
   var httpTransport = require('../net/transport-http')(request);
   var transport = httpTransport(hostName, uName, uPass);
-  var fetch = fetchPackProtocol(transport);
-  var push = sendPackProtocol(transport);
+  var fetchStream = fetchPackProtocol(transport);
+  var pushStream = sendPackProtocol(transport);
 
   repo.clone = clone;
   repo.commit = commit;
   repo.push = push;
   repo.resolveRepo = resolveRepo;
+  repo.getContentByHash = getContentByHash;
 
   function clone(callback) {
-    fetch.take(function (err, refs) {
-      fetch.put({
+    fetchStream.take(function (err, refs) {
+      fetchStream.put({
         want: refs['refs/heads/master']
       });
 
-      fetch.put(null);
-      fetch.put({
+      fetchStream.put(null);
+      fetchStream.put({
         done: true
       });
 
-      fetch.take(function (err, channels) {
+      fetchStream.take(function (err, channels) {
         repo.unpack(channels.pack, {}, function () {
           repo.updateRef('refs/heads/master', refs['refs/heads/master'], function () {
             return callback('Clonned !');
@@ -46,25 +47,13 @@ function highLevel(repo, uName, uPass, hostName) {
     });
   }
 
-  function commit(callback) {
+  function commit(data, message, callback) {
     repo.readRef('refs/heads/master', function(err, refHash) {
       repo.loadAs('commit', refHash, function(err, commit) {
         // Changes to files that already exists
-        var changes = [
-          {
-              path: "/test/justAdded22.txt",
-              mode: modes.file,
-              content: ""
-          },
-          {
-              path: "/test/second.txt",
-              mode: modes.file,
-              content: "This is the updated content 111safa."
-          }
-        ];
-        changes['base'] = commit.tree;
+        data['base'] = commit.tree;
 
-        repo.createTree(changes, function(err, treeHash) {
+        repo.createTree(data, function(err, treeHash) {
           var commitMessage = {
             author: {
                 name: commit.author.name,
@@ -72,7 +61,7 @@ function highLevel(repo, uName, uPass, hostName) {
             },
             tree: treeHash,
             parent: refHash,
-            message: "This is the commit message.\n"
+            message: message
           }
 
           repo.saveAs('commit', commitMessage, function(err, commitHash) {
@@ -88,9 +77,9 @@ function highLevel(repo, uName, uPass, hostName) {
   function push(callback) {
     repo.readRef('refs/heads/master', function(err, refHash) {
       repo.loadAs('commit', refHash, function(err, commit) {
-        push.take(function() {
-          push.put({ oldhash: commit.parents[0], newhash: refHash, ref: 'refs/heads/master' });
-          push.put(null);
+        pushStream.take(function() {
+          pushStream.put({ oldhash: commit.parents[0], newhash: refHash, ref: 'refs/heads/master' });
+          pushStream.put(null);
 
           var hashes = [refHash];
           repo.treeWalk(commit.tree, function(err, item) {
@@ -102,11 +91,11 @@ function highLevel(repo, uName, uPass, hostName) {
                 repo.pack(hashes, {}, function(err, stream) {
                   function putHashes(err, packObject) {
                     if (packObject !== undefined) {
-                      push.put(packObject);
+                      pushStream.put(packObject);
                       stream.take(putHashes);
                     } else {
-                      push.put({flush: true});
-                      return callback('Push done !');
+                      pushStream.put({flush: true});
+                      return callback('pushStream done !');
                     }
                   }
 
@@ -122,6 +111,12 @@ function highLevel(repo, uName, uPass, hostName) {
     });
   }
 
+  function getContentByHash(hash, callback){
+    repo.loadAs('text', hash, function(err, content){
+      callback(content);
+    })
+  }
+
   function resolveRepo(callback) {
     repo.readRef('refs/heads/master', function(err, refHash) {
       repo.loadAs('commit', refHash, function(err, commit) {
@@ -129,45 +124,21 @@ function highLevel(repo, uName, uPass, hostName) {
 
         var repoStructure = {};
         repo.treeWalk(commit.tree, function(err, item) {
+          
           function collectFiles(err, object) {
             if (object !== undefined) {
-              var temp = repoStructure;
-              var loadType = object.mode === 16384 ? 'tree' : 'text';
-              var pathArray = object.path.split('/').filter(function(element) {
-                return element.length > 0;
-              });
-
-              pathArray = ['/'].concat(pathArray);
-
-              repo.loadAs(loadType, object.hash, function(err, content) {
-                pathArray.forEach(function(element) {
-                  if (temp.hasOwnProperty(element)) {
-                    temp = temp[element]
-                    return true;
-                  }
-
-                  temp[element] = {
-                    hash: object.hash,
-                    mode: object.mode,
-                    path: object.path
-                  };
-
-                  if (loadType === 'text') {
-                    temp[element].content = content;
-                  }
-                });
-
-                item.read(collectFiles);
-              });
-            } else {
-              return callback(repoStructure);
+              repoStructure[object.path] = object;
+              item.read(collectFiles);
+            }
+            else {
+              return;
             }
           }
 
           item.read(collectFiles);
+          callback(repoStructure);
         });
       });
     });
   }
-
 }
