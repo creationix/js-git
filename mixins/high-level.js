@@ -40,7 +40,7 @@ function highLevel(repo, uName, uPass, hostName) {
       fetchStream.take(function (err, channels) {
         repo.unpack(channels.pack, {}, function () {
           repo.updateRef('refs/heads/master', refs['refs/heads/master'], function () {
-            return callback('Clonned !');
+            return callback('Repo is clonned.');
           });
         });
       });
@@ -51,8 +51,7 @@ function highLevel(repo, uName, uPass, hostName) {
     repo.readRef('refs/heads/master', function(err, refHash) {
       repo.loadAs('commit', refHash, function(err, commit) {
         // Changes to files that already exists
-        data['base'] = commit.tree;
-
+        data.base = commit.tree;
         repo.createTree(data, function(err, treeHash) {
           var commitMessage = {
             author: {
@@ -66,7 +65,7 @@ function highLevel(repo, uName, uPass, hostName) {
 
           repo.saveAs('commit', commitMessage, function(err, commitHash) {
             repo.updateRef('refs/heads/master', commitHash, function(err, res) {
-              return callback('Commit done !');
+              return callback('Commit done.');
             });
           });
         });
@@ -95,7 +94,7 @@ function highLevel(repo, uName, uPass, hostName) {
                       stream.take(putHashes);
                     } else {
                       pushStream.put({flush: true});
-                      return callback('pushStream done !');
+                      return callback('Push done.');
                     }
                   }
 
@@ -129,9 +128,6 @@ function highLevel(repo, uName, uPass, hostName) {
             if (object !== undefined) {
               repoStructure[object.path] = object;
               item.read(collectFiles);
-            }
-            else {
-              return;
             }
           }
 
