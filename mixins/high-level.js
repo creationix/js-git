@@ -85,7 +85,7 @@ function highLevel(repo, uName, uPass, hostName) {
           repo.treeWalk(commit.tree, function(err, item) {
             function collectHashes(err, object) {
               if (object !== undefined) {
-                hashes.push(object);
+                hashes.push(object.hash);
                 item.read(collectHashes);
               } else {
                 repo.pack(hashes, {}, function(err, stream) {
