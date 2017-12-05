@@ -90,15 +90,17 @@ function sendPack(transport, onError) {
     if (line.oldhash) {
       var extra = "";
       if (!capsSent) {
-        capsSent = true;
-        if (caps["ofs-delta"]) extra += " ofs-delta";
-        if (caps["thin-pack"]) extra += " thin-pack";
-        // if (caps["multi_ack_detailed"]) extra += " multi_ack_detailed";
-        // else if (caps["multi_ack"]) extra +=" multi_ack";
-        if (caps["side-band-64k"]) extra += " side-band-64k";
-        else if (caps["side-band"]) extra += " side-band";
-        // if (caps["agent"]) extra += " agent=" + agent;
-        if (caps.agent) extra += " agent=" + caps.agent;
+          capsSent = true;
+          var caplist = [];
+          if (caps["ofs-delta"]) caplist.push("ofs-delta");
+          if (caps["thin-pack"]) caplist.push("thin-pack");
+          // if (caps["multi_ack_detailed"]) extra += " multi_ack_detailed";
+          // else if (caps["multi_ack"]) extra +=" multi_ack";
+          if (caps["side-band-64k"]) caplist.push("side-band-64k");
+          else if (caps["side-band"]) caplist.push("side-band");
+          // if (caps["agent"]) extra += " agent=" + agent;
+          if (caps.agent) extra += caplist.push("agent=" + caps.agent);
+          extra = "\0" + caplist.join(" ");
       }
       extra += "\n";
       socket.put(line.oldhash + " " + line.newhash + " " + line.ref + extra);
