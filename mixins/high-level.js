@@ -28,6 +28,10 @@ function highLevel(repo, uName, uPass, hostName) {
 
   function clone(callback) {
     fetchStream.take(function (err, refs) {
+      if (!refs['refs/heads/master']) {
+        return callback('Repo does not have a master branch');
+      }
+
       fetchStream.put({
         want: refs['refs/heads/master']
       });
@@ -123,7 +127,7 @@ function highLevel(repo, uName, uPass, hostName) {
 
         var repoStructure = {};
         repo.treeWalk(commit.tree, function(err, item) {
-          
+
           function collectFiles(err, object) {
             if (object !== undefined) {
               repoStructure[object.path] = object;
