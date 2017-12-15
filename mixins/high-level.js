@@ -10,23 +10,22 @@ function highLevel(repo, uName, uPass, hostName) {
 
   require('./mem-db')(repo);
   require('./create-tree')(repo);
-  require('./read-combiner')(repo);
   require('./pack-ops')(repo);
   require('./walkers')(repo);
   require('./formats')(repo);
 
   var httpTransport = require('../net/transport-http')(request);
   var transport = httpTransport(hostName, uName, uPass);
-  var fetchStream = fetchPackProtocol(transport);
-  var pushStream = sendPackProtocol(transport);
 
   repo.clone = clone;
   repo.commit = commit;
   repo.push = push;
   repo.resolveRepo = resolveRepo;
   repo.getContentByHash = getContentByHash;
+  repo.transport = transport;
 
   function clone(callback) {
+    var fetchStream = fetchPackProtocol(this.transport);
     fetchStream.take(function (err, refs) {
       if (!refs['refs/heads/master']) {
         return callback('Repo does not have a master branch');
@@ -44,7 +43,7 @@ function highLevel(repo, uName, uPass, hostName) {
       fetchStream.take(function (err, channels) {
         repo.unpack(channels.pack, {}, function () {
           repo.updateRef('refs/heads/master', refs['refs/heads/master'], function () {
-            return callback('Repo is clonned.');
+            return callback('Repo is cloned.');
           });
         });
       });
@@ -78,8 +77,10 @@ function highLevel(repo, uName, uPass, hostName) {
   }
 
   function push(callback) {
+    var self = this;
     repo.readRef('refs/heads/master', function(err, refHash) {
       repo.loadAs('commit', refHash, function(err, commit) {
+        var pushStream = sendPackProtocol(self.transport);
         pushStream.take(function() {
           pushStream.put({ oldhash: commit.parents[0], newhash: refHash, ref: 'refs/heads/master' });
           pushStream.put(null);
