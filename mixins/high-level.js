@@ -133,11 +133,12 @@ function highLevel(repo, uName, uPass, hostName) {
             if (object !== undefined) {
               repoStructure[object.path] = object;
               item.read(collectFiles);
+            } else {
+                callback(repoStructure);
             }
           }
 
           item.read(collectFiles);
-          callback(repoStructure);
         });
       });
     });
