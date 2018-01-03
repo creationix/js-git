@@ -1,3 +1,5 @@
+// -*- mode: js; js-indent-level: 2; -*-
+
 "use strict";
 
 var request = require('../net/request-xhr');
@@ -24,15 +26,24 @@ function highLevel(repo, uName, uPass, hostName) {
   repo.getContentByHash = getContentByHash;
   repo.transport = transport;
 
-  function clone(callback) {
+  function remoteRefs(callback) {
+    var fetchStream = fetchPackProtocol(this.transport);
+    fetchStream.take(callback);
+  }
+
+  function clone(branch, callback) {
     var fetchStream = fetchPackProtocol(this.transport);
     fetchStream.take(function (err, refs) {
-      if (!refs['refs/heads/master']) {
-        return callback('Repo does not have a master branch');
+      if (!refs[branch]) {
+	// create empty branch
+        repo.updateRef(branch, "0000000000000000000000000000000000000000", function () {
+          callback('create empty branch '+branch);
+        });
+	  return;
       }
 
       fetchStream.put({
-        want: refs['refs/heads/master']
+        want: refs[branch]
       });
 
       fetchStream.put(null);
@@ -42,7 +53,7 @@ function highLevel(repo, uName, uPass, hostName) {
 
       fetchStream.take(function (err, channels) {
         repo.unpack(channels.pack, {}, function () {
-          repo.updateRef('refs/heads/master', refs['refs/heads/master'], function () {
+          repo.updateRef(branch, refs[branch], function () {
             return callback('Repo is cloned.');
           });
         });
@@ -50,24 +61,24 @@ function highLevel(repo, uName, uPass, hostName) {
     });
   }
 
-  function commit(data, message, callback) {
-    repo.readRef('refs/heads/master', function(err, refHash) {
-      repo.loadAs('commit', refHash, function(err, commit) {
+  function commit(branch, changes, metadata, callback) {
+    repo.readRef(branch, function(err, refHash) {
+      repo.loadAs('commit', refHash, function(err, parentcommit) {
         // Changes to files that already exists
-        data.base = commit.tree;
-        repo.createTree(data, function(err, treeHash) {
-          var commitMessage = {
-            author: {
-                name: commit.author.name,
-                email: commit.author.email
-            },
+        changes.base = parentcommit.tree;
+        repo.createTree(changes, function(err, treeHash) {
+          var commitObj = {
             tree: treeHash,
-            parent: refHash,
-            message: message
+            author: metadata.author,
+            message: metadata.message
           }
 
-          repo.saveAs('commit', commitMessage, function(err, commitHash) {
-            repo.updateRef('refs/heads/master', commitHash, function(err, res) {
+	  if (refHash != "0000000000000000000000000000000000000000") {
+	    commitObj.parent = refHash;
+	  }
+
+          repo.saveAs('commit', commitObj, function(err, commitHash) {
+            repo.updateRef(branch, commitHash, function(err, res) {
               return callback('Commit done.');
             });
           });
@@ -76,13 +87,17 @@ function highLevel(repo, uName, uPass, hostName) {
     });
   }
 
-  function push(callback) {
+  function push(branch, callback) {
     var self = this;
-    repo.readRef('refs/heads/master', function(err, refHash) {
+    repo.readRef(branch, function(err, refHash) {
       repo.loadAs('commit', refHash, function(err, commit) {
         var pushStream = sendPackProtocol(self.transport);
         pushStream.take(function() {
-          pushStream.put({ oldhash: commit.parents[0], newhash: refHash, ref: 'refs/heads/master' });
+	  if (commit.parents[0] === undefined) {
+            pushStream.put({ oldhash: "0000000000000000000000000000000000000000", newhash: refHash, ref: branch });
+	  } else {
+	    pushStream.put({ oldhash: commit.parents[0], newhash: refHash, ref: branch });
+	  }
           pushStream.put(null);
 
           var hashes = [refHash];
@@ -121,14 +136,18 @@ function highLevel(repo, uName, uPass, hostName) {
     })
   }
 
-  function resolveRepo(callback) {
-    repo.readRef('refs/heads/master', function(err, refHash) {
+  function resolveRepo(branch, callback) {
+    repo.readRef(branch, function(err, refHash) {
       repo.loadAs('commit', refHash, function(err, commit) {
-        if (commit === undefined) { return callback(); }
-
         var repoStructure = {};
-        repo.treeWalk(commit.tree, function(err, item) {
+        if (commit === undefined || commit.length === 0) {
+	  repoStructure["/"] = {
+	    body: {}
+	  };
+	  return callback(repoStructure);
+	}
 
+        repo.treeWalk(commit.tree, function(err, item) {
           function collectFiles(err, object) {
             if (object !== undefined) {
               repoStructure[object.path] = object;
