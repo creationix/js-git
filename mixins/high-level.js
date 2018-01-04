@@ -31,7 +31,7 @@ function highLevel(repo, uName, uPass, hostName) {
     fetchStream.take(callback);
   }
 
-  function clone(branch, callback) {
+  function clone(branch, depth, callback) {
     var fetchStream = fetchPackProtocol(this.transport);
     fetchStream.take(function (err, refs) {
       if (!refs[branch]) {
@@ -45,6 +45,11 @@ function highLevel(repo, uName, uPass, hostName) {
       fetchStream.put({
         want: refs[branch]
       });
+      if (depth) {
+	fetchStream.put({
+          deepen: depth
+	});
+      }
 
       fetchStream.put(null);
       fetchStream.put({
@@ -149,11 +154,14 @@ function highLevel(repo, uName, uPass, hostName) {
 
         repo.treeWalk(commit.tree, function(err, item) {
           function collectFiles(err, object) {
-            if (object !== undefined) {
+            if (object !== undefined && !err) {
               repoStructure[object.path] = object;
               item.read(collectFiles);
             } else {
-                callback(repoStructure);
+	      if (err) {
+		console.log(err);
+	      }
+              callback(repoStructure);
             }
           }
 

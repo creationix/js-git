@@ -1,3 +1,5 @@
+// -*- mode: js; js-indent-level: 2; -*-
+
 "use strict";
 
 var makeChannel = require('culvert');
