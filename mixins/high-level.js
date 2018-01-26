@@ -27,12 +27,12 @@ function highLevel(repo, uName, uPass, hostName) {
   repo.transport = transport;
 
   function remoteRefs(callback) {
-    var fetchStream = fetchPackProtocol(this.transport);
+    var fetchStream = fetchPackProtocol(this.transport, callback);
     fetchStream.take(callback);
   }
 
   function clone(branch, depth, callback) {
-    var fetchStream = fetchPackProtocol(this.transport);
+    var fetchStream = fetchPackProtocol(this.transport, callback);
     fetchStream.take(function (err, refs) {
       if (!refs[branch]) {
 	// create empty branch
@@ -50,18 +50,26 @@ function highLevel(repo, uName, uPass, hostName) {
           deepen: depth
 	});
       }
-
       fetchStream.put(null);
-      fetchStream.put({
-        done: true
-      });
 
-      fetchStream.take(function (err, channels) {
-        repo.unpack(channels.pack, {}, function () {
-          repo.updateRef(branch, refs[branch], function () {
-            return callback('Repo is cloned.');
+      repo.listRefs(false, function (err, haveRefs) {
+	Object.values(haveRefs).forEach(function (refhash) {
+	  fetchStream.put({
+	    have: refhash
+	  });
+	});
+
+	fetchStream.put({
+          done: true
+	});
+
+	fetchStream.take(function (err, channels) {
+          repo.unpack(channels.pack, {}, function () {
+            repo.updateRef(branch, refs[branch], function () {
+              return callback('Repo is cloned to '+refs[branch]);
+            });
           });
-        });
+	});
       });
     });
   }
@@ -96,7 +104,7 @@ function highLevel(repo, uName, uPass, hostName) {
     var self = this;
     repo.readRef(branch, function(err, refHash) {
       repo.loadAs('commit', refHash, function(err, commit) {
-        var pushStream = sendPackProtocol(self.transport);
+        var pushStream = sendPackProtocol(self.transport, callback);
         pushStream.take(function() {
 	  if (commit.parents[0] === undefined) {
             pushStream.put({ oldhash: "0000000000000000000000000000000000000000", newhash: refHash, ref: branch });
