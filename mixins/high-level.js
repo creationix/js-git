@@ -127,7 +127,17 @@ function highLevel(repo, uName, uPass, hostName) {
                       stream.take(putHashes);
                     } else {
                       pushStream.put({flush: true});
-                      return callback('Push done.');
+		      var takedone = function(_, response) {
+			if (response && response.progress) {
+			  callback(response.progress);
+			}
+			if (response === null) {
+			  return callback(null);
+			} else {
+			  pushStream.take(takedone);
+			}
+		      }
+		      pushStream.take(takedone);
                     }
                   }
 

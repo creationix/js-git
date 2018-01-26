@@ -1,3 +1,4 @@
+// -*- mode: js; js-indent-level: 2; -*-
 "use strict";
 
 var makeChannel = require('culvert');
@@ -90,17 +91,17 @@ function sendPack(transport, onError) {
     if (line.oldhash) {
       var extra = "";
       if (!capsSent) {
-          capsSent = true;
-          var caplist = [];
-          if (caps["ofs-delta"]) caplist.push("ofs-delta");
-          if (caps["thin-pack"]) caplist.push("thin-pack");
-          // if (caps["multi_ack_detailed"]) extra += " multi_ack_detailed";
-          // else if (caps["multi_ack"]) extra +=" multi_ack";
-          if (caps["side-band-64k"]) caplist.push("side-band-64k");
-          else if (caps["side-band"]) caplist.push("side-band");
-          // if (caps["agent"]) extra += " agent=" + agent;
-          if (caps.agent) extra += caplist.push("agent=" + caps.agent);
-          extra = "\0" + caplist.join(" ");
+        capsSent = true;
+        var caplist = [];
+        if (caps["ofs-delta"]) caplist.push("ofs-delta");
+        if (caps["thin-pack"]) caplist.push("thin-pack");
+        // if (caps["multi_ack_detailed"]) extra += " multi_ack_detailed";
+        // else if (caps["multi_ack"]) extra +=" multi_ack";
+        if (caps["side-band-64k"]) caplist.push("side-band-64k");
+        else if (caps["side-band"]) caplist.push("side-band");
+        // if (caps["agent"]) extra += " agent=" + agent;
+        if (caps.agent) extra += caplist.push("agent=" + caps.agent);
+        extra = "\0" + caplist.join(" ");
       }
       extra += "\n";
       socket.put(line.oldhash + " " + line.newhash + " " + line.ref + extra);
@@ -112,9 +113,11 @@ function sendPack(transport, onError) {
   function onPack(_, line) {
     if (line.flush) {
       socket.put(line);
-      socket.take(function (_, h) {
-        api.put(h);
-      });
+      var fwd = function(_, b) {
+	api.put(b);
+	socket.take(fwd);
+      }
+      socket.take(fwd);
     } else {
       socket.put({
         noframe: line
