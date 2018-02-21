@@ -54,7 +54,7 @@ require('js-git/mixins/walkers')(repo);
 // This combines parallel requests for the same resource for effeciency under load.
 require('js-git/mixins/read-combiner')(repo);
 
-// This makes the object interface less strict.  See it's docs for details
+// This makes the object interface less strict.  See its docs for details
 require('js-git/mixins/formats')(repo);
 ```
 
