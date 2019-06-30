@@ -51,7 +51,7 @@ require('js-git/mixins/pack-ops')(repo);
 // - treeWalk(hash) => stream<object>
 require('js-git/mixins/walkers')(repo);
 
-// This combines parallel requests for the same resource for effeciency under load.
+// This combines parallel requests for the same resource for efficiency under load.
 require('js-git/mixins/read-combiner')(repo);
 
 // This makes the object interface less strict.  See its docs for details
