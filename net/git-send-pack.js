@@ -1,23 +1,19 @@
 // -*- mode: js; js-indent-level: 2; -*-
-
 "use strict";
 
 var makeChannel = require('culvert');
 var wrapHandler = require('../lib/wrap-handler');
 var bodec = require('bodec');
 
-module.exports = fetchPack;
+module.exports = sendPack;
 
-function fetchPack(transport, onError) {
+function sendPack(transport, onError) {
 
   if (!onError) onError = throwIt;
 
   // Wrap our handler functions to route errors properly.
   onRef = wrapHandler(onRef, onError);
-  onWant = wrapHandler(onWant, onError);
-  onNak = wrapHandler(onNak, onError);
-  onMore = wrapHandler(onMore, onError);
-  onReady = wrapHandler(onReady, onError);
+  onPush = wrapHandler(onPush, onError);
 
   var caps = null;
   var capsSent = false;
@@ -35,7 +31,7 @@ function fetchPack(transport, onError) {
   };
 
   // Start the connection and listen for the response.
-  var socket = transport("git-upload-pack", onError);
+  var socket = transport("git-receive-pack", onError);
   socket.take(onRef);
 
   // Return the other half of the duplex API channel.
@@ -51,21 +47,20 @@ function fetchPack(transport, onError) {
     }
     if (line === null) {
       api.put(refs);
-      api.take(onWant);
+      api.take(onPush);
       return;
-    }
-    else if (!caps) {
+    } else if (!caps) {
       caps = {};
-      Object.defineProperty(refs, "caps", {value: caps});
-      Object.defineProperty(refs, "shallows", {value:[]});
+      Object.defineProperty(refs, "caps", {
+        value: caps
+      });
       var index = line.indexOf("\0");
       if (index >= 0) {
         line.substring(index + 1).split(" ").forEach(function (cap) {
           var i = cap.indexOf("=");
           if (i >= 0) {
             caps[cap.substring(0, i)] = cap.substring(i + 1);
-          }
-          else {
+          } else {
             caps[cap] = true;
           }
         });
@@ -87,23 +82,13 @@ function fetchPack(transport, onError) {
   var progressChannel;
   var errorChannel;
 
-  function onWant(line) {
+  function onPush(line) {
     if (line === undefined) return socket.put();
     if (line === null) {
       socket.put(null);
-      return api.take(onWant);
+      return api.take(onPack);
     }
-    if (line.deepen) {
-      socket.put("deepen " + line.deepen + "\n");
-      return api.take(onWant);
-    }
-    if (line.have) {
-      haves[line.have] = true;
-      havesCount++;
-      socket.put("have " + line.have + "\n");
-      return api.take(onWant);
-    }
-    if (line.want) {
+    if (line.oldhash) {
       var extra = "";
       if (!capsSent) {
         capsSent = true;
@@ -116,82 +101,39 @@ function fetchPack(transport, onError) {
         else if (caps["side-band"]) caplist.push("side-band");
         // if (caps["agent"]) extra += " agent=" + agent;
         if (caps.agent) extra += caplist.push("agent=" + caps.agent);
-        extra = " " + caplist.join(" ");
+        extra = "\0" + caplist.join(" ");
       }
       extra += "\n";
-      socket.put("want " + line.want + extra);
-      return api.take(onWant);
+      socket.put(line.oldhash + " " + line.newhash + " " + line.ref + extra);
+      return api.take(onPush);
     }
-    if (line.done) {
-      socket.put("done\n");
-      return socket.take(onNak);
-    }
-    throw new Error("Invalid have/want command");
+    throw new Error("Invalid push command");
   }
 
-  function onNak(line) {
-    if (line === undefined) return api.put();
-    if (line === null) return socket.take(onNak);
-    if (bodec.isBinary(line) || line.progress || line.error) {
-      packChannel = makeChannel();
-      progressChannel = makeChannel();
-      errorChannel = makeChannel();
-      api.put({
-        pack: { take: packChannel.take },
-        progress: { take: progressChannel.take },
-        error: { take: errorChannel.take },
+  function onPack(_, line) {
+    if (line.flush) {
+      socket.put(line);
+      var fwd = function(_, b) {
+	api.put(b);
+	socket.take(fwd);
+      }
+      socket.take(fwd);
+    } else {
+      socket.put({
+        noframe: line
       });
-      return onMore(null, line);
     }
-    var match = line.match(/^shallow ([0-9a-f]{40})$/);
-    if (match) {
-      refs.shallows.push(match[1]);
-      return socket.take(onNak);
-    }
-    match = line.match(/^ACK ([0-9a-f]{40})$/);
-    if (match) {
-      return socket.take(onNak);
-    }
-    if (line === "NAK") {
-      return socket.take(onNak);
-    }
-    throw new Error("Expected NAK, but got " + JSON.stringify(line));
+    return api.take(onPack);
   }
 
-  function onMore(line) {
-
-    if (line === undefined) {
-      packChannel.put();
-      progressChannel.put();
-      errorChannel.put();
-      return api.put();
-    }
-    if (line === null) {
-      api.put(line);
-    }
-    else {
-      if (line.progress) {
-        progressChannel.put(line.progress);
-      }
-      else if (line.error) {
-        errorChannel.put(line.error);
-      }
-      else {
-        if (!packChannel.put(line)) {
-          return packChannel.drain(onReady);
-        }
-      }
-    }
-    socket.take(onMore);
-  }
-
-  function onReady() {
-    socket.take(onMore);
+  function onResponse(h) {
+    callback(h);
   }
 
 }
 
 var defer = require('js-git/lib/defer');
+
 function throwIt(err) {
   defer(function () {
     throw err;
