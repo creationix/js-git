@@ -8,7 +8,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/creationix/js-git.git"
+    "url": "git+https://github.com/creationix/js-git.git"
   },
   "author": "Tim Caswell <tim@creationix.com>",
   "license": "MIT",
