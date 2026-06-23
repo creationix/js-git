@@ -1,8 +1,10 @@
+// -*- mode: js; js-indent-level: 2; -*-
+
 "use strict";
 
 module.exports = request;
 
-function request(method, url, headers, body, callback) {
+function request(method, url, headers, body, callback, responseType) {
   if (typeof body === "function") {
     callback = body;
     body = undefined;
@@ -12,7 +14,10 @@ function request(method, url, headers, body, callback) {
   }
   var xhr = new XMLHttpRequest();
   xhr.open(method, url, true);
-  xhr.responseType = "arraybuffer";
+  if (!responseType) {
+    responseType = "arraybuffer";
+  }
+  xhr.responseType = responseType;
 
   Object.keys(headers).forEach(function (name) {
     xhr.setRequestHeader(name, headers[name]);
@@ -26,10 +31,15 @@ function request(method, url, headers, body, callback) {
       resHeaders[line.substring(0, index).toLowerCase()] = line.substring(index + 1).trim();
     });
 
+    var body = xhr.response;
+    if (body && xhr.responseType == "arraybuffer") {
+      body = new Uint8Array(body);
+    }
+
     callback(null, {
       statusCode: xhr.status,
       headers: resHeaders,
-      body: xhr.response && new Uint8Array(xhr.response)
+      body: body
     });
   };
   xhr.send(body);
