@@ -39,6 +39,7 @@ function logWalk(ref, callback) {
     return repo.loadAs("commit", hash, function (err, commit) {
       if (!commit) return callback(err || new Error("Missing commit " + hash));
       commit.hash = hash;
+      seen[hash] = true;
       if (hash === last) commit.last = true;
       return callback(null, commit);
     });
@@ -47,7 +48,7 @@ function logWalk(ref, callback) {
 }
 
 function compare(commit, other) {
-  return commit.author.date < other.author.date;
+  return commit.author.date.seconds > other.author.date.seconds;
 }
 
 function treeWalk(hash, callback) {
